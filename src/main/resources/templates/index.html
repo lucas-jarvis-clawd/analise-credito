@@ -32,8 +32,22 @@
                             </div>
                         </form>
                     </div>
-                    <div class="card-footer text-muted text-center">
-                        <small>Versão 1.0.0 - Sistema de Gestão de Análise de Crédito</small>
+                    <div class="card-footer bg-light">
+                        <div class="text-center mb-3">
+                            <small class="text-muted">Versão 1.0.0 - Sistema de Gestão de Análise de Crédito</small>
+                        </div>
+                        <hr class="my-2">
+                        <div class="text-center">
+                            <small class="text-muted d-block mb-2">Área Administrativa:</small>
+                            <div class="d-flex justify-content-center gap-2">
+                                <a th:href="@{/importacao}" class="btn btn-outline-primary btn-sm">
+                                    <i class="bi bi-file-earmark-arrow-up"></i> Importação
+                                </a>
+                                <a th:href="@{/configuracao}" class="btn btn-outline-secondary btn-sm">
+                                    <i class="bi bi-gear"></i> Configuração
+                                </a>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>

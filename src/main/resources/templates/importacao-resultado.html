@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Resultado da Importação</title>
+    <link rel="stylesheet" th:href="@{/webjars/bootstrap/5.3.2/css/bootstrap.min.css}">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+</head>
+<body class="bg-light">
+    <div class="container mt-4">
+        <div class="row">
+            <div class="col-md-12">
+                <h2 class="mb-4">
+                    <i class="bi bi-check2-square text-primary"></i> Resultado da Importação
+                </h2>
+
+                <!-- Status -->
+                <div th:classappend="${resultado.status == 'SUCESSO'} ? 'alert-success' :
+                                   (${resultado.status == 'SUCESSO_PARCIAL'} ? 'alert-warning' : 'alert-danger')"
+                     class="alert alert-dismissible fade show shadow-sm" role="alert">
+                    <h4 class="alert-heading">
+                        <i th:if="${resultado.status == 'SUCESSO'}" class="bi bi-check-circle-fill"></i>
+                        <i th:if="${resultado.status == 'SUCESSO_PARCIAL'}" class="bi bi-exclamation-circle-fill"></i>
+                        <i th:if="${resultado.status == 'ERRO'}" class="bi bi-x-circle-fill"></i>
+                        <span th:text="${resultado.status}"></span>
+                    </h4>
+                    <p th:if="${resultado.status == 'SUCESSO'}" class="mb-0">
+                        A importação foi concluída com sucesso! Todos os registros foram processados.
+                    </p>
+                    <p th:if="${resultado.status == 'SUCESSO_PARCIAL'}" class="mb-0">
+                        A importação foi concluída com avisos. Alguns registros podem ter sido ignorados.
+                    </p>
+                    <p th:if="${resultado.status == 'ERRO'}" class="mb-0">
+                        A importação falhou. Verifique os erros abaixo e tente novamente.
+                    </p>
+                </div>
+
+                <!-- Statistics -->
+                <div class="card mb-3 shadow-sm">
+                    <div class="card-header bg-info text-white">
+                        <h5 class="mb-0">
+                            <i class="bi bi-bar-chart-fill"></i> Estatísticas de Importação
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row text-center">
+                            <div class="col-md-3 mb-3">
+                                <div class="border rounded p-3 bg-light">
+                                    <i class="bi bi-people-fill text-primary" style="font-size: 2rem;"></i>
+                                    <h3 class="mt-2 mb-0" th:text="${resultado.clientesImportados}">0</h3>
+                                    <small class="text-muted">Clientes</small>
+                                </div>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <div class="border rounded p-3 bg-light">
+                                    <i class="bi bi-cart-fill text-success" style="font-size: 2rem;"></i>
+                                    <h3 class="mt-2 mb-0" th:text="${resultado.pedidosImportados}">0</h3>
+                                    <small class="text-muted">Pedidos</small>
+                                </div>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <div class="border rounded p-3 bg-light">
+                                    <i class="bi bi-graph-up text-info" style="font-size: 2rem;"></i>
+                                    <h3 class="mt-2 mb-0" th:text="${resultado.dadosBIImportados}">0</h3>
+                                    <small class="text-muted">Dados BI</small>
+                                </div>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <div class="border rounded p-3 bg-light">
+                                    <i class="bi bi-receipt text-warning" style="font-size: 2rem;"></i>
+                                    <h3 class="mt-2 mb-0" th:text="${resultado.duplicatasImportadas}">0</h3>
+                                    <small class="text-muted">Duplicatas</small>
+                                </div>
+                            </div>
+                        </div>
+                        <hr>
+                        <div class="text-center">
+                            <h4>
+                                <i class="bi bi-database-fill text-secondary"></i>
+                                Total de Registros:
+                                <span class="badge bg-secondary" th:text="${resultado.totalImportado}">0</span>
+                            </h4>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Errors -->
+                <div th:if="${resultado.erros != null and !resultado.erros.empty}" class="card mb-3 shadow-sm">
+                    <div class="card-header bg-danger text-white">
+                        <h5 class="mb-0">
+                            <i class="bi bi-exclamation-octagon-fill"></i>
+                            Erros (<span th:text="${#lists.size(resultado.erros)}">0</span>)
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <ul class="mb-0">
+                            <li th:each="erro : ${resultado.erros}" th:text="${erro}"></li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Warnings -->
+                <div th:if="${resultado.avisos != null and !resultado.avisos.empty}" class="card mb-3 shadow-sm">
+                    <div class="card-header bg-warning">
+                        <h5 class="mb-0">
+                            <i class="bi bi-exclamation-triangle-fill"></i>
+                            Avisos (<span th:text="${#lists.size(resultado.avisos)}">0</span>)
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <ul class="mb-0">
+                            <li th:each="aviso : ${resultado.avisos}" th:text="${aviso}"></li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- No errors or warnings -->
+                <div th:if="${(resultado.erros == null or resultado.erros.empty) and (resultado.avisos == null or resultado.avisos.empty)}"
+                     class="alert alert-success shadow-sm">
+                    <i class="bi bi-check-circle-fill"></i>
+                    Nenhum erro ou aviso reportado. Importação completamente limpa!
+                </div>
+
+                <div class="text-end mb-5">
+                    <a th:href="@{/importacao}" class="btn btn-secondary btn-lg me-2">
+                        <i class="bi bi-arrow-clockwise"></i> Nova Importação
+                    </a>
+                    <a href="/" class="btn btn-primary btn-lg">
+                        <i class="bi bi-house-fill"></i> Ir para Home
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script th:src="@{/webjars/bootstrap/5.3.2/js/bootstrap.bundle.min.js}"></script>
+</body>
+</html>
