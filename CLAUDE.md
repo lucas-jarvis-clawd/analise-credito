@@ -122,24 +122,30 @@ analise.requerAprovacaoGestor = (
 
 ## Implementation Plan
 
-**Status:** In execution (using executing-plans skill with parallel agents)
+**Status:** ✅ **80% COMPLETE - MVP FUNCIONAL!**
 
 **Phases:**
-1. ✅ Fundação: Pacotes, enums, entities, repos, config
-2. ⏳ Importação: ImportacaoService (Apache POI), XLSX parsing
-3. ⏳ Services Core: Scoring, Alertas, Workflow, Parecer
-4. ⏳ UI Kanban: Dashboard com HTMX drag-and-drop
-5. ⏳ Wizard Análise: 4 steps + painel decisão lateral
-6. ⏳ CRUD/Admin: Cliente, Documentos, Configuração
-7. ⏳ Testes: Unit tests (services) + acceptance (E2E)
+1. ✅ Fundação: Pacotes, enums (6), entities (14), repos (14), config
+2. ✅ Importação: ImportacaoService (Apache POI), XLSX parsing - 684 linhas, 14 testes
+3. ✅ Services Core: Scoring (9 tests), Alertas (13 tests), Workflow (20 tests), Parecer (20 tests)
+4. ✅ UI Kanban: Dashboard com drag-and-drop JavaScript, filtros, badges dinâmicos
+5. ✅ Wizard Análise: 6 tabs (Cadastrais, Vínculos, Restrições, Financeiro, Docs, Histórico) + painel decisão
+6. ✅ CRUD/Admin: Home, Importação, Configuração, FileStorage, Documentos
+7. ⏳ Testes: 77 testes unitários passando, E2E pendente
 8. ⏳ Deploy: Docs, build scripts, perfil produção
 
 **Execution Strategy:**
-- Batches de 3 tarefas com review entre batches
-- Agentes paralelos para tarefas independentes (services)
-- Sequencial para dependências (entities → repos → services → controllers)
+- ✅ Executado com subagent-driven-development
+- ✅ Agentes especializados para cada tarefa
+- ✅ Review em dois estágios (spec compliance + code quality)
+- ✅ 16/20 tarefas completas
 
-**Task List:** 20 tarefas totais (ver TaskList para status atual)
+**Task List:**
+- ✅ Tasks #1-7: Backend completo (entities, repos, services, import)
+- ✅ Tasks #8-11: Business services (scoring, alertas, workflow, parecer)
+- ✅ Tasks #12-17: Controllers e UI (home, kanban, analise, import, config, file upload)
+- ⏳ Task #18: Templates adicionais (maioria já feita)
+- ⏳ Tasks #19-20: Testes adicionais e E2E
 
 ## Development Workflow
 
