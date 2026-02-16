@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<!-- Kanban Card Fragment -->
+<th:block th:fragment="kanban-cards(analises)">
+    <div th:if="${analises == null or analises.isEmpty()}" class="empty-column">
+        <i class="bi bi-inbox"></i><br>
+        Nenhuma análise
+    </div>
+    <div th:each="analise : ${analises}"
+         class="kanban-card"
+         draggable="true"
+         th:attr="data-analise-id=${analise.id}"
+         th:id="'card-' + ${analise.id}">
+
+        <!-- Cliente Info -->
+        <div class="card-cliente" th:text="${analise.pedido.cliente.razaoSocial}">Razão Social</div>
+        <div class="card-cnpj" th:text="${analise.pedido.cliente.cnpj}">00.000.000/0000-00</div>
+
+        <!-- Pedido Info -->
+        <div class="card-info">
+            <span th:if="${analise.pedido.marca}">
+                <i class="bi bi-tag"></i> <span th:text="${analise.pedido.marca}">Marca</span>
+            </span>
+            <span>
+                <i class="bi bi-file-text"></i> <span th:text="${analise.pedido.numero}">Pedido</span>
+            </span>
+            <span>
+                <i class="bi bi-currency-dollar"></i>
+                <span th:text="${#numbers.formatDecimal(analise.pedido.valor, 1, 'POINT', 2, 'COMMA')}">0,00</span>
+            </span>
+        </div>
+
+        <!-- Data do Pedido -->
+        <div class="card-info">
+            <span>
+                <i class="bi bi-calendar"></i>
+                <span th:text="${#temporals.format(analise.pedido.data, 'dd/MM/yyyy')}">00/00/0000</span>
+            </span>
+        </div>
+
+        <!-- Alertas -->
+        <div class="card-badges" th:if="${analise.pedido.alerts != null and !analise.pedido.alerts.isEmpty()}">
+            <span th:each="alert : ${analise.pedido.alerts}"
+                  class="badge bg-danger badge-alert"
+                  th:text="${alert}">Alerta</span>
+        </div>
+
+        <!-- Score Badge -->
+        <div class="card-badges" th:if="${analise.pedido.cliente.scoreBoaVista != null}">
+            <span class="badge badge-score"
+                  th:classappend="${analise.pedido.cliente.scoreBoaVista >= 700} ? 'score-alto' : (${analise.pedido.cliente.scoreBoaVista >= 400} ? 'score-medio' : 'score-baixo')"
+                  th:text="'Score: ' + ${analise.pedido.cliente.scoreBoaVista}">Score: 0</span>
+        </div>
+
+        <!-- Botão Analisar -->
+        <a th:href="@{/analise/{id}(id=${analise.id})}"
+           class="btn btn-primary btn-analisar mt-2">
+            <i class="bi bi-clipboard-check"></i> Analisar
+        </a>
+    </div>
+</th:block>
+</html>

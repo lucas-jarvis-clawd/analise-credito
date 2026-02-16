@@ -1,0 +1,10 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<div th:fragment="badges(alerts)">
+    <span th:each="alert : ${alerts}"
+          class="badge bg-danger me-1"
+          th:text="${alert}">
+        Alert
+    </span>
+</div>
+</html>

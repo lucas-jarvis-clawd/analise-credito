@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Kanban - Análise de Crédito</title>
+    <link rel="stylesheet" th:href="@{/webjars/bootstrap/5.3.2/css/bootstrap.min.css}">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+    <style>
+        body {
+            background-color: #f0f2f5;
+        }
+
+        .kanban-container {
+            display: flex;
+            gap: 1rem;
+            overflow-x: auto;
+            padding-bottom: 2rem;
+        }
+
+        .kanban-column {
+            min-width: 300px;
+            background-color: #e9ecef;
+            border-radius: 8px;
+            padding: 1rem;
+            flex-shrink: 0;
+        }
+
+        .kanban-column-header {
+            font-weight: 600;
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            color: #495057;
+            margin-bottom: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .kanban-column-count {
+            background-color: #6c757d;
+            color: white;
+            border-radius: 12px;
+            padding: 0.125rem 0.5rem;
+            font-size: 0.75rem;
+        }
+
+        .kanban-card {
+            background-color: white;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 0.75rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            cursor: move;
+            transition: all 0.2s;
+        }
+
+        .kanban-card:hover {
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+            transform: translateY(-2px);
+        }
+
+        .kanban-card.dragging {
+            opacity: 0.5;
+            transform: rotate(5deg);
+        }
+
+        .kanban-column.drag-over {
+            background-color: #dee2e6;
+            border: 2px dashed #495057;
+        }
+
+        .card-cliente {
+            font-weight: 600;
+            font-size: 0.875rem;
+            color: #212529;
+            margin-bottom: 0.25rem;
+        }
+
+        .card-cnpj {
+            font-size: 0.75rem;
+            color: #6c757d;
+            margin-bottom: 0.5rem;
+        }
+
+        .card-info {
+            font-size: 0.75rem;
+            color: #495057;
+            margin-bottom: 0.5rem;
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .card-info span {
+            white-space: nowrap;
+        }
+
+        .card-badges {
+            display: flex;
+            gap: 0.25rem;
+            flex-wrap: wrap;
+            margin-bottom: 0.5rem;
+        }
+
+        .badge-alert {
+            font-size: 0.625rem;
+            padding: 0.25rem 0.5rem;
+        }
+
+        .badge-score {
+            font-weight: 600;
+        }
+
+        .score-alto {
+            background-color: #28a745;
+        }
+
+        .score-medio {
+            background-color: #ffc107;
+            color: #212529;
+        }
+
+        .score-baixo {
+            background-color: #dc3545;
+        }
+
+        .workflow-section {
+            margin-bottom: 3rem;
+        }
+
+        .workflow-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #212529;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 3px solid;
+        }
+
+        .workflow-base-prazo .workflow-title {
+            border-color: #0d6efd;
+        }
+
+        .workflow-cliente-novo .workflow-title {
+            border-color: #198754;
+        }
+
+        .btn-analisar {
+            font-size: 0.75rem;
+            padding: 0.25rem 0.5rem;
+            width: 100%;
+        }
+
+        .empty-column {
+            color: #adb5bd;
+            font-size: 0.875rem;
+            text-align: center;
+            padding: 2rem 1rem;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation Bar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/">
+                <i class="bi bi-kanban"></i> Análise de Crédito
+            </a>
+            <div class="d-flex align-items-center gap-3">
+                <span class="text-white">
+                    <i class="bi bi-person-circle"></i>
+                    <span th:text="${perfil}">FINANCEIRO</span>
+                </span>
+                <a href="/" class="btn btn-outline-light btn-sm">
+                    <i class="bi bi-box-arrow-left"></i> Sair
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Container -->
+    <div class="container-fluid mt-4">
+        <!-- Header with Filters -->
+        <div class="row mb-4">
+            <div class="col">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h2><i class="bi bi-kanban"></i> Dashboard Kanban</h2>
+                    <div class="btn-group" role="group">
+                        <a th:href="@{/analise/kanban(filtro='TODOS')}"
+                           th:classappend="${filtro == 'TODOS'} ? 'active' : ''"
+                           class="btn btn-outline-primary">
+                            <i class="bi bi-grid-3x3"></i> Todos
+                        </a>
+                        <a th:href="@{/analise/kanban(filtro='PRAZO')}"
+                           th:classappend="${filtro == 'PRAZO'} ? 'active' : ''"
+                           class="btn btn-outline-primary">
+                            <i class="bi bi-clock"></i> Base/Prazo
+                        </a>
+                        <a th:href="@{/analise/kanban(filtro='NOVO')}"
+                           th:classappend="${filtro == 'NOVO'} ? 'active' : ''"
+                           class="btn btn-outline-primary">
+                            <i class="bi bi-person-plus"></i> Cliente Novo
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- BASE_PRAZO Workflow Section -->
+        <div th:if="${filtro == 'TODOS' or filtro == 'PRAZO'}"
+             class="workflow-section workflow-base-prazo">
+            <h3 class="workflow-title">
+                <i class="bi bi-clock-history"></i> Workflow: BASE/PRAZO
+            </h3>
+            <div class="kanban-container">
+                <!-- PENDENTE Column -->
+                <div class="kanban-column" data-status="PENDENTE" data-workflow="BASE_PRAZO">
+                    <div class="kanban-column-header">
+                        <span>Pendente</span>
+                        <span class="kanban-column-count"
+                              th:text="${kanbanData.get(T(AnaliseCredito.Analise_de_Credito.domain.enums.TipoWorkflow).BASE_PRAZO).get(T(AnaliseCredito.Analise_de_Credito.domain.enums.StatusWorkflow).PENDENTE)?.size() ?: 0}">0</span>
+                    </div>
+                    <div th:replace="~{fragments/card-pedido :: kanban-cards(${kanbanData.get(T(AnaliseCredito.Analise_de_Credito.domain.enums.TipoWorkflow).BASE_PRAZO).get(T(AnaliseCredito.Analise_de_Credito.domain.enums.StatusWorkflow).PENDENTE)})}"></div>
+                </div>
+
+                <!-- EM_ANALISE_FINANCEIRO Column -->
+                <div class="kanban-column" data-status="EM_ANALISE_FINANCEIRO" data-workflow="BASE_PRAZO">
+                    <div class="kanban-column-header">
+                        <span>Em Análise</span>
+                        <span class="kanban-column-count"
+                              th:text="${kanbanData.get(T(AnaliseCredito.Analise_de_Credito.domain.enums.TipoWorkflow).BASE_PRAZO).get(T(AnaliseCredito.Analise_de_Credito.domain.enums.StatusWorkflow).EM_ANALISE_FINANCEIRO)?.size() ?: 0}">0</span>
+                    </div>
+                    <div th:replace="~{fragments/card-pedido :: kanban-cards(${kanbanData.get(T(AnaliseCredito.Analise_de_Credito.domain.enums.TipoWorkflow).BASE_PRAZO).get(T(AnaliseCredito.Analise_de_Credito.domain.enums.StatusWorkflow).EM_ANALISE_FINANCEIRO)})}"></div>
+                </div>
+
+                <!-- PARECER_APROVADO Column -->
+                <div class="kanban-column" data-status="PARECER_APROVADO" data-workflow="BASE_PRAZO">
+                    <div class="kanban-column-header">
+                        <span>Aprovado</span>
+                        <span class="kanban-column-count"
+                              th:text="${kanbanData.get(T(AnaliseCredito.Analise_de_Credito.domain.enums.TipoWorkflow).BASE_PRAZO).get(T(AnaliseCredito.Analise_de_Credito.domain.enums.StatusWorkflow).PARECER_APROVADO)?.size() ?: 0}">0</span>
+                    </div>
+                    <div th:replace="~{fragments/card-pedido :: kanban-cards(${kanbanData.get(T(AnaliseCredito.Analise_de_Credito.domain.enums.TipoWorkflow).BASE_PRAZO).get(T(AnaliseCredito.Analise_de_Credito.domain.enums.StatusWorkflow).PARECER_APROVADO)})}"></div>
+                </div>
+
+                <!-- PARECER_REPROVADO Column -->
+                <div class="kanban-column" data-status="PARECER_REPROVADO" data-workflow="BASE_PRAZO">
+                    <div class="kanban-column-header">
+                        <span>Reprovado</span>
+                        <span class="kanban-column-count"
+                              th:text="${kanbanData.get(T(AnaliseCredito.Analise_de_Credito.domain.enums.TipoWorkflow).BASE_PRAZO).get(T(AnaliseCredito.Analise_de_Credito.domain.enums.StatusWorkflow).PARECER_REPROVADO)?.size() ?: 0}">0</span>
+                    </div>
+                    <div th:replace="~{fragments/card-pedido :: kanban-cards(${kanbanData.get(T(AnaliseCredito.Analise_de_Credito.domain.enums.TipoWorkflow).BASE_PRAZO).get(T(AnaliseCredito.Analise_de_Credito.domain.enums.StatusWorkflow).PARECER_REPROVADO)})}"></div>
+                </div>
+
+                <!-- FINALIZADO Column -->
+                <div class="kanban-column" data-status="FINALIZADO" data-workflow="BASE_PRAZO">
+                    <div class="kanban-column-header">
+                        <span>Finalizado</span>
+                        <span class="kanban-column-count"
+                              th:text="${kanbanData.get(T(AnaliseCredito.Analise_de_Credito.domain.enums.TipoWorkflow).BASE_PRAZO).get(T(AnaliseCredito.Analise_de_Credito.domain.enums.StatusWorkflow).FINALIZADO)?.size() ?: 0}">0</span>
+                    </div>
+                    <div th:replace="~{fragments/card-pedido :: kanban-cards(${kanbanData.get(T(AnaliseCredito.Analise_de_Credito.domain.enums.TipoWorkflow).BASE_PRAZO).get(T(AnaliseCredito.Analise_de_Credito.domain.enums.StatusWorkflow).FINALIZADO)})}"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- CLIENTE_NOVO Workflow Section -->
+        <div th:if="${filtro == 'TODOS' or filtro == 'NOVO'}"
+             class="workflow-section workflow-cliente-novo">
+            <h3 class="workflow-title">
+                <i class="bi bi-person-plus"></i> Workflow: CLIENTE NOVO
+            </h3>
+            <div class="kanban-container">
+                <!-- PENDENTE Column -->
+                <div class="kanban-column" data-status="PENDENTE" data-workflow="CLIENTE_NOVO">
+                    <div class="kanban-column-header">
+                        <span>Pendente</span>
+                        <span class="kanban-column-count"
+                              th:text="${kanbanData.get(T(AnaliseCredito.Analise_de_Credito.domain.enums.TipoWorkflow).CLIENTE_NOVO).get(T(AnaliseCredito.Analise_de_Credito.domain.enums.StatusWorkflow).PENDENTE)?.size() ?: 0}">0</span>
+                    </div>
+                    <div th:replace="~{fragments/card-pedido :: kanban-cards(${kanbanData.get(T(AnaliseCredito.Analise_de_Credito.domain.enums.TipoWorkflow).CLIENTE_NOVO).get(T(AnaliseCredito.Analise_de_Credito.domain.enums.StatusWorkflow).PENDENTE)})}"></div>
+                </div>
+
+                <!-- DOCUMENTACAO_SOLICITADA Column -->
+                <div class="kanban-column" data-status="DOCUMENTACAO_SOLICITADA" data-workflow="CLIENTE_NOVO">
+                    <div class="kanban-column-header">
+                        <span>Doc. Solicitada</span>
+                        <span class="kanban-column-count"
+                              th:text="${kanbanData.get(T(AnaliseCredito.Analise_de_Credito.domain.enums.TipoWorkflow).CLIENTE_NOVO).get(T(AnaliseCredito.Analise_de_Credito.domain.enums.StatusWorkflow).DOCUMENTACAO_SOLICITADA)?.size() ?: 0}">0</span>
+                    </div>
+                    <div th:replace="~{fragments/card-pedido :: kanban-cards(${kanbanData.get(T(AnaliseCredito.Analise_de_Credito.domain.enums.TipoWorkflow).CLIENTE_NOVO).get(T(AnaliseCredito.Analise_de_Credito.domain.enums.StatusWorkflow).DOCUMENTACAO_SOLICITADA)})}"></div>
+                </div>
+
+                <!-- DOCUMENTACAO_ENVIADA Column -->
+                <div class="kanban-column" data-status="DOCUMENTACAO_ENVIADA" data-workflow="CLIENTE_NOVO">
+                    <div class="kanban-column-header">
+                        <span>Doc. Enviada</span>
+                        <span class="kanban-column-count"
+                              th:text="${kanbanData.get(T(AnaliseCredito.Analise_de_Credito.domain.enums.TipoWorkflow).CLIENTE_NOVO).get(T(AnaliseCredito.Analise_de_Credito.domain.enums.StatusWorkflow).DOCUMENTACAO_ENVIADA)?.size() ?: 0}">0</span>
+                    </div>
+                    <div th:replace="~{fragments/card-pedido :: kanban-cards(${kanbanData.get(T(AnaliseCredito.Analise_de_Credito.domain.enums.TipoWorkflow).CLIENTE_NOVO).get(T(AnaliseCredito.Analise_de_Credito.domain.enums.StatusWorkflow).DOCUMENTACAO_ENVIADA)})}"></div>
+                </div>
+
+                <!-- PARECER_APROVADO Column -->
+                <div class="kanban-column" data-status="PARECER_APROVADO" data-workflow="CLIENTE_NOVO">
+                    <div class="kanban-column-header">
+                        <span>Aprovado</span>
+                        <span class="kanban-column-count"
+                              th:text="${kanbanData.get(T(AnaliseCredito.Analise_de_Credito.domain.enums.TipoWorkflow).CLIENTE_NOVO).get(T(AnaliseCredito.Analise_de_Credito.domain.enums.StatusWorkflow).PARECER_APROVADO)?.size() ?: 0}">0</span>
+                    </div>
+                    <div th:replace="~{fragments/card-pedido :: kanban-cards(${kanbanData.get(T(AnaliseCredito.Analise_de_Credito.domain.enums.TipoWorkflow).CLIENTE_NOVO).get(T(AnaliseCredito.Analise_de_Credito.domain.enums.StatusWorkflow).PARECER_APROVADO)})}"></div>
+                </div>
+
+                <!-- PARECER_REPROVADO Column -->
+                <div class="kanban-column" data-status="PARECER_REPROVADO" data-workflow="CLIENTE_NOVO">
+                    <div class="kanban-column-header">
+                        <span>Reprovado</span>
+                        <span class="kanban-column-count"
+                              th:text="${kanbanData.get(T(AnaliseCredito.Analise_de_Credito.domain.enums.TipoWorkflow).CLIENTE_NOVO).get(T(AnaliseCredito.Analise_de_Credito.domain.enums.StatusWorkflow).PARECER_REPROVADO)?.size() ?: 0}">0</span>
+                    </div>
+                    <div th:replace="~{fragments/card-pedido :: kanban-cards(${kanbanData.get(T(AnaliseCredito.Analise_de_Credito.domain.enums.TipoWorkflow).CLIENTE_NOVO).get(T(AnaliseCredito.Analise_de_Credito.domain.enums.StatusWorkflow).PARECER_REPROVADO)})}"></div>
+                </div>
+
+                <!-- FINALIZADO Column -->
+                <div class="kanban-column" data-status="FINALIZADO" data-workflow="CLIENTE_NOVO">
+                    <div class="kanban-column-header">
+                        <span>Finalizado</span>
+                        <span class="kanban-column-count"
+                              th:text="${kanbanData.get(T(AnaliseCredito.Analise_de_Credito.domain.enums.TipoWorkflow).CLIENTE_NOVO).get(T(AnaliseCredito.Analise_de_Credito.domain.enums.StatusWorkflow).FINALIZADO)?.size() ?: 0}">0</span>
+                    </div>
+                    <div th:replace="~{fragments/card-pedido :: kanban-cards(${kanbanData.get(T(AnaliseCredito.Analise_de_Credito.domain.enums.TipoWorkflow).CLIENTE_NOVO).get(T(AnaliseCredito.Analise_de_Credito.domain.enums.StatusWorkflow).FINALIZADO)})}"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script th:src="@{/webjars/bootstrap/5.3.2/js/bootstrap.bundle.min.js}"></script>
+    <script>
+        // Drag and Drop functionality
+        let draggedCard = null;
+
+        // Add event listeners to all cards
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeDragAndDrop();
+        });
+
+        function initializeDragAndDrop() {
+            const cards = document.querySelectorAll('.kanban-card');
+            const columns = document.querySelectorAll('.kanban-column');
+
+            // Card drag events
+            cards.forEach(card => {
+                card.addEventListener('dragstart', handleDragStart);
+                card.addEventListener('dragend', handleDragEnd);
+            });
+
+            // Column drop events
+            columns.forEach(column => {
+                column.addEventListener('dragover', handleDragOver);
+                column.addEventListener('drop', handleDrop);
+                column.addEventListener('dragleave', handleDragLeave);
+            });
+        }
+
+        function handleDragStart(e) {
+            draggedCard = this;
+            this.classList.add('dragging');
+            e.dataTransfer.effectAllowed = 'move';
+            e.dataTransfer.setData('text/html', this.innerHTML);
+        }
+
+        function handleDragEnd(e) {
+            this.classList.remove('dragging');
+
+            // Remove drag-over from all columns
+            document.querySelectorAll('.kanban-column').forEach(col => {
+                col.classList.remove('drag-over');
+            });
+        }
+
+        function handleDragOver(e) {
+            if (e.preventDefault) {
+                e.preventDefault();
+            }
+            e.dataTransfer.dropEffect = 'move';
+
+            const column = e.target.closest('.kanban-column');
+            if (column) {
+                column.classList.add('drag-over');
+            }
+
+            return false;
+        }
+
+        function handleDragLeave(e) {
+            const column = e.target.closest('.kanban-column');
+            if (column && !column.contains(e.relatedTarget)) {
+                column.classList.remove('drag-over');
+            }
+        }
+
+        function handleDrop(e) {
+            if (e.stopPropagation) {
+                e.stopPropagation();
+            }
+
+            const column = e.target.closest('.kanban-column');
+            if (!column || !draggedCard) {
+                return false;
+            }
+
+            column.classList.remove('drag-over');
+
+            const novoStatus = column.getAttribute('data-status');
+            const analiseId = draggedCard.getAttribute('data-analise-id');
+
+            // Send AJAX request to update status
+            updateStatus(analiseId, novoStatus);
+
+            return false;
+        }
+
+        function updateStatus(analiseId, novoStatus) {
+            const formData = new FormData();
+            formData.append('novoStatus', novoStatus);
+
+            fetch('/analise/' + analiseId + '/status', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Reload page to reflect changes
+                    window.location.reload();
+                } else {
+                    alert('Erro: ' + (data.error || 'Transição não permitida'));
+                    // Reload to reset card position
+                    window.location.reload();
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Erro ao atualizar status');
+                window.location.reload();
+            });
+        }
+    </script>
+</body>
+</html>
