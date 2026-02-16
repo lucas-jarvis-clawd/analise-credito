@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Análise de Crédito</title>
+    <link rel="stylesheet" th:href="@{/webjars/bootstrap/5.3.2/css/bootstrap.min.css}">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+</head>
+<body class="bg-light">
+    <div class="container mt-5">
+        <div class="row justify-content-center">
+            <div class="col-md-6">
+                <div class="card shadow">
+                    <div class="card-header bg-primary text-white text-center">
+                        <h3 class="mb-0">Sistema de Análise de Crédito</h3>
+                    </div>
+                    <div class="card-body text-center py-5">
+                        <p class="lead mb-4">Selecione seu perfil para continuar:</p>
+
+                        <form action="/perfil/selecionar" method="post" class="mt-4">
+                            <div class="d-grid gap-3">
+                                <button type="submit" name="perfil" value="FINANCEIRO"
+                                        class="btn btn-primary btn-lg">
+                                    <i class="bi bi-calculator"></i> Entrar como Financeiro
+                                </button>
+
+                                <button type="submit" name="perfil" value="COMERCIAL"
+                                        class="btn btn-success btn-lg">
+                                    <i class="bi bi-person-badge"></i> Entrar como Comercial
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="card-footer text-muted text-center">
+                        <small>Versão 1.0.0 - Sistema de Gestão de Análise de Crédito</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script th:src="@{/webjars/bootstrap/5.3.2/js/bootstrap.bundle.min.js}"></script>
+</body>
+</html>
