@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Analise de Credito - [[${cliente.razaoSocial}]]</title>
+    <title>Análise de Crédito - [[${cliente.razaoSocial}]]</title>
     <link rel="stylesheet" th:href="@{/webjars/bootstrap/5.3.2/css/bootstrap.min.css}">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <link rel="stylesheet" th:href="@{/css/theme.css}">
@@ -30,7 +30,7 @@
             <div>
                 <h2>
                     <i class="bi bi-building"></i>
-                    <span th:text="${cliente.razaoSocial}">Razao Social</span>
+                    <span th:text="${cliente.razaoSocial}">Razão Social</span>
                 </h2>
                 <div class="page-subtitle">
                     <strong>CNPJ:</strong> <span th:text="${cliente.cnpj}">00.000.000/0000-00</span>
@@ -56,15 +56,21 @@
                             </button>
                         </li>
                         <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="pedidosgrupo-tab" data-bs-toggle="tab"
+                                    data-bs-target="#pedidosgrupo" type="button" role="tab">
+                                <i class="bi bi-table"></i> Pedidos Grupo
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
                             <button class="nav-link" id="vinculos-tab" data-bs-toggle="tab"
                                     data-bs-target="#vinculos" type="button" role="tab">
-                                <i class="bi bi-diagram-3"></i> Vinculos e Socios
+                                <i class="bi bi-diagram-3"></i> Vínculos e Sócios
                             </button>
                         </li>
                         <li class="nav-item" role="presentation">
                             <button class="nav-link" id="restricoes-tab" data-bs-toggle="tab"
                                     data-bs-target="#restricoes" type="button" role="tab">
-                                <i class="bi bi-exclamation-triangle"></i> Restricoes
+                                <i class="bi bi-exclamation-triangle"></i> Restrições
                             </button>
                         </li>
                         <li class="nav-item" role="presentation">
@@ -82,7 +88,7 @@
                         <li class="nav-item" role="presentation">
                             <button class="nav-link" id="historico-tab" data-bs-toggle="tab"
                                     data-bs-target="#historico" type="button" role="tab">
-                                <i class="bi bi-clock-history"></i> Historico
+                                <i class="bi bi-clock-history"></i> Histórico
                             </button>
                         </li>
                     </ul>
@@ -104,8 +110,8 @@
                             </div>
                             <div class="row">
                                 <div class="col-md-12">
-                                    <div class="info-label">Razao Social</div>
-                                    <div class="info-value" th:text="${cliente.razaoSocial}">Razao Social</div>
+                                    <div class="info-label">Razão Social</div>
+                                    <div class="info-value" th:text="${cliente.razaoSocial}">Razão Social</div>
                                 </div>
                             </div>
                             <div class="row">
@@ -116,14 +122,14 @@
                             </div>
                             <div class="row">
                                 <div class="col-md-4">
-                                    <div class="info-label">Data de Fundacao</div>
+                                    <div class="info-label">Data de Fundação</div>
                                     <div class="info-value" th:text="${cliente.dataFundacao != null ? #temporals.format(cliente.dataFundacao, 'dd/MM/yyyy') : 'N/D'}">00/00/0000</div>
                                 </div>
                                 <div class="col-md-4">
                                     <div class="info-label">SIMEI</div>
                                     <div class="info-value">
                                         <span th:if="${cliente.simei}" class="badge-gold">SIM</span>
-                                        <span th:unless="${cliente.simei}" class="badge-dark">NAO</span>
+                                        <span th:unless="${cliente.simei}" class="badge-dark">NÃO</span>
                                     </div>
                                 </div>
                                 <div class="col-md-4">
@@ -147,8 +153,8 @@
                                     <div class="info-value" th:text="${cliente.cluster ?: 'N/D'}">Cluster</div>
                                 </div>
                                 <div class="col-md-4">
-                                    <div class="info-label">Situacao Credito</div>
-                                    <div class="info-value" th:text="${cliente.situacaoCredito ?: 'N/D'}">Situacao</div>
+                                    <div class="info-label">Situação Crédito</div>
+                                    <div class="info-value" th:text="${cliente.situacaoCredito ?: 'N/D'}">Situação</div>
                                 </div>
                                 <div class="col-md-4">
                                     <div class="info-label">Sintegra</div>
@@ -157,13 +163,108 @@
                             </div>
                         </div>
 
-                        <!-- Tab 2: Vinculos e Socios -->
-                        <div class="tab-pane fade" id="vinculos" role="tabpanel">
-                            <h4 class="mb-4" style="font-size:1.1rem;"><i class="bi bi-diagram-3 text-gold"></i> Vinculos e Socios</h4>
+                        <!-- Tab: Pedidos do Grupo Econômico (Cross-Tab) -->
+                        <div class="tab-pane fade" id="pedidosgrupo" role="tabpanel">
+                            <h4 class="mb-3" style="font-size:1.1rem;">
+                                <i class="bi bi-table text-gold"></i> Pedidos do Grupo Econômico
+                                <span th:if="${pedido.colecao != null}" class="badge-gold ms-2" style="font-size:0.75rem;">
+                                    Coleção <span th:text="${pedido.colecao}">202601</span>
+                                </span>
+                            </h4>
+                            <p style="font-size:0.82rem;color:var(--text-muted);margin-bottom:1rem;">
+                                <i class="bi bi-info-circle"></i>
+                                Grupo: <strong th:text="${grupo.codigo}">GRUPO</strong>
+                                &mdash; Clique em uma linha para expandir e ver os pedidos individuais.
+                            </p>
 
-                            <h5 class="mb-3" style="font-size:0.95rem;font-weight:600;">Socios (<span th:text="${#lists.size(socios)}">0</span>)</h5>
+                            <div th:if="${#lists.isEmpty(crossTabRows)}" class="alert-theme-info">
+                                <i class="bi bi-info-circle"></i> Nenhum pedido encontrado para esta coleção no grupo econômico.
+                            </div>
+
+                            <div th:unless="${#lists.isEmpty(crossTabRows)}" style="overflow-x:auto;">
+                                <table class="table-theme" style="width:100%;font-size:0.82rem;" id="crossTabTable">
+                                    <thead>
+                                        <tr>
+                                            <th style="min-width:180px;position:sticky;left:0;background:var(--sidebar-bg);color:var(--text-sidebar-hover);z-index:2;">
+                                                CNPJ / Razão Social
+                                            </th>
+                                            <th th:each="marca : ${marcas}" th:text="${marca}" style="text-align:right;min-width:120px;">Marca</th>
+                                            <th style="text-align:right;min-width:120px;font-weight:700;">TOTAL</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <th:block th:each="row, rowStat : ${crossTabRows}">
+                                            <!-- CNPJ summary row (clickable) -->
+                                            <tr class="crosstab-row" style="cursor:pointer;"
+                                                th:attr="onclick='toggleDetail(' + ${rowStat.index} + ')'">
+                                                <td style="position:sticky;left:0;background:var(--card-bg);z-index:1;">
+                                                    <div style="display:flex;align-items:center;gap:0.5rem;">
+                                                        <i class="bi bi-chevron-right crosstab-chevron" th:id="'chevron-' + ${rowStat.index}" style="transition:transform 0.2s;font-size:0.7rem;color:var(--gold);"></i>
+                                                        <div>
+                                                            <div style="font-weight:600;" th:text="${row['razaoSocial']}">Razão Social</div>
+                                                            <div style="font-size:0.72rem;color:var(--text-muted);" th:text="${row['cnpj']}">00000000000000</div>
+                                                        </div>
+                                                        <span class="badge" style="background:var(--gold-subtle);color:var(--gold-dark);font-size:0.65rem;margin-left:auto;"
+                                                              th:text="${row['pedidosCount'] + ' pedido(s)'}">0 pedido(s)</span>
+                                                    </div>
+                                                </td>
+                                                <td th:each="marca : ${marcas}" style="text-align:right;font-variant-numeric:tabular-nums;"
+                                                    th:with="val=${row['valoresPorMarca'].get(marca)}">
+                                                    <span th:if="${val != null and val.compareTo(T(java.math.BigDecimal).ZERO) > 0}"
+                                                          th:text="'R$ ' + ${#numbers.formatDecimal(val, 1, 'POINT', 2, 'COMMA')}">R$ 0,00</span>
+                                                    <span th:if="${val == null or val.compareTo(T(java.math.BigDecimal).ZERO) == 0}"
+                                                          style="color:var(--text-muted);">&mdash;</span>
+                                                </td>
+                                                <td style="text-align:right;font-weight:700;font-variant-numeric:tabular-nums;color:var(--gold-dark);"
+                                                    th:text="'R$ ' + ${#numbers.formatDecimal(row['total'], 1, 'POINT', 2, 'COMMA')}">R$ 0,00</td>
+                                            </tr>
+                                            <!-- Expanded detail rows (hidden by default) -->
+                                            <tr th:each="pd : ${row['pedidosDetalhe']}" class="crosstab-detail" style="display:none;"
+                                                th:classappend="'detail-' + ${rowStat.index}">
+                                                <td style="position:sticky;left:0;background:var(--content-bg);z-index:1;padding-left:2.5rem;">
+                                                    <div style="font-size:0.78rem;">
+                                                        <i class="bi bi-receipt" style="color:var(--gold);"></i>
+                                                        Pedido <strong th:text="${pd['numero']}">000</strong>
+                                                        <span th:if="${pd['data'] != null}" style="color:var(--text-muted);margin-left:0.5rem;"
+                                                              th:text="${#temporals.format(pd['data'], 'dd/MM/yyyy')}">00/00/0000</span>
+                                                        <span th:if="${pd['bloqueio'] != null}" class="badge" style="font-size:0.6rem;background:var(--danger-bg);color:var(--danger);margin-left:0.3rem;"
+                                                              th:text="'Bloq: ' + ${pd['bloqueio']}">Bloq: 80</span>
+                                                        <span th:if="${pd['condicaoPagamento'] != null}" style="color:var(--text-muted);font-size:0.72rem;margin-left:0.5rem;"
+                                                              th:text="${pd['condicaoPagamento']}">30/60/90</span>
+                                                    </div>
+                                                </td>
+                                                <td th:each="m : ${marcas}" style="text-align:right;background:var(--content-bg);font-size:0.78rem;">
+                                                    <span th:if="${pd['marca'] == m}"
+                                                          th:text="'R$ ' + ${#numbers.formatDecimal(pd['valor'], 1, 'POINT', 2, 'COMMA')}">R$ 0,00</span>
+                                                </td>
+                                                <td style="text-align:right;background:var(--content-bg);font-weight:600;font-size:0.78rem;"
+                                                    th:text="'R$ ' + ${#numbers.formatDecimal(pd['valor'], 1, 'POINT', 2, 'COMMA')}">R$ 0,00</td>
+                                            </tr>
+                                        </th:block>
+                                    </tbody>
+                                    <tfoot>
+                                        <tr style="font-weight:700;border-top:2px solid var(--gold);">
+                                            <td style="position:sticky;left:0;background:var(--card-bg);z-index:1;">
+                                                TOTAL GRUPO
+                                            </td>
+                                            <td th:each="marca : ${marcas}" style="text-align:right;font-variant-numeric:tabular-nums;"
+                                                th:with="totalM=${totalPorMarca.get(marca)}"
+                                                th:text="${totalM != null} ? 'R$ ' + ${#numbers.formatDecimal(totalM, 1, 'POINT', 2, 'COMMA')} : 'R$ 0,00'">R$ 0,00</td>
+                                            <td style="text-align:right;color:var(--gold-dark);font-variant-numeric:tabular-nums;"
+                                                th:text="'R$ ' + ${#numbers.formatDecimal(grandTotal, 1, 'POINT', 2, 'COMMA')}">R$ 0,00</td>
+                                        </tr>
+                                    </tfoot>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- Tab 2: Vínculos e Sócios -->
+                        <div class="tab-pane fade" id="vinculos" role="tabpanel">
+                            <h4 class="mb-4" style="font-size:1.1rem;"><i class="bi bi-diagram-3 text-gold"></i> Vínculos e Sócios</h4>
+
+                            <h5 class="mb-3" style="font-size:0.95rem;font-weight:600;">Sócios (<span th:text="${#lists.size(socios)}">0</span>)</h5>
                             <div th:if="${#lists.isEmpty(socios)}" class="alert-theme-info">
-                                <i class="bi bi-info-circle"></i> Nenhum socio cadastrado.
+                                <i class="bi bi-info-circle"></i> Nenhum sócio cadastrado.
                             </div>
                             <div th:unless="${#lists.isEmpty(socios)}">
                                 <table class="table-theme" style="width:100%">
@@ -171,14 +272,14 @@
                                         <tr>
                                             <th>CPF/CNPJ</th>
                                             <th>Nome</th>
-                                            <th>Participacao (%)</th>
+                                            <th>Participação (%)</th>
                                             <th>Data Entrada</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         <tr th:each="socio : ${socios}">
                                             <td th:text="${socio.cpfCnpj}">000.000.000-00</td>
-                                            <td th:text="${socio.nome}">Nome do Socio</td>
+                                            <td th:text="${socio.nome}">Nome do Sócio</td>
                                             <td th:text="${socio.participacao != null ? socio.participacao + '%' : 'N/D'}">0%</td>
                                             <td th:text="${socio.dataEntrada != null ? #temporals.format(socio.dataEntrada, 'dd/MM/yyyy') : 'N/D'}">00/00/0000</td>
                                         </tr>
@@ -186,23 +287,23 @@
                                 </table>
                             </div>
 
-                            <h5 class="mb-3 mt-4" style="font-size:0.95rem;font-weight:600;">Participacoes em Outras Empresas (<span th:text="${#lists.size(participacoes)}">0</span>)</h5>
+                            <h5 class="mb-3 mt-4" style="font-size:0.95rem;font-weight:600;">Participações em Outras Empresas (<span th:text="${#lists.size(participacoes)}">0</span>)</h5>
                             <div th:if="${#lists.isEmpty(participacoes)}" class="alert-theme-info">
-                                <i class="bi bi-info-circle"></i> Nenhuma participacao cadastrada.
+                                <i class="bi bi-info-circle"></i> Nenhuma participação cadastrada.
                             </div>
                             <div th:unless="${#lists.isEmpty(participacoes)}">
                                 <table class="table-theme" style="width:100%">
                                     <thead>
                                         <tr>
                                             <th>CNPJ</th>
-                                            <th>Razao Social</th>
-                                            <th>Participacao (%)</th>
+                                            <th>Razão Social</th>
+                                            <th>Participação (%)</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         <tr th:each="participacao : ${participacoes}">
                                             <td th:text="${participacao.cnpjParticipada}">00.000.000/0000-00</td>
-                                            <td th:text="${participacao.razaoSocialParticipada}">Razao Social</td>
+                                            <td th:text="${participacao.razaoSocialParticipada}">Razão Social</td>
                                             <td th:text="${participacao.percentual != null ? participacao.percentual + '%' : 'N/D'}">0%</td>
                                         </tr>
                                     </tbody>
@@ -210,9 +311,9 @@
                             </div>
                         </div>
 
-                        <!-- Tab 3: Restricoes -->
+                        <!-- Tab 3: Restrições -->
                         <div class="tab-pane fade" id="restricoes" role="tabpanel">
-                            <h4 class="mb-4" style="font-size:1.1rem;"><i class="bi bi-exclamation-triangle text-gold"></i> Restricoes Financeiras</h4>
+                            <h4 class="mb-4" style="font-size:1.1rem;"><i class="bi bi-exclamation-triangle text-gold"></i> Restrições Financeiras</h4>
 
                             <!-- Score Summary -->
                             <div style="display:flex;gap:1rem;margin-bottom:1.5rem;">
@@ -230,7 +331,7 @@
                                 </div>
                                 <div class="stat-card" style="flex:1">
                                     <div class="stat-card-info">
-                                        <span class="stat-card-label">Total de Restricoes</span>
+                                        <span class="stat-card-label">Total de Restrições</span>
                                         <span class="stat-card-value" style="color:var(--danger);"
                                               th:text="${#lists.size(pefins) + #lists.size(protestos) + #lists.size(acoesJudiciais) + #lists.size(cheques)}">0</span>
                                     </div>
@@ -238,112 +339,238 @@
                                 </div>
                             </div>
 
-                            <!-- PEFIN -->
+                            <!-- ========== PEFIN ========== -->
                             <h5 class="mb-3" style="font-size:0.95rem;font-weight:600;">PEFIN (<span th:text="${#lists.size(pefins)}">0</span>)</h5>
-                            <div th:if="${#lists.isEmpty(pefins)}" class="alert-theme-success" style="margin-bottom:1.25rem;">
-                                <i class="bi bi-check-circle"></i> Nenhuma ocorrencia.
+                            <div th:if="${#lists.isEmpty(pefins)}" class="alert-theme-success" style="margin-bottom:0.75rem;">
+                                <i class="bi bi-check-circle"></i> Nenhuma ocorrência.
                             </div>
-                            <div th:unless="${#lists.isEmpty(pefins)}" style="margin-bottom:1.25rem;">
+                            <div th:unless="${#lists.isEmpty(pefins)}" style="margin-bottom:0.75rem;">
                                 <table class="table-theme" style="width:100%">
                                     <thead>
-                                        <tr><th>Origem</th><th>Valor</th><th>Data</th></tr>
+                                        <tr><th>Origem</th><th>Valor</th><th>Data</th><th style="width:50px;"></th></tr>
                                     </thead>
                                     <tbody>
                                         <tr th:each="pefin : ${pefins}">
                                             <td th:text="${pefin.origem}">Origem</td>
                                             <td>R$ <span th:text="${#numbers.formatDecimal(pefin.valor, 1, 'POINT', 2, 'COMMA')}">0,00</span></td>
                                             <td th:text="${pefin.dataOcorrencia != null ? #temporals.format(pefin.dataOcorrencia, 'dd/MM/yyyy') : 'N/D'}">00/00/0000</td>
+                                            <td>
+                                                <form th:action="@{/analise/{aId}/pefin/{pId}/excluir(aId=${analise.id}, pId=${pefin.id})}" method="post" style="display:inline;">
+                                                    <button type="submit" class="btn-ghost" style="padding:0.15rem 0.4rem;font-size:0.75rem;color:var(--danger);" title="Excluir"
+                                                            onclick="return confirm('Excluir este PEFIN?');">
+                                                        <i class="bi bi-trash"></i>
+                                                    </button>
+                                                </form>
+                                            </td>
                                         </tr>
                                     </tbody>
                                     <tfoot>
                                         <tr>
                                             <th>TOTAL</th>
                                             <th>R$ <span th:text="${#numbers.formatDecimal(totalPefin, 1, 'POINT', 2, 'COMMA')}">0,00</span></th>
-                                            <th></th>
+                                            <th colspan="2"></th>
                                         </tr>
                                     </tfoot>
                                 </table>
                             </div>
+                            <form th:action="@{/analise/{id}/pefin(id=${analise.id})}" method="post" style="margin-bottom:1.5rem;">
+                                <div style="display:flex;gap:0.5rem;align-items:flex-end;flex-wrap:wrap;">
+                                    <div style="flex:2;">
+                                        <label class="form-label-theme" style="font-size:0.75rem;">Origem</label>
+                                        <input type="text" name="origem" class="form-control form-control-theme form-control-sm" placeholder="Ex: Serasa, SPC" required>
+                                    </div>
+                                    <div style="flex:1;">
+                                        <label class="form-label-theme" style="font-size:0.75rem;">Valor (R$)</label>
+                                        <input type="number" name="valor" class="form-control form-control-theme form-control-sm" step="0.01" min="0" placeholder="0,00" required>
+                                    </div>
+                                    <div style="flex:1;">
+                                        <label class="form-label-theme" style="font-size:0.75rem;">Data</label>
+                                        <input type="date" name="dataOcorrencia" class="form-control form-control-theme form-control-sm">
+                                    </div>
+                                    <div>
+                                        <button type="submit" class="btn-gold-outline" style="font-size:0.75rem;padding:0.35rem 0.7rem;">
+                                            <i class="bi bi-plus-circle"></i> Adicionar
+                                        </button>
+                                    </div>
+                                </div>
+                            </form>
 
-                            <!-- Protestos -->
+                            <!-- ========== Protestos ========== -->
                             <h5 class="mb-3" style="font-size:0.95rem;font-weight:600;">Protestos (<span th:text="${#lists.size(protestos)}">0</span>)</h5>
-                            <div th:if="${#lists.isEmpty(protestos)}" class="alert-theme-success" style="margin-bottom:1.25rem;">
-                                <i class="bi bi-check-circle"></i> Nenhuma ocorrencia.
+                            <div th:if="${#lists.isEmpty(protestos)}" class="alert-theme-success" style="margin-bottom:0.75rem;">
+                                <i class="bi bi-check-circle"></i> Nenhuma ocorrência.
                             </div>
-                            <div th:unless="${#lists.isEmpty(protestos)}" style="margin-bottom:1.25rem;">
+                            <div th:unless="${#lists.isEmpty(protestos)}" style="margin-bottom:0.75rem;">
                                 <table class="table-theme" style="width:100%">
                                     <thead>
-                                        <tr><th>Cartorio</th><th>Valor</th><th>Data</th></tr>
+                                        <tr><th>Cartório</th><th>Valor</th><th>Data</th><th style="width:50px;"></th></tr>
                                     </thead>
                                     <tbody>
                                         <tr th:each="protesto : ${protestos}">
-                                            <td th:text="${protesto.cartorio}">Cartorio</td>
+                                            <td th:text="${protesto.cartorio}">Cartório</td>
                                             <td>R$ <span th:text="${#numbers.formatDecimal(protesto.valor, 1, 'POINT', 2, 'COMMA')}">0,00</span></td>
                                             <td th:text="${protesto.dataProtesto != null ? #temporals.format(protesto.dataProtesto, 'dd/MM/yyyy') : 'N/D'}">00/00/0000</td>
+                                            <td>
+                                                <form th:action="@{/analise/{aId}/protesto/{pId}/excluir(aId=${analise.id}, pId=${protesto.id})}" method="post" style="display:inline;">
+                                                    <button type="submit" class="btn-ghost" style="padding:0.15rem 0.4rem;font-size:0.75rem;color:var(--danger);" title="Excluir"
+                                                            onclick="return confirm('Excluir este protesto?');">
+                                                        <i class="bi bi-trash"></i>
+                                                    </button>
+                                                </form>
+                                            </td>
                                         </tr>
                                     </tbody>
                                     <tfoot>
                                         <tr>
                                             <th>TOTAL</th>
                                             <th>R$ <span th:text="${#numbers.formatDecimal(totalProtesto, 1, 'POINT', 2, 'COMMA')}">0,00</span></th>
-                                            <th></th>
+                                            <th colspan="2"></th>
                                         </tr>
                                     </tfoot>
                                 </table>
                             </div>
+                            <form th:action="@{/analise/{id}/protesto(id=${analise.id})}" method="post" style="margin-bottom:1.5rem;">
+                                <div style="display:flex;gap:0.5rem;align-items:flex-end;flex-wrap:wrap;">
+                                    <div style="flex:2;">
+                                        <label class="form-label-theme" style="font-size:0.75rem;">Cartório</label>
+                                        <input type="text" name="cartorio" class="form-control form-control-theme form-control-sm" placeholder="Nome do cartório" required>
+                                    </div>
+                                    <div style="flex:1;">
+                                        <label class="form-label-theme" style="font-size:0.75rem;">Valor (R$)</label>
+                                        <input type="number" name="valor" class="form-control form-control-theme form-control-sm" step="0.01" min="0" placeholder="0,00" required>
+                                    </div>
+                                    <div style="flex:1;">
+                                        <label class="form-label-theme" style="font-size:0.75rem;">Data</label>
+                                        <input type="date" name="dataProtesto" class="form-control form-control-theme form-control-sm">
+                                    </div>
+                                    <div>
+                                        <button type="submit" class="btn-gold-outline" style="font-size:0.75rem;padding:0.35rem 0.7rem;">
+                                            <i class="bi bi-plus-circle"></i> Adicionar
+                                        </button>
+                                    </div>
+                                </div>
+                            </form>
 
-                            <!-- Acoes Judiciais -->
-                            <h5 class="mb-3" style="font-size:0.95rem;font-weight:600;">Acoes Judiciais (<span th:text="${#lists.size(acoesJudiciais)}">0</span>)</h5>
-                            <div th:if="${#lists.isEmpty(acoesJudiciais)}" class="alert-theme-success" style="margin-bottom:1.25rem;">
-                                <i class="bi bi-check-circle"></i> Nenhuma ocorrencia.
+                            <!-- ========== Ações Judiciais ========== -->
+                            <h5 class="mb-3" style="font-size:0.95rem;font-weight:600;">Ações Judiciais (<span th:text="${#lists.size(acoesJudiciais)}">0</span>)</h5>
+                            <div th:if="${#lists.isEmpty(acoesJudiciais)}" class="alert-theme-success" style="margin-bottom:0.75rem;">
+                                <i class="bi bi-check-circle"></i> Nenhuma ocorrência.
                             </div>
-                            <div th:unless="${#lists.isEmpty(acoesJudiciais)}" style="margin-bottom:1.25rem;">
+                            <div th:unless="${#lists.isEmpty(acoesJudiciais)}" style="margin-bottom:0.75rem;">
                                 <table class="table-theme" style="width:100%">
                                     <thead>
-                                        <tr><th>Tipo</th><th>Vara</th><th>Data</th></tr>
+                                        <tr><th>Tipo</th><th>Vara</th><th>Valor</th><th>Data</th><th style="width:50px;"></th></tr>
                                     </thead>
                                     <tbody>
                                         <tr th:each="acao : ${acoesJudiciais}">
                                             <td th:text="${acao.tipo}">Tipo</td>
                                             <td th:text="${acao.vara}">Vara</td>
+                                            <td th:if="${acao.valor != null}">R$ <span th:text="${#numbers.formatDecimal(acao.valor, 1, 'POINT', 2, 'COMMA')}">0,00</span></td>
+                                            <td th:unless="${acao.valor != null}">N/D</td>
                                             <td th:text="${acao.dataDistribuicao != null ? #temporals.format(acao.dataDistribuicao, 'dd/MM/yyyy') : 'N/D'}">00/00/0000</td>
+                                            <td>
+                                                <form th:action="@{/analise/{aId}/acao-judicial/{acId}/excluir(aId=${analise.id}, acId=${acao.id})}" method="post" style="display:inline;">
+                                                    <button type="submit" class="btn-ghost" style="padding:0.15rem 0.4rem;font-size:0.75rem;color:var(--danger);" title="Excluir"
+                                                            onclick="return confirm('Excluir esta ação judicial?');">
+                                                        <i class="bi bi-trash"></i>
+                                                    </button>
+                                                </form>
+                                            </td>
                                         </tr>
                                     </tbody>
                                 </table>
                             </div>
+                            <form th:action="@{/analise/{id}/acao-judicial(id=${analise.id})}" method="post" style="margin-bottom:1.5rem;">
+                                <div style="display:flex;gap:0.5rem;align-items:flex-end;flex-wrap:wrap;">
+                                    <div style="flex:2;">
+                                        <label class="form-label-theme" style="font-size:0.75rem;">Tipo</label>
+                                        <input type="text" name="tipo" class="form-control form-control-theme form-control-sm" placeholder="Ex: Execução Fiscal" required>
+                                    </div>
+                                    <div style="flex:1.5;">
+                                        <label class="form-label-theme" style="font-size:0.75rem;">Vara</label>
+                                        <input type="text" name="vara" class="form-control form-control-theme form-control-sm" placeholder="Vara">
+                                    </div>
+                                    <div style="flex:1;">
+                                        <label class="form-label-theme" style="font-size:0.75rem;">Valor (R$)</label>
+                                        <input type="number" name="valor" class="form-control form-control-theme form-control-sm" step="0.01" min="0" placeholder="0,00">
+                                    </div>
+                                    <div style="flex:1;">
+                                        <label class="form-label-theme" style="font-size:0.75rem;">Data</label>
+                                        <input type="date" name="dataDistribuicao" class="form-control form-control-theme form-control-sm">
+                                    </div>
+                                    <div>
+                                        <button type="submit" class="btn-gold-outline" style="font-size:0.75rem;padding:0.35rem 0.7rem;">
+                                            <i class="bi bi-plus-circle"></i> Adicionar
+                                        </button>
+                                    </div>
+                                </div>
+                            </form>
 
-                            <!-- Cheques -->
+                            <!-- ========== Cheques ========== -->
                             <h5 class="mb-3" style="font-size:0.95rem;font-weight:600;">Cheques Sem Fundos (<span th:text="${#lists.size(cheques)}">0</span>)</h5>
-                            <div th:if="${#lists.isEmpty(cheques)}" class="alert-theme-success" style="margin-bottom:1.25rem;">
-                                <i class="bi bi-check-circle"></i> Nenhuma ocorrencia.
+                            <div th:if="${#lists.isEmpty(cheques)}" class="alert-theme-success" style="margin-bottom:0.75rem;">
+                                <i class="bi bi-check-circle"></i> Nenhuma ocorrência.
                             </div>
-                            <div th:unless="${#lists.isEmpty(cheques)}" style="margin-bottom:1.25rem;">
+                            <div th:unless="${#lists.isEmpty(cheques)}" style="margin-bottom:0.75rem;">
                                 <table class="table-theme" style="width:100%">
                                     <thead>
-                                        <tr><th>Banco</th><th>Agencia</th><th>Valor</th><th>Data</th></tr>
+                                        <tr><th>Banco</th><th>Agência</th><th>Valor</th><th>Data</th><th style="width:50px;"></th></tr>
                                     </thead>
                                     <tbody>
                                         <tr th:each="cheque : ${cheques}">
                                             <td th:text="${cheque.banco}">Banco</td>
-                                            <td th:text="${cheque.agencia}">Agencia</td>
+                                            <td th:text="${cheque.agencia}">Agência</td>
                                             <td>R$ <span th:text="${#numbers.formatDecimal(cheque.valor, 1, 'POINT', 2, 'COMMA')}">0,00</span></td>
                                             <td th:text="${cheque.dataOcorrencia != null ? #temporals.format(cheque.dataOcorrencia, 'dd/MM/yyyy') : 'N/D'}">00/00/0000</td>
+                                            <td>
+                                                <form th:action="@{/analise/{aId}/cheque/{cId}/excluir(aId=${analise.id}, cId=${cheque.id})}" method="post" style="display:inline;">
+                                                    <button type="submit" class="btn-ghost" style="padding:0.15rem 0.4rem;font-size:0.75rem;color:var(--danger);" title="Excluir"
+                                                            onclick="return confirm('Excluir este cheque?');">
+                                                        <i class="bi bi-trash"></i>
+                                                    </button>
+                                                </form>
+                                            </td>
                                         </tr>
                                     </tbody>
                                     <tfoot>
                                         <tr>
                                             <th colspan="2">TOTAL</th>
                                             <th>R$ <span th:text="${#numbers.formatDecimal(totalCheque, 1, 'POINT', 2, 'COMMA')}">0,00</span></th>
-                                            <th></th>
+                                            <th colspan="2"></th>
                                         </tr>
                                     </tfoot>
                                 </table>
                             </div>
+                            <form th:action="@{/analise/{id}/cheque(id=${analise.id})}" method="post" style="margin-bottom:1.5rem;">
+                                <div style="display:flex;gap:0.5rem;align-items:flex-end;flex-wrap:wrap;">
+                                    <div style="flex:1.5;">
+                                        <label class="form-label-theme" style="font-size:0.75rem;">Banco</label>
+                                        <input type="text" name="banco" class="form-control form-control-theme form-control-sm" placeholder="Nome do banco" required>
+                                    </div>
+                                    <div style="flex:1;">
+                                        <label class="form-label-theme" style="font-size:0.75rem;">Agência</label>
+                                        <input type="text" name="agencia" class="form-control form-control-theme form-control-sm" placeholder="Agência">
+                                    </div>
+                                    <div style="flex:1;">
+                                        <label class="form-label-theme" style="font-size:0.75rem;">Valor (R$)</label>
+                                        <input type="number" name="valor" class="form-control form-control-theme form-control-sm" step="0.01" min="0" placeholder="0,00" required>
+                                    </div>
+                                    <div style="flex:1;">
+                                        <label class="form-label-theme" style="font-size:0.75rem;">Data</label>
+                                        <input type="date" name="dataOcorrencia" class="form-control form-control-theme form-control-sm">
+                                    </div>
+                                    <div>
+                                        <button type="submit" class="btn-gold-outline" style="font-size:0.75rem;padding:0.35rem 0.7rem;">
+                                            <i class="bi bi-plus-circle"></i> Adicionar
+                                        </button>
+                                    </div>
+                                </div>
+                            </form>
 
                             <!-- Total Geral -->
                             <div class="alert-theme-danger" style="font-weight:600;">
                                 <i class="bi bi-exclamation-octagon"></i>
-                                TOTAL GERAL DE RESTRICOES:
+                                TOTAL GERAL DE RESTRIÇÕES:
                                 R$ <span th:text="${#numbers.formatDecimal(totalRestricoes, 1, 'POINT', 2, 'COMMA')}">0,00</span>
                             </div>
                         </div>
@@ -354,17 +581,17 @@
 
                             <h5 class="mb-3" style="font-size:0.95rem;font-weight:600;">Dados de Business Intelligence</h5>
                             <div th:if="${#lists.isEmpty(dadosBI)}" class="alert-theme-info" style="margin-bottom:1.25rem;">
-                                <i class="bi bi-info-circle"></i> Nenhum dado de BI disponivel.
+                                <i class="bi bi-info-circle"></i> Nenhum dado de BI disponível.
                             </div>
                             <div th:unless="${#lists.isEmpty(dadosBI)}" style="margin-bottom:1.5rem;">
                                 <table class="table-theme" style="width:100%">
                                     <thead>
                                         <tr>
-                                            <th>Colecao</th>
+                                            <th>Coleção</th>
                                             <th>Valor Vencido</th>
-                                            <th>Credito</th>
+                                            <th>Crédito</th>
                                             <th>Score Interno</th>
-                                            <th>Atraso Medio</th>
+                                            <th>Atraso Médio</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -425,7 +652,7 @@
                                             <th>Tipo</th>
                                             <th>Nome do Arquivo</th>
                                             <th>Data Upload</th>
-                                            <th>Acoes</th>
+                                            <th>Ações</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -445,13 +672,13 @@
                             </div>
                         </div>
 
-                        <!-- Tab 6: Historico -->
+                        <!-- Tab 6: Histórico -->
                         <div class="tab-pane fade" id="historico" role="tabpanel">
-                            <h4 class="mb-4" style="font-size:1.1rem;"><i class="bi bi-clock-history text-gold"></i> Historico da Analise</h4>
+                            <h4 class="mb-4" style="font-size:1.1rem;"><i class="bi bi-clock-history text-gold"></i> Histórico da Análise</h4>
                             <div class="timeline">
                                 <div class="timeline-card">
                                     <h6>
-                                        <i class="bi bi-calendar"></i> Inicio da Analise
+                                        <i class="bi bi-calendar"></i> Início da Análise
                                     </h6>
                                     <p>
                                         <strong>Data:</strong> <span th:text="${analise.dataInicio != null ? #temporals.format(analise.dataInicio, 'dd/MM/yyyy HH:mm') : 'N/D'}">00/00/0000 00:00</span><br>
@@ -461,13 +688,13 @@
                                 </div>
                                 <div th:if="${analise.dataFim != null}" class="timeline-card">
                                     <h6>
-                                        <i class="bi bi-check-circle"></i> Analise Concluida
+                                        <i class="bi bi-check-circle"></i> Análise Concluída
                                     </h6>
                                     <p>
                                         <strong>Data:</strong> <span th:text="${#temporals.format(analise.dataFim, 'dd/MM/yyyy HH:mm')}">00/00/0000 00:00</span><br>
-                                        <strong>Decisao:</strong> <span th:text="${analise.decisao}">APROVADO</span><br>
+                                        <strong>Decisão:</strong> <span th:text="${analise.decisao}">APROVADO</span><br>
                                         <strong>Analista:</strong> <span th:text="${analise.analistaResponsavel}">SISTEMA</span><br>
-                                        <strong>Duracao:</strong> <span th:text="${analise.duracaoHoras + ' horas'}">0 horas</span>
+                                        <strong>Duração:</strong> <span th:text="${analise.duracaoHoras + ' horas'}">0 horas</span>
                                     </p>
                                 </div>
                             </div>
@@ -480,7 +707,7 @@
             <div class="col-md-4">
                 <div class="decision-panel animate-in">
                     <div class="panel-header">
-                        <i class="bi bi-clipboard-check"></i> Decisao de Credito
+                        <i class="bi bi-clipboard-check"></i> Decisão de Crédito
                     </div>
                     <div class="panel-body">
                         <!-- Score Badge -->
@@ -518,7 +745,7 @@
                                 <label class="form-label-theme">Parecer:</label>
                                 <select name="decisao" id="decisaoSelect" class="form-select form-select-theme" required>
                                     <option value="">Selecione...</option>
-                                    <option value="APROVADO">Aprovado sem restricao</option>
+                                    <option value="APROVADO">Aprovado sem restrição</option>
                                     <option value="LIMITADO">Limitado a R$ X</option>
                                     <option value="REPROVADO">Reprovar</option>
                                 </select>
@@ -534,7 +761,7 @@
                             <div class="mb-3">
                                 <label class="form-label-theme">Justificativa:</label>
                                 <textarea name="justificativa" class="form-control form-control-theme" rows="4"
-                                          required placeholder="Descreva os motivos da sua decisao..."></textarea>
+                                          required placeholder="Descreva os motivos da sua decisão..."></textarea>
                             </div>
 
                             <hr style="border-color:var(--border-light);">
@@ -546,7 +773,7 @@
                             </div>
 
                             <button type="submit" class="btn-gold" style="width:100%;padding:0.75rem;font-size:1rem;">
-                                <i class="bi bi-check-circle"></i> Concluir Analise
+                                <i class="bi bi-check-circle"></i> Concluir Análise
                             </button>
                         </form>
                     </div>
@@ -571,10 +798,23 @@
 
         document.getElementById('decisionForm').addEventListener('submit', function(e) {
             const decisao = document.getElementById('decisaoSelect').value;
-            if (!confirm('Tem certeza que deseja concluir a analise com a decisao: ' + decisao + '?')) {
+            if (!confirm('Tem certeza que deseja concluir a análise com a decisão: ' + decisao + '?')) {
                 e.preventDefault();
             }
         });
+
+        // Cross-tab expand/collapse
+        function toggleDetail(index) {
+            const details = document.querySelectorAll('.detail-' + index);
+            const chevron = document.getElementById('chevron-' + index);
+            const isVisible = details.length > 0 && details[0].style.display !== 'none';
+            details.forEach(function(row) {
+                row.style.display = isVisible ? 'none' : 'table-row';
+            });
+            if (chevron) {
+                chevron.style.transform = isVisible ? 'rotate(0deg)' : 'rotate(90deg)';
+            }
+        }
     </script>
 </body>
 </html>

@@ -16,8 +16,9 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.List;
+import java.util.*;
 
 /**
  * AnaliseController - Controlador do wizard de análise de crédito.
@@ -70,6 +71,9 @@ public class AnaliseController {
 
     @Autowired
     private DocumentoRepository documentoRepository;
+
+    @Autowired
+    private PedidoRepository pedidoRepository;
 
     @Autowired
     private ScoringService scoringService;
@@ -145,6 +149,76 @@ public class AnaliseController {
             tempAnalise.setDataFim(LocalDateTime.now());
             parecerPreview = parecerService.gerarParecerCRM(tempAnalise);
         }
+
+        // Build cross-tab: all pedidos from grupo econômico in same coleção
+        List<String> marcas = new ArrayList<>();
+        List<Map<String, Object>> crossTabRows = new ArrayList<>();
+        Map<String, BigDecimal> totalPorMarca = new LinkedHashMap<>();
+
+        if (pedido.getColecao() != null) {
+            List<Pedido> pedidosGrupo = pedidoRepository.findByGrupoEconomicoIdAndColecao(
+                    grupo.getId(), pedido.getColecao());
+
+            // Collect distinct marcas (sorted)
+            TreeSet<String> marcasSet = new TreeSet<>();
+            for (Pedido p : pedidosGrupo) {
+                marcasSet.add(p.getMarca() != null ? p.getMarca() : "Sem Marca");
+            }
+            marcas.addAll(marcasSet);
+
+            // Group pedidos by CNPJ
+            Map<String, List<Pedido>> pedidosPorCnpj = new LinkedHashMap<>();
+            for (Pedido p : pedidosGrupo) {
+                String cnpj = p.getCliente().getCnpj();
+                pedidosPorCnpj.computeIfAbsent(cnpj, k -> new ArrayList<>()).add(p);
+            }
+
+            // Build rows: one per CNPJ with valor totals per marca + individual pedidos
+            for (Map.Entry<String, List<Pedido>> entry : pedidosPorCnpj.entrySet()) {
+                Map<String, Object> row = new LinkedHashMap<>();
+                row.put("cnpj", entry.getKey());
+                row.put("razaoSocial", entry.getValue().get(0).getCliente().getRazaoSocial());
+
+                Map<String, BigDecimal> valoresPorMarca = new LinkedHashMap<>();
+                BigDecimal totalCnpjRow = BigDecimal.ZERO;
+                for (String m : marcas) {
+                    valoresPorMarca.put(m, BigDecimal.ZERO);
+                }
+                for (Pedido p : entry.getValue()) {
+                    String m = p.getMarca() != null ? p.getMarca() : "Sem Marca";
+                    valoresPorMarca.merge(m, p.getValor(), BigDecimal::add);
+                    totalCnpjRow = totalCnpjRow.add(p.getValor());
+                }
+                row.put("valoresPorMarca", valoresPorMarca);
+                row.put("total", totalCnpjRow);
+
+                List<Map<String, Object>> pedidosDetalhe = new ArrayList<>();
+                for (Pedido p : entry.getValue()) {
+                    Map<String, Object> pedidoInfo = new LinkedHashMap<>();
+                    pedidoInfo.put("numero", p.getNumero());
+                    pedidoInfo.put("valor", p.getValor());
+                    pedidoInfo.put("marca", p.getMarca() != null ? p.getMarca() : "Sem Marca");
+                    pedidoInfo.put("data", p.getData());
+                    pedidoInfo.put("bloqueio", p.getBloqueio());
+                    pedidoInfo.put("condicaoPagamento", p.getCondicaoPagamento());
+                    pedidosDetalhe.add(pedidoInfo);
+                }
+                row.put("pedidosDetalhe", pedidosDetalhe);
+                row.put("pedidosCount", entry.getValue().size());
+
+                crossTabRows.add(row);
+
+                for (String m : marcas) {
+                    totalPorMarca.merge(m, valoresPorMarca.get(m), BigDecimal::add);
+                }
+            }
+        }
+
+        model.addAttribute("marcas", marcas);
+        model.addAttribute("crossTabRows", crossTabRows);
+        model.addAttribute("totalPorMarca", totalPorMarca);
+        BigDecimal grandTotal = totalPorMarca.values().stream().reduce(BigDecimal.ZERO, BigDecimal::add);
+        model.addAttribute("grandTotal", grandTotal);
 
         // Add all data to model
         model.addAttribute("analise", analise);
@@ -266,6 +340,142 @@ public class AnaliseController {
                     "Erro ao concluir análise: " + e.getMessage());
             return "redirect:/analise/" + id;
         }
+    }
+
+    // ==================== CRUD Restricoes ====================
+
+    @PostMapping("/{id}/pefin")
+    public String adicionarPefin(@PathVariable Long id,
+                                 @RequestParam String origem,
+                                 @RequestParam BigDecimal valor,
+                                 @RequestParam(required = false) String dataOcorrencia,
+                                 RedirectAttributes redirectAttributes) {
+        Analise analise = analiseRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Análise não encontrada: " + id));
+        Cliente cliente = clienteRepository.findById(analise.getClienteId()).orElseThrow();
+
+        Pefin pefin = new Pefin();
+        pefin.setCliente(cliente);
+        pefin.setOrigem(origem);
+        pefin.setValor(valor);
+        if (dataOcorrencia != null && !dataOcorrencia.isBlank()) {
+            pefin.setDataOcorrencia(LocalDate.parse(dataOcorrencia));
+        }
+        pefinRepository.save(pefin);
+
+        redirectAttributes.addFlashAttribute("mensagem", "PEFIN adicionado com sucesso.");
+        return "redirect:/analise/" + id + "#restricoes";
+    }
+
+    @PostMapping("/{id}/pefin/{pefinId}/excluir")
+    public String excluirPefin(@PathVariable Long id,
+                               @PathVariable Long pefinId,
+                               RedirectAttributes redirectAttributes) {
+        pefinRepository.deleteById(pefinId);
+        redirectAttributes.addFlashAttribute("mensagem", "PEFIN removido com sucesso.");
+        return "redirect:/analise/" + id + "#restricoes";
+    }
+
+    @PostMapping("/{id}/protesto")
+    public String adicionarProtesto(@PathVariable Long id,
+                                    @RequestParam String cartorio,
+                                    @RequestParam BigDecimal valor,
+                                    @RequestParam(required = false) String dataProtesto,
+                                    RedirectAttributes redirectAttributes) {
+        Analise analise = analiseRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Análise não encontrada: " + id));
+        Cliente cliente = clienteRepository.findById(analise.getClienteId()).orElseThrow();
+
+        Protesto protesto = new Protesto();
+        protesto.setCliente(cliente);
+        protesto.setCartorio(cartorio);
+        protesto.setValor(valor);
+        if (dataProtesto != null && !dataProtesto.isBlank()) {
+            protesto.setDataProtesto(LocalDate.parse(dataProtesto));
+        }
+        protestoRepository.save(protesto);
+
+        redirectAttributes.addFlashAttribute("mensagem", "Protesto adicionado com sucesso.");
+        return "redirect:/analise/" + id + "#restricoes";
+    }
+
+    @PostMapping("/{id}/protesto/{protestoId}/excluir")
+    public String excluirProtesto(@PathVariable Long id,
+                                  @PathVariable Long protestoId,
+                                  RedirectAttributes redirectAttributes) {
+        protestoRepository.deleteById(protestoId);
+        redirectAttributes.addFlashAttribute("mensagem", "Protesto removido com sucesso.");
+        return "redirect:/analise/" + id + "#restricoes";
+    }
+
+    @PostMapping("/{id}/acao-judicial")
+    public String adicionarAcaoJudicial(@PathVariable Long id,
+                                        @RequestParam String tipo,
+                                        @RequestParam(required = false) String vara,
+                                        @RequestParam(required = false) BigDecimal valor,
+                                        @RequestParam(required = false) String dataDistribuicao,
+                                        RedirectAttributes redirectAttributes) {
+        Analise analise = analiseRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Análise não encontrada: " + id));
+        Cliente cliente = clienteRepository.findById(analise.getClienteId()).orElseThrow();
+
+        AcaoJudicial acao = new AcaoJudicial();
+        acao.setCliente(cliente);
+        acao.setTipo(tipo);
+        acao.setVara(vara);
+        if (valor != null) {
+            acao.setValor(valor);
+        }
+        if (dataDistribuicao != null && !dataDistribuicao.isBlank()) {
+            acao.setDataDistribuicao(LocalDate.parse(dataDistribuicao));
+        }
+        acaoJudicialRepository.save(acao);
+
+        redirectAttributes.addFlashAttribute("mensagem", "Ação Judicial adicionada com sucesso.");
+        return "redirect:/analise/" + id + "#restricoes";
+    }
+
+    @PostMapping("/{id}/acao-judicial/{acaoId}/excluir")
+    public String excluirAcaoJudicial(@PathVariable Long id,
+                                      @PathVariable Long acaoId,
+                                      RedirectAttributes redirectAttributes) {
+        acaoJudicialRepository.deleteById(acaoId);
+        redirectAttributes.addFlashAttribute("mensagem", "Ação Judicial removida com sucesso.");
+        return "redirect:/analise/" + id + "#restricoes";
+    }
+
+    @PostMapping("/{id}/cheque")
+    public String adicionarCheque(@PathVariable Long id,
+                                  @RequestParam String banco,
+                                  @RequestParam(required = false) String agencia,
+                                  @RequestParam BigDecimal valor,
+                                  @RequestParam(required = false) String dataOcorrencia,
+                                  RedirectAttributes redirectAttributes) {
+        Analise analise = analiseRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Análise não encontrada: " + id));
+        Cliente cliente = clienteRepository.findById(analise.getClienteId()).orElseThrow();
+
+        Cheque cheque = new Cheque();
+        cheque.setCliente(cliente);
+        cheque.setBanco(banco);
+        cheque.setAgencia(agencia);
+        cheque.setValor(valor);
+        if (dataOcorrencia != null && !dataOcorrencia.isBlank()) {
+            cheque.setDataOcorrencia(LocalDate.parse(dataOcorrencia));
+        }
+        chequeRepository.save(cheque);
+
+        redirectAttributes.addFlashAttribute("mensagem", "Cheque adicionado com sucesso.");
+        return "redirect:/analise/" + id + "#restricoes";
+    }
+
+    @PostMapping("/{id}/cheque/{chequeId}/excluir")
+    public String excluirCheque(@PathVariable Long id,
+                                @PathVariable Long chequeId,
+                                RedirectAttributes redirectAttributes) {
+        chequeRepository.deleteById(chequeId);
+        redirectAttributes.addFlashAttribute("mensagem", "Cheque removido com sucesso.");
+        return "redirect:/analise/" + id + "#restricoes";
     }
 
     /**

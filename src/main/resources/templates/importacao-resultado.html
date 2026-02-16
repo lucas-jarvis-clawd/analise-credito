@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Resultado da Importacao</title>
+    <title>Resultado da Importação</title>
     <link rel="stylesheet" th:href="@{/webjars/bootstrap/5.3.2/css/bootstrap.min.css}">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <link rel="stylesheet" th:href="@{/css/theme.css}">
@@ -20,7 +20,7 @@
         <!-- Page Header -->
         <div class="page-header animate-in">
             <div>
-                <h2><i class="bi bi-check2-square"></i> Resultado da Importacao</h2>
+                <h2><i class="bi bi-check2-square"></i> Resultado da Importação</h2>
                 <div class="page-subtitle">Resumo do processamento dos arquivos</div>
             </div>
         </div>
@@ -36,20 +36,20 @@
                 <span th:text="${resultado.status}"></span>
             </h4>
             <p th:if="${resultado.status == 'SUCESSO'}" style="margin:0;font-size:0.875rem;">
-                A importacao foi concluida com sucesso! Todos os registros foram processados.
+                A importação foi concluída com sucesso! Todos os registros foram processados.
             </p>
             <p th:if="${resultado.status == 'SUCESSO_PARCIAL'}" style="margin:0;font-size:0.875rem;">
-                A importacao foi concluida com avisos. Alguns registros podem ter sido ignorados.
+                A importação foi concluída com avisos. Alguns registros podem ter sido ignorados.
             </p>
             <p th:if="${resultado.status == 'ERRO'}" style="margin:0;font-size:0.875rem;">
-                A importacao falhou. Verifique os erros abaixo e tente novamente.
+                A importação falhou. Verifique os erros abaixo e tente novamente.
             </p>
         </div>
 
         <!-- Statistics -->
         <div class="card-theme mb-theme animate-in">
             <div class="card-header-theme">
-                <i class="bi bi-bar-chart-fill"></i> Estatisticas de Importacao
+                <i class="bi bi-bar-chart-fill"></i> Estatísticas de Importação
             </div>
             <div class="card-body">
                 <div class="row" style="gap-y:1rem;">
@@ -123,12 +123,12 @@
         <div th:if="${(resultado.erros == null or resultado.erros.empty) and (resultado.avisos == null or resultado.avisos.empty)}"
              class="alert-theme-success mb-theme animate-in">
             <i class="bi bi-check-circle-fill"></i>
-            Nenhum erro ou aviso reportado. Importacao completamente limpa!
+            Nenhum erro ou aviso reportado. Importação completamente limpa!
         </div>
 
         <div style="display:flex;justify-content:flex-end;gap:0.75rem;margin-bottom:3rem;" class="animate-in">
             <a th:href="@{/importacao}" class="btn-ghost" style="padding:0.65rem 1.5rem;font-size:0.95rem;">
-                <i class="bi bi-arrow-clockwise"></i> Nova Importacao
+                <i class="bi bi-arrow-clockwise"></i> Nova Importação
             </a>
             <a href="/" class="btn-gold" style="padding:0.65rem 1.5rem;font-size:0.95rem;text-decoration:none;">
                 <i class="bi bi-house-fill"></i> Ir para Home
