@@ -44,6 +44,26 @@
             </span>
         </div>
 
+        <!-- SLA e UF Badges -->
+        <div class="card-badges">
+            <!-- SLA Badge -->
+            <span th:if="${grupo.diasEmAnalise != null}"
+                  class="badge-tc"
+                  th:classappend="${grupo.diasEmAnalise >= 3} ? 'bg-danger text-white' : (${grupo.diasEmAnalise >= 1} ? 'bg-warning' : 'bg-secondary text-white')"
+                  th:attr="title=${grupo.diasEmAnalise >= 3} ? 'ATRASADO - SLA excedido' : 'Dias em análise'">
+                <i class="bi bi-clock"></i>
+                <span th:text="${grupo.diasEmAnalise} + ' dia' + (${grupo.diasEmAnalise != 1} ? 's' : '')">0 dias</span>
+            </span>
+
+            <!-- UF Badge -->
+            <span th:if="${grupo.uf != null and !grupo.uf.isEmpty()}"
+                  class="badge-tc"
+                  style="background: var(--tc-primary); color: var(--tc-dark);">
+                <i class="bi bi-geo-alt"></i>
+                <span th:text="${grupo.uf}">SP</span>
+            </span>
+        </div>
+
         <!-- Pior Score do Grupo -->
         <div class="card-badges" th:if="${grupo.piorScore != null}">
             <span class="badge-tc badge-score"

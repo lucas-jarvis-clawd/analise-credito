@@ -161,7 +161,7 @@ public class AcceptanceTest {
         Model model = new ExtendedModelMap();
 
         // View Kanban
-        String viewName = kanbanController.kanban("TODOS", session, model);
+        String viewName = kanbanController.kanban("TODOS", null, null, null, null, session, model);
 
         assertEquals("kanban", viewName, "Should return kanban view name");
         assertNotNull(model.getAttribute("kanbanData"),
@@ -185,19 +185,19 @@ public class AcceptanceTest {
 
         // Test PRAZO filter
         Model model1 = new ExtendedModelMap();
-        kanbanController.kanban("PRAZO", session, model1);
+        kanbanController.kanban("PRAZO", null, null, null, null, session, model1);
         assertEquals("PRAZO", model1.getAttribute("filtro"),
             "Filter should be PRAZO");
 
         // Test NOVO filter
         Model model2 = new ExtendedModelMap();
-        kanbanController.kanban("NOVO", session, model2);
+        kanbanController.kanban("NOVO", null, null, null, null, session, model2);
         assertEquals("NOVO", model2.getAttribute("filtro"),
             "Filter should be NOVO");
 
         // Test TODOS filter (default)
         Model model3 = new ExtendedModelMap();
-        kanbanController.kanban("TODOS", session, model3);
+        kanbanController.kanban("TODOS", null, null, null, null, session, model3);
         assertEquals("TODOS", model3.getAttribute("filtro"),
             "Filter should be TODOS");
     }
@@ -400,7 +400,7 @@ public class AcceptanceTest {
 
         // Step 2: View Kanban
         Model kanbanModel = new ExtendedModelMap();
-        String kanbanView = kanbanController.kanban("TODOS", session, kanbanModel);
+        String kanbanView = kanbanController.kanban("TODOS", null, null, null, null, session, kanbanModel);
         assertEquals("kanban", kanbanView);
 
         // Step 3: View Configuration

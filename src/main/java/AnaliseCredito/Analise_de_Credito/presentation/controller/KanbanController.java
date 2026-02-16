@@ -20,6 +20,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -72,6 +73,10 @@ public class KanbanController {
     @Transactional(readOnly = true)
     @GetMapping("/kanban")
     public String kanban(@RequestParam(required = false, defaultValue = "TODOS") String filtro,
+                         @RequestParam(required = false) String uf,
+                         @RequestParam(required = false) String faixaValor,
+                         @RequestParam(required = false) Integer diasAnalise,
+                         @RequestParam(required = false) String busca,
                         HttpSession session,
                         Model model) {
 
@@ -80,10 +85,35 @@ public class KanbanController {
             perfil = "FINANCEIRO"; // Fallback
         }
 
-        // Buscar todas as análises com fetch join (evita LazyInitializationException)
-        List<Analise> analises = analiseRepository.findAllWithPedidoAndCliente();
+        // Parse faixaValor into min/max BigDecimal
+        BigDecimal valorMin = null;
+        BigDecimal valorMax = null;
 
-        // Aplicar filtro se necessário
+        if (faixaValor != null && !faixaValor.isEmpty()) {
+            switch (faixaValor) {
+                case "ATE_20K":
+                    valorMin = BigDecimal.ZERO;
+                    valorMax = new BigDecimal("20000");
+                    break;
+                case "20K_50K":
+                    valorMin = new BigDecimal("20000");
+                    valorMax = new BigDecimal("50000");
+                    break;
+                case "50K_100K":
+                    valorMin = new BigDecimal("50000");
+                    valorMax = new BigDecimal("100000");
+                    break;
+                case "ACIMA_100K":
+                    valorMin = new BigDecimal("100000");
+                    valorMax = null; // No upper limit
+                    break;
+            }
+        }
+
+        // Buscar análises com filtros aplicados (exceto diasAnalise que é calculado)
+        List<Analise> analises = analiseRepository.findAllWithFiltersAndFetch(uf, valorMin, valorMax, busca);
+
+        // Aplicar filtro de workflow se necessário
         if ("PRAZO".equals(filtro)) {
             analises = analises.stream()
                 .filter(a -> TipoWorkflow.BASE_PRAZO.equals(a.getPedido().getWorkflow()))
@@ -91,6 +121,24 @@ public class KanbanController {
         } else if ("NOVO".equals(filtro)) {
             analises = analises.stream()
                 .filter(a -> TipoWorkflow.CLIENTE_NOVO.equals(a.getPedido().getWorkflow()))
+                .collect(Collectors.toList());
+        }
+
+        // Calcular diasEmAnalise e filtrar por SLA se necessário
+        LocalDateTime hoje = LocalDateTime.now();
+        if (diasAnalise != null) {
+            analises = analises.stream()
+                .filter(a -> {
+                    long dias = java.time.Duration.between(a.getDataInicio(), hoje).toDays();
+                    if (diasAnalise == 0) {
+                        return dias < 1; // Menos de 1 dia
+                    } else if (diasAnalise == 1) {
+                        return dias >= 1 && dias < 3; // 1-2 dias
+                    } else if (diasAnalise == 3) {
+                        return dias >= 3; // 3+ dias (atrasado)
+                    }
+                    return true;
+                })
                 .collect(Collectors.toList());
         }
 
@@ -151,6 +199,12 @@ public class KanbanController {
             StatusWorkflow status = analisePrincipal.getStatusWorkflow();
             TipoWorkflow workflow = analisePrincipal.getPedido().getWorkflow();
 
+            // Calcular diasEmAnalise (da análise principal)
+            Integer diasEmAnalise = (int) java.time.Duration.between(analisePrincipal.getDataInicio(), hoje).toDays();
+
+            // UF do primeiro cliente
+            String ufGrupo = analisesDoGrupo.get(0).getPedido().getCliente().getEstado();
+
             // Construir DTO
             GrupoKanbanDTO grupoDTO = GrupoKanbanDTO.builder()
                 .grupoEconomicoId(grupoId)
@@ -165,6 +219,8 @@ public class KanbanController {
                 .status(status)
                 .workflow(workflow)
                 .analisePrincipalId(analisePrincipal.getId())
+                .diasEmAnalise(diasEmAnalise)
+                .uf(ufGrupo)
                 .build();
 
             gruposKanban.add(grupoDTO);
@@ -190,12 +246,24 @@ public class KanbanController {
             workflowMap.computeIfAbsent(status, k -> new ArrayList<>()).add(grupoDTO);
         }
 
+        // Build UF list for dropdown (distinct states from all clients)
+        List<String> ufs = Arrays.asList("AC", "AL", "AP", "AM", "BA", "CE", "DF", "ES", "GO", "MA",
+                                         "MT", "MS", "MG", "PA", "PB", "PR", "PE", "PI", "RJ", "RN",
+                                         "RS", "RO", "RR", "SC", "SP", "SE", "TO");
+
         // Passar dados ao template
         model.addAttribute("kanbanData", kanbanData);
         model.addAttribute("filtro", filtro);
         model.addAttribute("perfil", perfil);
         model.addAttribute("statusWorkflowValues", StatusWorkflow.values());
         model.addAttribute("tipoWorkflowValues", TipoWorkflow.values());
+
+        // Filter state
+        model.addAttribute("ufSelecionado", uf);
+        model.addAttribute("faixaValorSelecionado", faixaValor);
+        model.addAttribute("diasAnaliseSelecionado", diasAnalise);
+        model.addAttribute("buscaSelecionado", busca != null ? busca : "");
+        model.addAttribute("ufs", ufs);
 
         // Passar enums individuais para evitar uso de T() no template
         model.addAttribute("BASE_PRAZO", TipoWorkflow.BASE_PRAZO);

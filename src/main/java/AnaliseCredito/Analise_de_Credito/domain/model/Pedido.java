@@ -1,5 +1,6 @@
 package AnaliseCredito.Analise_de_Credito.domain.model;
 
+import AnaliseCredito.Analise_de_Credito.domain.enums.TipoOperacao;
 import AnaliseCredito.Analise_de_Credito.domain.enums.TipoWorkflow;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
@@ -63,6 +64,25 @@ public class Pedido {
      * Coleção no formato AAAAMM (ex: 202601)
      */
     private Integer colecao;
+
+    /**
+     * Nome da coleção (ex: "Verão 2026", "Inverno 2025")
+     */
+    @Column(name = "nome_colecao", length = 50)
+    private String nomeColecao;
+
+    /**
+     * Tipo de operação comercial
+     */
+    @Enumerated(EnumType.STRING)
+    @Column(name = "tipo_operacao", length = 20)
+    private TipoOperacao tipoOperacao;
+
+    /**
+     * Flag indicando se pedido é sazonal (alta temporada)
+     */
+    @Column(name = "pedido_sazonal")
+    private Boolean pedidoSazonal;
 
     // ========== Bloqueio e Workflow ==========
 

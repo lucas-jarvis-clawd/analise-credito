@@ -116,6 +116,38 @@ public class Configuracao {
     @Column(name = "restricoes_aprovacao_gestor", nullable = false)
     private Integer restricoesAprovacaoGestor = 5;
 
+    // ========== Configurações de Sazonalidade ==========
+
+    /**
+     * Se true, considera sazonalidade nos cálculos de alerta
+     */
+    @Column(name = "considerar_sazonalidade", nullable = false)
+    private Boolean considerarSazonalidade = true;
+
+    /**
+     * Multiplicador para alta temporada (ex: 1.3 = 30% a mais é normal)
+     */
+    @Column(name = "multiplicador_alta_temporada", precision = 5, scale = 2)
+    private BigDecimal multiplicadorAltaTemporada = new BigDecimal("1.30");
+
+    /**
+     * Multiplicador para baixa temporada (ex: 0.8 = 20% a menos é normal)
+     */
+    @Column(name = "multiplicador_baixa_temporada", precision = 5, scale = 2)
+    private BigDecimal multiplicadorBaixaTemporada = new BigDecimal("0.80");
+
+    /**
+     * Mês de início do verão (formato "MM", ex: "09" = setembro)
+     */
+    @Column(name = "mes_inicio_verao", length = 2)
+    private String mesInicioVerao = "09";
+
+    /**
+     * Mês de fim do verão (formato "MM", ex: "02" = fevereiro)
+     */
+    @Column(name = "mes_fim_verao", length = 2)
+    private String mesFimVerao = "02";
+
     // ========== Métodos auxiliares ==========
 
     /**

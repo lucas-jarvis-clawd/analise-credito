@@ -94,6 +94,16 @@
             padding: 0.4rem;
         }
 
+        .trend-indicator {
+            margin-top: 0.5rem;
+            font-size: 0.9rem;
+        }
+
+        .trend-indicator .badge {
+            padding: 0.4rem 0.8rem;
+            font-weight: 600;
+        }
+
         .parecer-box {
             background-color: #f8f9fa;
             border-left: 3px solid #0d6efd;
@@ -150,6 +160,26 @@
                     <strong>CNPJ:</strong> <span th:text="${cliente.cnpj}">00.000.000/0000-00</span>
                     <span class="ms-3"><strong>Pedido:</strong> <span th:text="${pedido.numero}">000000</span></span>
                     <span class="ms-3"><strong>Valor:</strong> R$ <span th:text="${#numbers.formatDecimal(pedido.valor, 1, 'POINT', 2, 'COMMA')}">0,00</span></span>
+                </p>
+                <!-- Informações Sazonais -->
+                <p class="text-muted mb-0 mt-1" th:if="${pedido.nomeColecao != null || pedido.tipoOperacao != null || pedido.pedidoSazonal != null}">
+                    <span th:if="${pedido.nomeColecao != null}">
+                        <strong>Coleção:</strong> <span th:text="${pedido.nomeColecao}">Verão 2026</span>
+                    </span>
+                    <span th:if="${pedido.tipoOperacao != null}" class="ms-3">
+                        <strong>Tipo:</strong>
+                        <span class="badge"
+                              th:classappend="${pedido.tipoOperacao.name() == 'REPOSICAO'} ? 'bg-success' :
+                                             (${pedido.tipoOperacao.name() == 'LANCAMENTO'} ? 'bg-info' : 'bg-warning text-dark')"
+                              th:text="${pedido.tipoOperacao}">
+                            REPOSICAO
+                        </span>
+                    </span>
+                    <span th:if="${pedido.pedidoSazonal != null && pedido.pedidoSazonal}" class="ms-3">
+                        <span class="badge bg-primary">
+                            <i class="bi bi-sun"></i> Pedido Sazonal
+                        </span>
+                    </span>
                 </p>
             </div>
         </div>
@@ -768,6 +798,19 @@
                             <div th:unless="${cliente.scoreBoaVista != null}"
                                  class="score-badge d-inline-block score-baixo">N/D</div>
                             <div class="text-muted small mt-2">Score Boa Vista</div>
+
+                            <!-- Trend Indicator -->
+                            <div class="trend-indicator" th:if="${dadosBIRecente != null && dadosBIRecente.tendencia != null}">
+                                <span th:if="${dadosBIRecente.tendencia.name() == 'MELHORANDO'}" class="badge bg-success">
+                                    <i class="bi bi-arrow-up-right"></i> MELHORANDO
+                                </span>
+                                <span th:if="${dadosBIRecente.tendencia.name() == 'DETERIORANDO'}" class="badge bg-danger">
+                                    <i class="bi bi-arrow-down-right"></i> PIORANDO
+                                </span>
+                                <span th:if="${dadosBIRecente.tendencia.name() == 'ESTAVEL'}" class="badge bg-secondary">
+                                    <i class="bi bi-dash"></i> ESTÁVEL
+                                </span>
+                            </div>
                         </div>
 
                         <!-- Limites -->
@@ -818,7 +861,7 @@
                             <!-- Parecer CRM Preview (only for CLIENTE_NOVO) -->
                             <div th:if="${parecerPreview != null}" class="mb-3">
                                 <label class="form-label fw-bold">Preview Parecer CRM:</label>
-                                <div class="parecer-box" th:text="${parecerPreview}">Parecer...</div>
+                                <pre th:text="${parecerPreview}" class="parecer-box" style="white-space: pre-wrap; font-family: monospace; font-size: 0.75rem; line-height: 1.4; margin: 0;">Parecer...</pre>
                             </div>
 
                             <button type="submit" class="btn btn-tc btn-tc-primary w-100 btn-lg">

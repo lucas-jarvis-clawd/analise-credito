@@ -82,6 +82,94 @@
                 </div>
             </div>
 
+            <!-- Filtros Operacionais -->
+            <div class="row mb-4">
+                <div class="col">
+                    <div class="card-tc">
+                        <div class="card-tc-header">
+                            <h5 class="mb-0">
+                                <i class="bi bi-funnel"></i> Filtros Operacionais
+                                <span th:if="${ufSelecionado != null or faixaValorSelecionado != null or diasAnaliseSelecionado != null or !buscaSelecionado.isEmpty()}"
+                                      class="badge-tc badge-info ms-2"
+                                      style="font-size: 0.7rem;">
+                                    Filtros Ativos
+                                </span>
+                            </h5>
+                        </div>
+                        <div class="card-tc-body" style="padding: 1.25rem;">
+                            <form method="get" th:action="@{/analise/kanban}" id="filterForm">
+                                <input type="hidden" name="filtro" th:value="${filtro}">
+
+                                <div class="row g-3">
+                                    <!-- UF Filter -->
+                                    <div class="col-md-2">
+                                        <label class="form-label-tc">
+                                            <i class="bi bi-map"></i> Estado (UF)
+                                        </label>
+                                        <select name="uf" class="form-select form-control-tc" th:value="${ufSelecionado}">
+                                            <option value="">Todos</option>
+                                            <option th:each="estado : ${ufs}"
+                                                    th:value="${estado}"
+                                                    th:text="${estado}"
+                                                    th:selected="${estado == ufSelecionado}">SP</option>
+                                        </select>
+                                    </div>
+
+                                    <!-- Faixa de Valor Filter -->
+                                    <div class="col-md-3">
+                                        <label class="form-label-tc">
+                                            <i class="bi bi-currency-dollar"></i> Faixa de Valor
+                                        </label>
+                                        <select name="faixaValor" class="form-select form-control-tc" th:value="${faixaValorSelecionado}">
+                                            <option value="">Todos os valores</option>
+                                            <option value="ATE_20K" th:selected="${faixaValorSelecionado == 'ATE_20K'}">Até R$ 20.000</option>
+                                            <option value="20K_50K" th:selected="${faixaValorSelecionado == '20K_50K'}">R$ 20.000 - R$ 50.000</option>
+                                            <option value="50K_100K" th:selected="${faixaValorSelecionado == '50K_100K'}">R$ 50.000 - R$ 100.000</option>
+                                            <option value="ACIMA_100K" th:selected="${faixaValorSelecionado == 'ACIMA_100K'}">Acima de R$ 100.000</option>
+                                        </select>
+                                    </div>
+
+                                    <!-- SLA/Dias em Análise Filter -->
+                                    <div class="col-md-2">
+                                        <label class="form-label-tc">
+                                            <i class="bi bi-clock-history"></i> SLA (Dias)
+                                        </label>
+                                        <select name="diasAnalise" class="form-select form-control-tc" th:value="${diasAnaliseSelecionado}">
+                                            <option value="">Todos</option>
+                                            <option value="0" th:selected="${diasAnaliseSelecionado != null and diasAnaliseSelecionado == 0}">Menos de 1 dia</option>
+                                            <option value="1" th:selected="${diasAnaliseSelecionado != null and diasAnaliseSelecionado == 1}">1-2 dias</option>
+                                            <option value="3" th:selected="${diasAnaliseSelecionado != null and diasAnaliseSelecionado == 3}">3+ dias (Atrasado)</option>
+                                        </select>
+                                    </div>
+
+                                    <!-- Search Filter -->
+                                    <div class="col-md-3">
+                                        <label class="form-label-tc">
+                                            <i class="bi bi-search"></i> Buscar
+                                        </label>
+                                        <input type="text"
+                                               name="busca"
+                                               class="form-control form-control-tc"
+                                               placeholder="CNPJ ou Razão Social"
+                                               th:value="${buscaSelecionado}">
+                                    </div>
+
+                                    <!-- Action Buttons -->
+                                    <div class="col-md-2 d-flex align-items-end gap-2">
+                                        <button type="submit" class="btn btn-tc btn-tc-primary flex-fill">
+                                            <i class="bi bi-filter"></i> Filtrar
+                                        </button>
+                                        <button type="button" class="btn btn-tc btn-tc-outline" onclick="limparFiltros()" title="Limpar Filtros">
+                                            <i class="bi bi-x-circle"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <!-- Workflow BASE_PRAZO -->
             <div th:if="${filtro == 'TODOS' or filtro == 'PRAZO'}" class="kanban-secao animar-slide-up">
                 <div class="kanban-titulo-workflow">
@@ -310,6 +398,11 @@
                 alert('❌ Erro ao atualizar status');
                 window.location.reload();
             });
+        }
+
+        function limparFiltros() {
+            const filtro = new URLSearchParams(window.location.search).get('filtro') || 'TODOS';
+            window.location.href = '/analise/kanban?filtro=' + filtro;
         }
     </script>
 </body>

@@ -2,6 +2,7 @@ package AnaliseCredito.Analise_de_Credito.infrastructure.config;
 
 import AnaliseCredito.Analise_de_Credito.domain.enums.StatusWorkflow;
 import AnaliseCredito.Analise_de_Credito.domain.enums.TipoCliente;
+import AnaliseCredito.Analise_de_Credito.domain.enums.TipoOperacao;
 import AnaliseCredito.Analise_de_Credito.domain.enums.TipoWorkflow;
 import AnaliseCredito.Analise_de_Credito.domain.model.*;
 import AnaliseCredito.Analise_de_Credito.infrastructure.persistence.*;
@@ -186,6 +187,41 @@ public class DataInitializer implements CommandLineRunner {
         pedido.setCondicaoPagamento("30/60 dias");
         pedido.setColecao(202601);
         pedido.calcularWorkflow(); // Calcula workflow baseado no bloqueio
+
+        // Add seasonal data based on pedido number
+        switch (numero) {
+            case "PED-001":
+                pedido.setNomeColecao("Verão 2026");
+                pedido.setTipoOperacao(TipoOperacao.LANCAMENTO);
+                pedido.setPedidoSazonal(true);
+                break;
+            case "PED-002":
+                pedido.setNomeColecao("Verão 2026");
+                pedido.setTipoOperacao(TipoOperacao.REPOSICAO);
+                pedido.setPedidoSazonal(true);
+                break;
+            case "PED-003":
+                pedido.setNomeColecao("Inverno 2025");
+                pedido.setTipoOperacao(TipoOperacao.REPOSICAO);
+                pedido.setPedidoSazonal(false);
+                break;
+            case "PED-004":
+                pedido.setNomeColecao("Verão 2026");
+                pedido.setTipoOperacao(TipoOperacao.OPORTUNIDADE);
+                pedido.setPedidoSazonal(true);
+                break;
+            case "PED-005":
+                pedido.setNomeColecao("Inverno 2025");
+                pedido.setTipoOperacao(TipoOperacao.LANCAMENTO);
+                pedido.setPedidoSazonal(false);
+                break;
+            case "PED-006":
+                pedido.setNomeColecao("Verão 2026");
+                pedido.setTipoOperacao(TipoOperacao.LANCAMENTO);
+                pedido.setPedidoSazonal(true);
+                break;
+        }
+
         return pedido;
     }
 

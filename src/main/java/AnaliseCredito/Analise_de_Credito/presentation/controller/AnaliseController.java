@@ -132,6 +132,17 @@ public class AnaliseController {
 
         // Load financial data
         List<DadosBI> dadosBI = dadosBIRepository.findByGrupoEconomicoId(grupo.getId());
+
+        // Get most recent DadosBI for trend analysis
+        DadosBI dadosBIRecente = dadosBI.isEmpty() ? null :
+            dadosBI.stream()
+                .max((d1, d2) -> {
+                    if (d1.getColecao() == null) return -1;
+                    if (d2.getColecao() == null) return 1;
+                    return d1.getColecao().compareTo(d2.getColecao());
+                })
+                .orElse(null);
+
         List<Duplicata> duplicatas = duplicataRepository.findByClienteId(cliente.getId());
 
         // Load documents
@@ -170,6 +181,7 @@ public class AnaliseController {
         model.addAttribute("acoesJudiciais", acoesJudiciais);
         model.addAttribute("cheques", cheques);
         model.addAttribute("dadosBI", dadosBI);
+        model.addAttribute("dadosBIRecente", dadosBIRecente);
         model.addAttribute("duplicatas", duplicatas);
         model.addAttribute("documentos", documentos);
         model.addAttribute("parecerPreview", parecerPreview);

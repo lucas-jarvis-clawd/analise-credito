@@ -2,6 +2,7 @@ package AnaliseCredito.Analise_de_Credito.application.service;
 
 import AnaliseCredito.Analise_de_Credito.domain.model.Cliente;
 import AnaliseCredito.Analise_de_Credito.domain.model.Configuracao;
+import AnaliseCredito.Analise_de_Credito.domain.model.DadosBI;
 import AnaliseCredito.Analise_de_Credito.domain.model.GrupoEconomico;
 import AnaliseCredito.Analise_de_Credito.domain.model.Pedido;
 import AnaliseCredito.Analise_de_Credito.infrastructure.persistence.ConfiguracaoRepository;
@@ -10,6 +11,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -92,6 +95,34 @@ public class AlertaService {
             alerts.add("SCORE BAIXO");
         }
 
+        // 7. ALERTA: Pedido acima da sazonalidade
+        if (config.getConsiderarSazonalidade() && pedido.getNomeColecao() != null) {
+            BigDecimal mediaColecao = calcularMediaHistoricaColecao(pedido.getNomeColecao(), cliente);
+            if (mediaColecao.compareTo(BigDecimal.ZERO) > 0) {
+                BigDecimal limiteSazonal = mediaColecao.multiply(new BigDecimal("1.50")); // 50% acima
+                if (pedido.getValor().compareTo(limiteSazonal) > 0) {
+                    alerts.add("PEDIDO ACIMA DA SAZONALIDADE (+50%)");
+                }
+            }
+        }
+
+        // 8. ALERTA: Deterioração de score BI
+        DadosBI dadosRecentes = buscarDadosBIMaisRecente(grupo);
+        if (dadosRecentes != null) {
+            Integer variacaoScore = dadosRecentes.getVariacaoScore();
+            if (variacaoScore != null && variacaoScore < -100) {
+                alerts.add("DETERIORAÇÃO DE SCORE (" + variacaoScore + " pontos)");
+            }
+        }
+
+        // 9. ALERTA: Aumento de atraso médio
+        if (dadosRecentes != null) {
+            BigDecimal variacaoAtraso = dadosRecentes.getVariacaoAtraso();
+            if (variacaoAtraso != null && variacaoAtraso.compareTo(new BigDecimal("5")) > 0) {
+                alerts.add("ATRASO CRESCENTE (+" + variacaoAtraso.setScale(1, RoundingMode.HALF_UP) + " dias)");
+            }
+        }
+
         return alerts;
     }
 
@@ -118,5 +149,52 @@ public class AlertaService {
                 .flatMap(cliente -> cliente.getPedidos().stream())
                 .map(Pedido::getValor)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
+    }
+
+    /**
+     * Calcula média histórica de pedidos da mesma coleção.
+     * Busca pedidos anteriores da mesma coleção (ex: "Verão 2025") e calcula média.
+     *
+     * @param nomeColecao Nome da coleção (ex: "Verão 2026")
+     * @param cliente Cliente para buscar histórico
+     * @return Média dos valores de pedidos da mesma coleção, ou ZERO se sem histórico
+     */
+    private BigDecimal calcularMediaHistoricaColecao(String nomeColecao, Cliente cliente) {
+        // Busca pedidos com mesmo nome de coleção
+        List<Pedido> pedidosColecao = cliente.getPedidos().stream()
+                .filter(p -> nomeColecao.equals(p.getNomeColecao()))
+                .filter(p -> p.getData() != null)
+                .filter(p -> p.getData().isBefore(LocalDate.now().minusMonths(6))) // Pelo menos 6 meses atrás
+                .toList();
+
+        if (pedidosColecao.isEmpty()) {
+            return BigDecimal.ZERO;
+        }
+
+        BigDecimal soma = pedidosColecao.stream()
+                .map(Pedido::getValor)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        return soma.divide(BigDecimal.valueOf(pedidosColecao.size()), 2, RoundingMode.HALF_UP);
+    }
+
+    /**
+     * Busca o DadosBI mais recente do grupo econômico.
+     *
+     * @param grupo Grupo econômico
+     * @return DadosBI mais recente, ou null se não houver dados
+     */
+    private DadosBI buscarDadosBIMaisRecente(GrupoEconomico grupo) {
+        if (grupo.getDadosBI() == null || grupo.getDadosBI().isEmpty()) {
+            return null;
+        }
+
+        return grupo.getDadosBI().stream()
+                .max((d1, d2) -> {
+                    if (d1.getColecao() == null) return -1;
+                    if (d2.getColecao() == null) return 1;
+                    return d1.getColecao().compareTo(d2.getColecao());
+                })
+                .orElse(null);
     }
 }

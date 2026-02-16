@@ -44,4 +44,14 @@ public class GrupoKanbanDTO {
     private TipoWorkflow workflow;
 
     private Long analisePrincipalId;
+
+    /**
+     * Dias em análise (SLA) - calculado como diferença entre hoje e dataInicio
+     */
+    private Integer diasEmAnalise;
+
+    /**
+     * UF (estado) do primeiro cliente do grupo
+     */
+    private String uf;
 }

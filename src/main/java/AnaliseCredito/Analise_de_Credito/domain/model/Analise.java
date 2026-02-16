@@ -2,6 +2,7 @@ package AnaliseCredito.Analise_de_Credito.domain.model;
 
 import AnaliseCredito.Analise_de_Credito.domain.enums.StatusWorkflow;
 import AnaliseCredito.Analise_de_Credito.domain.enums.TipoAnalista;
+import AnaliseCredito.Analise_de_Credito.domain.enums.TipoGarantia;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
@@ -136,6 +137,45 @@ public class Analise {
      */
     @Column(name = "requer_aprovacao_gestor", nullable = false)
     private Boolean requerAprovacaoGestor = false;
+
+    // ========== Aprovação Condicional ==========
+
+    /**
+     * Valor aprovado (pode ser diferente do solicitado)
+     */
+    @Column(name = "valor_aprovado", precision = 15, scale = 2)
+    private BigDecimal valorAprovado;
+
+    /**
+     * Prazo aprovado em dias
+     */
+    @Column(name = "prazo_aprovado")
+    private Integer prazoAprovado;
+
+    /**
+     * Condições especiais para aprovação
+     */
+    @Column(name = "condicoes_especiais", columnDefinition = "TEXT")
+    private String condicoesEspeciais;
+
+    /**
+     * Indica se exige garantia
+     */
+    @Column(name = "exige_garantia", nullable = false)
+    private Boolean exigeGarantia = false;
+
+    /**
+     * Tipo de garantia exigida
+     */
+    @Enumerated(EnumType.STRING)
+    @Column(name = "garantia_exigida", length = 50)
+    private TipoGarantia garantiaExigida;
+
+    /**
+     * Observações sobre as condições
+     */
+    @Column(name = "observacoes_condicoes", length = 1000)
+    private String observacoesCondicoes;
 
     // ========== Métodos auxiliares ==========
 

@@ -74,11 +74,15 @@ public class WorkflowService {
         basePrazoTransitions.put(StatusWorkflow.PENDENTE,
             EnumSet.of(StatusWorkflow.EM_ANALISE_FINANCEIRO));
         basePrazoTransitions.put(StatusWorkflow.EM_ANALISE_FINANCEIRO,
-            EnumSet.of(StatusWorkflow.PARECER_APROVADO, StatusWorkflow.PARECER_REPROVADO));
+            EnumSet.of(StatusWorkflow.PARECER_APROVADO, StatusWorkflow.PARECER_REPROVADO, StatusWorkflow.APROVADO_CONDICIONAL));
         basePrazoTransitions.put(StatusWorkflow.PARECER_APROVADO,
             EnumSet.of(StatusWorkflow.AGUARDANDO_APROVACAO_GESTOR, StatusWorkflow.REANALISE_COMERCIAL_SOLICITADA, StatusWorkflow.FINALIZADO));
         basePrazoTransitions.put(StatusWorkflow.PARECER_REPROVADO,
             EnumSet.of(StatusWorkflow.AGUARDANDO_APROVACAO_GESTOR, StatusWorkflow.REANALISE_COMERCIAL_SOLICITADA, StatusWorkflow.FINALIZADO));
+        basePrazoTransitions.put(StatusWorkflow.APROVADO_CONDICIONAL,
+            EnumSet.of(StatusWorkflow.AGUARDANDO_ACEITE_CLIENTE, StatusWorkflow.AGUARDANDO_APROVACAO_GESTOR, StatusWorkflow.FINALIZADO));
+        basePrazoTransitions.put(StatusWorkflow.AGUARDANDO_ACEITE_CLIENTE,
+            EnumSet.of(StatusWorkflow.FINALIZADO, StatusWorkflow.REANALISE_COMERCIAL_SOLICITADA));
         basePrazoTransitions.put(StatusWorkflow.AGUARDANDO_APROVACAO_GESTOR,
             EnumSet.of(StatusWorkflow.REANALISE_COMERCIAL_SOLICITADA, StatusWorkflow.FINALIZADO));
         basePrazoTransitions.put(StatusWorkflow.REANALISE_COMERCIAL_SOLICITADA,
@@ -97,11 +101,15 @@ public class WorkflowService {
         clienteNovoTransitions.put(StatusWorkflow.DOCUMENTACAO_SOLICITADA,
             EnumSet.of(StatusWorkflow.DOCUMENTACAO_ENVIADA));
         clienteNovoTransitions.put(StatusWorkflow.DOCUMENTACAO_ENVIADA,
-            EnumSet.of(StatusWorkflow.PARECER_APROVADO, StatusWorkflow.PARECER_REPROVADO));
+            EnumSet.of(StatusWorkflow.PARECER_APROVADO, StatusWorkflow.PARECER_REPROVADO, StatusWorkflow.APROVADO_CONDICIONAL));
         clienteNovoTransitions.put(StatusWorkflow.PARECER_APROVADO,
             EnumSet.of(StatusWorkflow.AGUARDANDO_APROVACAO_GESTOR, StatusWorkflow.REANALISE_COMERCIAL_SOLICITADA, StatusWorkflow.FINALIZADO));
         clienteNovoTransitions.put(StatusWorkflow.PARECER_REPROVADO,
             EnumSet.of(StatusWorkflow.AGUARDANDO_APROVACAO_GESTOR, StatusWorkflow.REANALISE_COMERCIAL_SOLICITADA, StatusWorkflow.FINALIZADO));
+        clienteNovoTransitions.put(StatusWorkflow.APROVADO_CONDICIONAL,
+            EnumSet.of(StatusWorkflow.AGUARDANDO_ACEITE_CLIENTE, StatusWorkflow.AGUARDANDO_APROVACAO_GESTOR, StatusWorkflow.FINALIZADO));
+        clienteNovoTransitions.put(StatusWorkflow.AGUARDANDO_ACEITE_CLIENTE,
+            EnumSet.of(StatusWorkflow.FINALIZADO, StatusWorkflow.REANALISE_COMERCIAL_SOLICITADA));
         clienteNovoTransitions.put(StatusWorkflow.AGUARDANDO_APROVACAO_GESTOR,
             EnumSet.of(StatusWorkflow.REANALISE_COMERCIAL_SOLICITADA, StatusWorkflow.FINALIZADO));
         clienteNovoTransitions.put(StatusWorkflow.REANALISE_COMERCIAL_SOLICITADA,
@@ -170,6 +178,17 @@ public class WorkflowService {
             case PARECER_APROVADO:
             case PARECER_REPROVADO:
                 // Verificar se requer aprovação de gestor
+                if (requerAprovacaoGestor(analise)) {
+                    analise.setRequerAprovacaoGestor(true);
+                }
+                break;
+
+            case APROVADO_CONDICIONAL:
+                // Aprovação condicional - verificar se precisa aceite do cliente
+                if (analise.getExigeGarantia() != null && analise.getExigeGarantia()) {
+                    // Se exige garantia, sempre requer aceite do cliente
+                    // (pode transicionar para AGUARDANDO_ACEITE_CLIENTE)
+                }
                 if (requerAprovacaoGestor(analise)) {
                     analise.setRequerAprovacaoGestor(true);
                 }

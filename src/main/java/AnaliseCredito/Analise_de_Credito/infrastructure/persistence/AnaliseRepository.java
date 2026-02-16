@@ -4,8 +4,10 @@ import AnaliseCredito.Analise_de_Credito.domain.enums.StatusWorkflow;
 import AnaliseCredito.Analise_de_Credito.domain.model.Analise;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 
@@ -50,4 +52,30 @@ public interface AnaliseRepository extends JpaRepository<Analise, Long> {
            "JOIN FETCH c.grupoEconomico g " +
            "LEFT JOIN FETCH g.clientes")
     List<Analise> findAllWithPedidoAndCliente();
+
+    /**
+     * Busca todas as análises com filtros operacionais aplicados.
+     * Todos os parâmetros são opcionais (null = sem filtro).
+     *
+     * @param uf Estado do cliente (2 letras)
+     * @param valorMin Valor mínimo do pedido
+     * @param valorMax Valor máximo do pedido
+     * @param busca Texto para buscar em razão social ou CNPJ
+     * @return Lista de análises filtradas com todas as relações carregadas
+     */
+    @Query("SELECT DISTINCT a FROM Analise a " +
+           "JOIN FETCH a.pedido p " +
+           "JOIN FETCH p.cliente c " +
+           "JOIN FETCH c.grupoEconomico g " +
+           "LEFT JOIN FETCH g.clientes " +
+           "WHERE (:uf IS NULL OR c.estado = :uf) " +
+           "AND (:valorMin IS NULL OR p.valor >= :valorMin) " +
+           "AND (:valorMax IS NULL OR p.valor <= :valorMax) " +
+           "AND (:busca IS NULL OR LOWER(c.razaoSocial) LIKE LOWER(CONCAT('%', :busca, '%')) OR c.cnpj LIKE CONCAT('%', :busca, '%'))")
+    List<Analise> findAllWithFiltersAndFetch(
+        @Param("uf") String uf,
+        @Param("valorMin") BigDecimal valorMin,
+        @Param("valorMax") BigDecimal valorMax,
+        @Param("busca") String busca
+    );
 }
