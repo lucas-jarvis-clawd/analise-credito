@@ -91,6 +91,20 @@ public class Cliente {
     @Column(length = 50)
     private String sintegra;
 
+    // ========== Pipeline Cliente Novo ==========
+
+    @Column(name = "status_receita", length = 50)
+    private String statusReceita;
+
+    @Column(name = "status_simples", length = 50)
+    private String statusSimples;
+
+    @Column(length = 20)
+    private String cnae;
+
+    @Column(name = "data_abertura_loja")
+    private LocalDate dataAberturaLoja;
+
     // ========== Datas ==========
 
     private LocalDate dataFundacao;

@@ -1,117 +1,109 @@
-# Sistema de Análise de Crédito
+# Sistema de Analise de Credito
 
-Webapp para digitalizar análise de crédito de lojistas, substituindo planilhas Excel por interface Kanban interativa com dois workflows distintos (clientes base prazo vs novos/antecipados).
+Webapp para digitalizar analise de credito de lojistas, substituindo planilhas Excel por interface Kanban interativa com dois workflows distintos (clientes base prazo vs novos/antecipados).
 
 ## Quick Start
 
 ```bash
 # Build
-./mvnw clean install
+mvn clean install
 
-# Run (H2 console at http://localhost:8080/h2-console)
-./mvnw spring-boot:run
+# Run (porta 8081, H2 console em http://localhost:8081/h2-console)
+mvn spring-boot:run
 
 # Test
-./mvnw test
+mvn test
 ```
+
+Na primeira execucao, `DataInitializer` popula dados de exemplo automaticamente (config, grupos, clientes, pedidos, analises) se o banco estiver vazio.
 
 ## Architecture
 
-**Stack:** Spring Boot 4.0.2 + Java 25 + Thymeleaf + HTMX + Bootstrap 5 + H2 (→ Oracle produção)
+**Stack:** Spring Boot 3.5.7 + Java 21 + Thymeleaf + HTMX + Bootstrap 5 + H2 (-> Oracle producao)
 
 **Package Structure:**
 ```
 AnaliseCredito.Analise_de_Credito/
 ├── domain/
-│   ├── model/          # Entidades JPA
-│   ├── enums/          # TipoWorkflow, StatusWorkflow, TipoCliente, etc
-│   └── valueobjects/   # CNPJ, Score
+│   ├── model/          # 14 entidades JPA
+│   └── enums/          # TipoWorkflow, StatusWorkflow, TipoCliente, etc
 ├── application/
-│   └── service/        # ScoringService, AlertaService, WorkflowService, ParecerService
+│   └── service/        # ScoringService, AlertaService, WorkflowService, ParecerService, ImportacaoService
 ├── infrastructure/
-│   ├── persistence/    # Spring Data Repositories
-│   └── storage/        # FileStorageService (uploads)
+│   ├── persistence/    # 14 Spring Data Repositories
+│   ├── storage/        # FileStorageService (uploads)
+│   └── config/         # DataInitializer (seed data)
 └── presentation/
-    ├── controller/     # MVC Controllers
-    └── dto/            # Form/View DTOs
+    ├── controller/     # HomeController, KanbanController, AnaliseController, ImportacaoController, ConfiguracaoController, DocumentoController
+    └── dto/            # AnaliseForm, ImportacaoDTO
 ```
 
 ## Domain Model (Core Entities)
 
 **GrupoEconomico** (SEMPRE existe - se cliente sem grupo, cria com codigo=cnpj)
 - `limiteAprovado`, `limiteDisponivel` (SEMPRE no grupo, nunca no Cliente)
-- 1:N → Cliente, DadosBI
+- 1:N -> Cliente, DadosBI
 
 **Cliente**
-- N:1 → GrupoEconomico (OBRIGATÓRIO)
-- 1:N → Pedido, Documento, Duplicata, Socio, Participacao, Restrições
+- N:1 -> GrupoEconomico (OBRIGATORIO)
+- 1:N -> Pedido, Documento, Duplicata, Socio, Participacao, Restricoes
 
 **Pedido**
 - `bloqueio` determina workflow: 80/36 = CLIENTE_NOVO, outros = BASE_PRAZO
+- `colecao` (Integer) - usada na cross-tab de pedidos do grupo
 - `alerts` (List<String>) - calculados dinamicamente por AlertaService
-- N:1 → Cliente, 1:1 → Analise
+- N:1 -> Cliente, 1:1 -> Analise
 
 **Analise**
-- Referências: pedidoId, clienteId, grupoEconomicoId
+- Referencias: pedidoId, clienteId, grupoEconomicoId
 - `statusWorkflow` (enum), `tipoAnalista` (FINANCEIRO/COMERCIAL)
 - `parecerCRM` gerado APENAS para workflow CLIENTE_NOVO
-- `requerAprovacaoGestor` (boolean) - baseado em regras de alçada
+- `requerAprovacaoGestor` (boolean) - baseado em regras de alcada
 
-**DadosBI** (por coleção, vinculado ao GrupoEconomico)
+**DadosBI** (por colecao, vinculado ao GrupoEconomico)
 - `colecao` (Integer, ex: 202601), `credito`, `score` (interno), `valorVencido`, `atrasoMedio`
 
-**Duplicata**
-- `getAtraso()` (método calculado, NÃO coluna fixa):
-  ```java
-  if (vencimento < today) {
-    return (dataPagamento != null)
-      ? dataPagamento - vencimento
-      : today - vencimento
-  }
-  return 0
-  ```
+**Restricoes** (4 entidades: Pefin, Protesto, AcaoJudicial, Cheque)
+- Inseridas MANUALMENTE pelo analista na aba Restricoes (nao vem de planilha)
+- Cada registro = 1 ocorrencia individual com campos descritivos (origem, cartorio, banco, etc.)
+- CRUD inline via POST endpoints no AnaliseController
 
-**Configuracao** (tabela única, 1 registro, editável por admin)
-- Limites SIMEI, thresholds score, multiplicadores, critérios alçada
+**Duplicata**
+- `getAtraso()` (metodo calculado, NAO coluna fixa)
+
+**Configuracao** (tabela unica, 1 registro, editavel por admin)
+- Limites SIMEI, thresholds score, multiplicadores, criterios alcada
 
 ## Workflows (Dois Distintos)
 
 ### BASE_PRAZO (bloqueio != 80 e != 36)
-PENDENTE → EM_ANALISE_FINANCEIRO → PARECER_APROVADO/REPROVADO → [AGUARDANDO_APROVACAO_GESTOR] → [REANALISE_COMERCIAL] → FINALIZADO
+PENDENTE -> EM_ANALISE_FINANCEIRO -> PARECER_APROVADO/REPROVADO -> [AGUARDANDO_APROVACAO_GESTOR] -> [REANALISE_COMERCIAL] -> FINALIZADO
 
 ### CLIENTE_NOVO (bloqueio == 80 ou == 36)
-PENDENTE → DOCUMENTACAO_SOLICITADA → DOCUMENTACAO_ENVIADA → PARECER_APROVADO/REPROVADO → [AGUARDANDO_APROVACAO_GESTOR] → [REANALISE_COMERCIAL] → FINALIZADO
+PENDENTE -> DOCUMENTACAO_SOLICITADA -> DOCUMENTACAO_ENVIADA -> PARECER_APROVADO/REPROVADO -> [AGUARDANDO_APROVACAO_GESTOR] -> [REANALISE_COMERCIAL] -> FINALIZADO
 
-**Diferença crítica:** CLIENTE_NOVO gera `parecerCRM` automaticamente (formato: "[DECISÃO] DATA - TIPO - FUNDAÇÃO - SIMEI - RESTRIÇÕES - CRED - SCORE - SÓCIOS - PARTS")
+**Diferenca critica:** CLIENTE_NOVO gera `parecerCRM` automaticamente.
 
 ## Key Business Rules
 
-### 1. Grupo Econômico Sempre Existe
-```java
-// Ao importar Cliente sem grupoEconomicoId:
-if (grupoEconomicoId == null) {
-  grupoEconomico = new GrupoEconomico(codigo: cliente.cnpj)
-}
-```
+### 1. Grupo Economico Sempre Existe
+Ao importar Cliente sem grupoEconomicoId, cria-se grupo com codigo = cnpj do cliente.
 
-### 2. Cálculo de Limite Sugerido (ScoringService)
-```java
-// 1. Buscar últimas 2 coleções BI do grupo
-// 2. Pegar maior crédito entre as 2
-// 3. Aplicar multiplicador por score interno:
-//    >= 800: 1.5x | >= 600: 1.2x | >= 400: 1.0x | < 400: 0.7x
-// 4. Cap para SIMEI: se grupo tem SIMEI com pedido, max = limiteSimei
-```
+### 2. Calculo de Limite Sugerido (ScoringService)
+1. Buscar ultimas 2 colecoes BI do grupo
+2. Pegar maior credito entre as 2
+3. Aplicar multiplicador por score interno: >=800: 1.5x | >=600: 1.2x | >=400: 1.0x | <400: 0.7x
+4. Cap para SIMEI: se grupo tem SIMEI com pedido, max = limiteSimei
 
-### 3. Sistema de Alertas (configuráveis)
-- 🔴 **SIMEI > LIMITE**: simei && pedido.valor > config.limiteSimei
-- 🔴 **GRUPO > X SIMEIS**: grupo tem > maxSimeisPorGrupo com pedidos
-- ⚠️ **PEDIDO > LIMITE**: pedido.valor > grupo.limiteAprovado
-- ⚠️ **TOTAL > LIMITE**: soma pedidos abertos > limite
-- 🟡 **RESTRIÇÕES (X)**: count(protestos + pefin + ações + cheques) > 0
-- 🟡 **SCORE BAIXO**: scoreBoaVista < scoreBaixoThreshold
+### 3. Sistema de Alertas (configuraveis)
+- SIMEI > LIMITE: simei && pedido.valor > config.limiteSimei
+- GRUPO > X SIMEIS: grupo tem > maxSimeisPorGrupo com pedidos
+- PEDIDO > LIMITE: pedido.valor > grupo.limiteAprovado
+- TOTAL > LIMITE: soma pedidos abertos > limite
+- RESTRICOES (X): count(protestos + pefin + acoes + cheques) > 0
+- SCORE BAIXO: scoreBoaVista < scoreBaixoThreshold
 
-### 4. Regras de Alçada
+### 4. Regras de Alcada
 ```java
 analise.requerAprovacaoGestor = (
   pedido.valor > valorAprovacaoGestor ||
@@ -120,110 +112,49 @@ analise.requerAprovacaoGestor = (
 )
 ```
 
-## Implementation Plan
+## Wizard de Analise (7 tabs)
 
-**Status:** ✅ **80% COMPLETE - MVP FUNCIONAL!**
+1. **Dados Cadastrais** - info do cliente (CNPJ, razao, fundacao, SIMEI, etc.)
+2. **Pedidos Grupo** - cross-tab de pedidos por CNPJ x Marca com expand/collapse
+3. **Vinculos e Socios** - socios e participacoes em outras empresas
+4. **Restricoes** - PEFIN, Protestos, Acoes Judiciais, Cheques (input manual + delete)
+5. **Financeiro** - DadosBI e Duplicatas em aberto
+6. **Documentos** - upload/download de PDFs e imagens
+7. **Historico** - timeline da analise
 
-**Phases:**
-1. ✅ Fundação: Pacotes, enums (6), entities (14), repos (14), config
-2. ✅ Importação: ImportacaoService (Apache POI), XLSX parsing - 684 linhas, 14 testes
-3. ✅ Services Core: Scoring (9 tests), Alertas (13 tests), Workflow (20 tests), Parecer (20 tests)
-4. ✅ UI Kanban: Dashboard com drag-and-drop JavaScript, filtros, badges dinâmicos
-5. ✅ Wizard Análise: 6 tabs (Cadastrais, Vínculos, Restrições, Financeiro, Docs, Histórico) + painel decisão
-6. ✅ CRUD/Admin: Home, Importação, Configuração, FileStorage, Documentos
-7. ⏳ Testes: 77 testes unitários passando, E2E pendente
-8. ⏳ Deploy: Docs, build scripts, perfil produção
-
-**Execution Strategy:**
-- ✅ Executado com subagent-driven-development
-- ✅ Agentes especializados para cada tarefa
-- ✅ Review em dois estágios (spec compliance + code quality)
-- ✅ 16/20 tarefas completas
-
-**Task List:**
-- ✅ Tasks #1-7: Backend completo (entities, repos, services, import)
-- ✅ Tasks #8-11: Business services (scoring, alertas, workflow, parecer)
-- ✅ Tasks #12-17: Controllers e UI (home, kanban, analise, import, config, file upload)
-- ⏳ Task #18: Templates adicionais (maioria já feita)
-- ⏳ Tasks #19-20: Testes adicionais e E2E
-
-## Development Workflow
-
-### Task Execution
-```bash
-# Ver tarefas pendentes
-# Use TaskList tool in Claude
-
-# Marcar tarefa em progresso
-# Use TaskUpdate tool with status: in_progress
-
-# Marcar tarefa concluída
-# Use TaskUpdate tool with status: completed
-```
-
-### Testing Strategy
-- **Unit tests:** Services principais (Scoring, Alertas, Parecer, Duplicata.getAtraso())
-- **Acceptance tests:** Importação, Kanban drag-drop, Wizard, Workflows, Alçada
-- **Verification:** H2 Console para validar dados importados
-
-### File Upload
-- Diretório: `/static/uploads/{cnpj}/`
-- Tipos permitidos: PDF, imagens
-- Max size: configurável em application.properties
+Painel lateral: Score, limites, formulario de decisao (Aprovado/Limitado/Reprovado + justificativa).
 
 ## Gotchas & Non-Obvious Patterns
 
-1. **GrupoEconomico nunca é null** - Todo cliente TEM grupo (mesmo que seja só ele)
+1. **GrupoEconomico nunca e null** - Todo cliente TEM grupo (mesmo que seja so ele)
 2. **Workflow determinado por bloqueio** - Campo `bloqueio` do pedido define qual workflow (80/36 = novo)
-3. **Parecer CRM condicional** - Só gera para CLIENTE_NOVO, não para BASE_PRAZO
-4. **Atraso calculado, não armazenado** - Duplicata.getAtraso() é método getter, não coluna
-5. **Alertas dinâmicos** - List<String> calculada on-the-fly, não persistida
-6. **Limite no grupo, não no cliente** - Cliente.limiteAprovado NÃO existe
-7. **HTMX para Kanban** - Drag-and-drop sem JavaScript pesado
-8. **DadosBI por coleção** - Cada linha = 1 coleção de 1 grupo (não por cliente)
+3. **Parecer CRM condicional** - So gera para CLIENTE_NOVO, nao para BASE_PRAZO
+4. **Atraso calculado, nao armazenado** - Duplicata.getAtraso() e metodo, nao coluna
+5. **Alertas dinamicos** - List<String> calculada on-the-fly, nao persistida
+6. **Limite no grupo, nao no cliente** - Cliente.limiteAprovado NAO existe
+7. **DadosBI por colecao** - Cada linha = 1 colecao de 1 grupo (nao por cliente)
+8. **Restricoes manuais** - Nao vem de importacao, analista insere manualmente na aba
+9. **Cross-tab pedidos** - Agrupamento CNPJ x Marca filtrado por colecao do pedido em analise
+10. **Porta 8081** - Nao e a porta padrao do Spring Boot (8080)
 
 ## Configuration
 
-### application.properties (H2)
+### application.properties
 ```properties
+server.port=8081
 spring.datasource.url=jdbc:h2:mem:analisedb
 spring.h2.console.enabled=true
-spring.jpa.show-sql=true
 spring.jpa.hibernate.ddl-auto=create-drop
 
-# File upload
 spring.servlet.multipart.max-file-size=10MB
 spring.servlet.multipart.max-request-size=10MB
 upload.path=/static/uploads/
 ```
 
-### Future: Oracle Migration
-- Adicionar driver Oracle JDBC ao pom.xml
-- Criar perfil application-prod.properties
-- Mudar ddl-auto para validate (produção)
-
-## Dependencies (pom.xml)
-
-**Current:**
-- spring-boot-starter-data-jpa
-- spring-boot-starter-thymeleaf
-- spring-boot-starter-webmvc
-- h2
-- spring-boot-devtools
-
-**To Add (Task #5):**
-- Apache POI (XLSX parsing)
-- HTMX webjar
-- Bootstrap 5 webjar
-- spring-boot-starter-validation
-- lombok (optional)
-
 ## MVP Scope (What's NOT Included)
 
-- ❌ Autenticação (usar seleção manual de perfil)
-- ❌ Integração ERP (usar importação XLSX)
-- ❌ Replicar cálculo BI (importar DadosBI.xlsx)
-- ❌ API REST (apenas MVC)
-- ❌ Oracle (usar H2 por enquanto)
-
-**Roadmap pós-MVP:** Migração Oracle → Integração ERP → Auth AD/SSO → Cálculo BI interno → API REST/Mobile
+- Autenticacao (usar selecao manual de perfil)
+- Integracao ERP (usar importacao XLSX)
+- Replicar calculo BI (importar DadosBI.xlsx)
+- API REST (apenas MVC)
+- Oracle (usar H2 por enquanto)

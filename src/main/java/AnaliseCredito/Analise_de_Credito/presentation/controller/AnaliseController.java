@@ -252,6 +252,12 @@ public class AnaliseController {
         model.addAttribute("totalCheque", totalCheque);
         model.addAttribute("totalRestricoes", totalPefin.add(totalProtesto).add(totalCheque));
 
+        // Pipeline CLIENTE_NOVO data
+        if (pedido.getWorkflow() == TipoWorkflow.CLIENTE_NOVO) {
+            model.addAttribute("isPipeline", true);
+            model.addAttribute("pipelineStatus", analise.getStatusWorkflow());
+        }
+
         return "analise";
     }
 

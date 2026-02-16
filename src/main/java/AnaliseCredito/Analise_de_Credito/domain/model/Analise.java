@@ -137,6 +137,12 @@ public class Analise {
     @Column(name = "requer_aprovacao_gestor", nullable = false)
     private Boolean requerAprovacaoGestor = false;
 
+    /**
+     * Motivo do desvio para cancelamento ou antecipado (pipeline CLIENTE_NOVO)
+     */
+    @Column(name = "motivo_desvio", length = 500)
+    private String motivoDesvio;
+
     // ========== Métodos auxiliares ==========
 
     /**
@@ -153,7 +159,12 @@ public class Analise {
     @Transient
     public boolean isAguardandoAcao() {
         return StatusWorkflow.DOCUMENTACAO_SOLICITADA.equals(statusWorkflow) ||
-               StatusWorkflow.AGUARDANDO_APROVACAO_GESTOR.equals(statusWorkflow);
+               StatusWorkflow.AGUARDANDO_APROVACAO_GESTOR.equals(statusWorkflow) ||
+               StatusWorkflow.FAZER_CONSULTAS.equals(statusWorkflow) ||
+               StatusWorkflow.CONSULTA_PROTESTOS.equals(statusWorkflow) ||
+               StatusWorkflow.VERIFICACAO_LOJA_FISICA.equals(statusWorkflow) ||
+               StatusWorkflow.CONSULTA_SCORE_RESTRICOES.equals(statusWorkflow) ||
+               StatusWorkflow.EM_ANALISE_CLIENTE_NOVO.equals(statusWorkflow);
     }
 
     /**

@@ -119,24 +119,54 @@
                     <div th:replace="~{fragments/card-pedido :: kanban-cards(${kanbanData.get(CLIENTE_NOVO).get(PENDENTE)})}"></div>
                 </div>
 
-                <!-- DOCUMENTACAO_SOLICITADA Column -->
-                <div class="kanban-column" data-status="DOCUMENTACAO_SOLICITADA" data-workflow="CLIENTE_NOVO">
+                <!-- FAZER_CONSULTAS Column -->
+                <div class="kanban-column" data-status="FAZER_CONSULTAS" data-workflow="CLIENTE_NOVO">
                     <div class="kanban-column-header">
-                        <span>Doc. Solicitada</span>
+                        <span>Fazer Consultas</span>
                         <span class="kanban-column-count"
-                              th:text="${kanbanData.get(CLIENTE_NOVO).get(DOCUMENTACAO_SOLICITADA)?.size() ?: 0}">0</span>
+                              th:text="${kanbanData.get(CLIENTE_NOVO).get(FAZER_CONSULTAS)?.size() ?: 0}">0</span>
                     </div>
-                    <div th:replace="~{fragments/card-pedido :: kanban-cards(${kanbanData.get(CLIENTE_NOVO).get(DOCUMENTACAO_SOLICITADA)})}"></div>
+                    <div th:replace="~{fragments/card-pedido :: kanban-cards(${kanbanData.get(CLIENTE_NOVO).get(FAZER_CONSULTAS)})}"></div>
                 </div>
 
-                <!-- DOCUMENTACAO_ENVIADA Column -->
-                <div class="kanban-column" data-status="DOCUMENTACAO_ENVIADA" data-workflow="CLIENTE_NOVO">
+                <!-- CONSULTA_PROTESTOS Column -->
+                <div class="kanban-column" data-status="CONSULTA_PROTESTOS" data-workflow="CLIENTE_NOVO">
                     <div class="kanban-column-header">
-                        <span>Doc. Enviada</span>
+                        <span>Consulta Protestos</span>
                         <span class="kanban-column-count"
-                              th:text="${kanbanData.get(CLIENTE_NOVO).get(DOCUMENTACAO_ENVIADA)?.size() ?: 0}">0</span>
+                              th:text="${kanbanData.get(CLIENTE_NOVO).get(CONSULTA_PROTESTOS)?.size() ?: 0}">0</span>
                     </div>
-                    <div th:replace="~{fragments/card-pedido :: kanban-cards(${kanbanData.get(CLIENTE_NOVO).get(DOCUMENTACAO_ENVIADA)})}"></div>
+                    <div th:replace="~{fragments/card-pedido :: kanban-cards(${kanbanData.get(CLIENTE_NOVO).get(CONSULTA_PROTESTOS)})}"></div>
+                </div>
+
+                <!-- VERIFICACAO_LOJA_FISICA Column -->
+                <div class="kanban-column" data-status="VERIFICACAO_LOJA_FISICA" data-workflow="CLIENTE_NOVO">
+                    <div class="kanban-column-header">
+                        <span>Verif. Loja</span>
+                        <span class="kanban-column-count"
+                              th:text="${kanbanData.get(CLIENTE_NOVO).get(VERIFICACAO_LOJA_FISICA)?.size() ?: 0}">0</span>
+                    </div>
+                    <div th:replace="~{fragments/card-pedido :: kanban-cards(${kanbanData.get(CLIENTE_NOVO).get(VERIFICACAO_LOJA_FISICA)})}"></div>
+                </div>
+
+                <!-- CONSULTA_SCORE_RESTRICOES Column -->
+                <div class="kanban-column" data-status="CONSULTA_SCORE_RESTRICOES" data-workflow="CLIENTE_NOVO">
+                    <div class="kanban-column-header">
+                        <span>Score/Restrições</span>
+                        <span class="kanban-column-count"
+                              th:text="${kanbanData.get(CLIENTE_NOVO).get(CONSULTA_SCORE_RESTRICOES)?.size() ?: 0}">0</span>
+                    </div>
+                    <div th:replace="~{fragments/card-pedido :: kanban-cards(${kanbanData.get(CLIENTE_NOVO).get(CONSULTA_SCORE_RESTRICOES)})}"></div>
+                </div>
+
+                <!-- EM_ANALISE_CLIENTE_NOVO Column -->
+                <div class="kanban-column" data-status="EM_ANALISE_CLIENTE_NOVO" data-workflow="CLIENTE_NOVO">
+                    <div class="kanban-column-header">
+                        <span>Em Análise</span>
+                        <span class="kanban-column-count"
+                              th:text="${kanbanData.get(CLIENTE_NOVO).get(EM_ANALISE_CLIENTE_NOVO)?.size() ?: 0}">0</span>
+                    </div>
+                    <div th:replace="~{fragments/card-pedido :: kanban-cards(${kanbanData.get(CLIENTE_NOVO).get(EM_ANALISE_CLIENTE_NOVO)})}"></div>
                 </div>
 
                 <!-- PARECER_APROVADO Column -->
@@ -157,6 +187,26 @@
                               th:text="${kanbanData.get(CLIENTE_NOVO).get(PARECER_REPROVADO)?.size() ?: 0}">0</span>
                     </div>
                     <div th:replace="~{fragments/card-pedido :: kanban-cards(${kanbanData.get(CLIENTE_NOVO).get(PARECER_REPROVADO)})}"></div>
+                </div>
+
+                <!-- SOLICITAR_CANCELAMENTO Column -->
+                <div class="kanban-column kanban-column-cancelamento" data-status="SOLICITAR_CANCELAMENTO" data-workflow="CLIENTE_NOVO">
+                    <div class="kanban-column-header">
+                        <span>Cancelamento</span>
+                        <span class="kanban-column-count"
+                              th:text="${kanbanData.get(CLIENTE_NOVO).get(SOLICITAR_CANCELAMENTO)?.size() ?: 0}">0</span>
+                    </div>
+                    <div th:replace="~{fragments/card-pedido :: kanban-cards(${kanbanData.get(CLIENTE_NOVO).get(SOLICITAR_CANCELAMENTO)})}"></div>
+                </div>
+
+                <!-- ENCAMINHADO_ANTECIPADO Column -->
+                <div class="kanban-column kanban-column-antecipado" data-status="ENCAMINHADO_ANTECIPADO" data-workflow="CLIENTE_NOVO">
+                    <div class="kanban-column-header">
+                        <span>Antecipado</span>
+                        <span class="kanban-column-count"
+                              th:text="${kanbanData.get(CLIENTE_NOVO).get(ENCAMINHADO_ANTECIPADO)?.size() ?: 0}">0</span>
+                    </div>
+                    <div th:replace="~{fragments/card-pedido :: kanban-cards(${kanbanData.get(CLIENTE_NOVO).get(ENCAMINHADO_ANTECIPADO)})}"></div>
                 </div>
 
                 <!-- FINALIZADO Column -->

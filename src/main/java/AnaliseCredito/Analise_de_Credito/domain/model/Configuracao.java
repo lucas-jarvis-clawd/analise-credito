@@ -116,6 +116,23 @@ public class Configuracao {
     @Column(name = "restricoes_aprovacao_gestor", nullable = false)
     private Integer restricoesAprovacaoGestor = 5;
 
+    // ========== Pipeline Cliente Novo ==========
+
+    @Column(name = "cnaes_permitidos", length = 2000)
+    private String cnaesPermitidos;
+
+    @Column(name = "protesto_threshold_antecipado", precision = 15, scale = 2)
+    private BigDecimal protestoThresholdAntecipado = new BigDecimal("1000");
+
+    @Column(name = "restricao_threshold_antecipado", precision = 15, scale = 2)
+    private BigDecimal restricaoThresholdAntecipado = new BigDecimal("1000");
+
+    @Column(name = "meses_loja_threshold")
+    private Integer mesesLojaThreshold = 10;
+
+    @Column(name = "meses_fundacao_threshold")
+    private Integer mesesFundacaoThreshold = 12;
+
     // ========== Métodos auxiliares ==========
 
     /**
@@ -161,5 +178,26 @@ public class Configuracao {
     @Transient
     public boolean requerAprovacaoPorRestricoes(Integer numRestricoes) {
         return numRestricoes != null && numRestricoes >= restricoesAprovacaoGestor;
+    }
+
+    /**
+     * Verifica se um CNAE é permitido para o pipeline de cliente novo.
+     * Se a lista de CNAEs permitidos estiver vazia/null, todos são permitidos.
+     */
+    @Transient
+    public boolean isCnaePermitido(String cnae) {
+        if (cnaesPermitidos == null || cnaesPermitidos.isBlank()) {
+            return true;
+        }
+        if (cnae == null || cnae.isBlank()) {
+            return false;
+        }
+        String[] permitidos = cnaesPermitidos.split(",");
+        for (String permitido : permitidos) {
+            if (permitido.trim().equals(cnae.trim())) {
+                return true;
+            }
+        }
+        return false;
     }
 }

@@ -313,10 +313,10 @@ class WorkflowServiceTest {
     }
 
     /**
-     * Test 9: Workflow CLIENTE_NOVO - transição PENDENTE → DOCUMENTACAO_SOLICITADA
+     * Test 9: Workflow CLIENTE_NOVO - transição PENDENTE → FAZER_CONSULTAS
      */
     @Test
-    void transicionar_clienteNovo_pendenteParaDocSolicitada_sucesso() {
+    void transicionar_clienteNovo_pendenteParaFazerConsultas_sucesso() {
         // Arrange
         pedido.setBloqueio("80");  // CLIENTE_NOVO
         pedido.setWorkflow(TipoWorkflow.CLIENTE_NOVO);
@@ -325,18 +325,18 @@ class WorkflowServiceTest {
         when(analiseRepository.save(any(Analise.class))).thenReturn(analise);
 
         // Act
-        workflowService.transicionar(analise, StatusWorkflow.DOCUMENTACAO_SOLICITADA, "analista@teste.com");
+        workflowService.transicionar(analise, StatusWorkflow.FAZER_CONSULTAS, "analista@teste.com");
 
         // Assert
-        assertEquals(StatusWorkflow.DOCUMENTACAO_SOLICITADA, analise.getStatusWorkflow());
+        assertEquals(StatusWorkflow.FAZER_CONSULTAS, analise.getStatusWorkflow());
         verify(analiseRepository).save(analise);
     }
 
     /**
-     * Test 10: Workflow CLIENTE_NOVO - não pode pular DOCUMENTACAO_SOLICITADA
+     * Test 10: Workflow CLIENTE_NOVO - não pode ir direto para EM_ANALISE_FINANCEIRO
      */
     @Test
-    void transicionar_clienteNovo_pulandoDocSolicitada_lancaExcecao() {
+    void transicionar_clienteNovo_transicaoInvalida_lancaExcecao() {
         // Arrange
         pedido.setBloqueio("80");  // CLIENTE_NOVO
         pedido.setWorkflow(TipoWorkflow.CLIENTE_NOVO);
@@ -351,14 +351,14 @@ class WorkflowServiceTest {
     }
 
     /**
-     * Test 11: Workflow CLIENTE_NOVO - DOCUMENTACAO_ENVIADA → PARECER_APROVADO
+     * Test 11: Workflow CLIENTE_NOVO - EM_ANALISE_CLIENTE_NOVO → PARECER_APROVADO
      */
     @Test
-    void transicionar_clienteNovo_docEnviadaParaParecer_sucesso() {
+    void transicionar_clienteNovo_emAnaliseParaParecer_sucesso() {
         // Arrange
         pedido.setBloqueio("80");  // CLIENTE_NOVO
         pedido.setWorkflow(TipoWorkflow.CLIENTE_NOVO);
-        analise.setStatusWorkflow(StatusWorkflow.DOCUMENTACAO_ENVIADA);
+        analise.setStatusWorkflow(StatusWorkflow.EM_ANALISE_CLIENTE_NOVO);
 
         when(configuracaoRepository.findById(1L)).thenReturn(Optional.of(configuracao));
         when(clienteRepository.findById(1L)).thenReturn(Optional.of(cliente));
@@ -387,7 +387,7 @@ class WorkflowServiceTest {
 
         assertTrue(workflowService.isTransicaoValida(
             StatusWorkflow.PENDENTE,
-            StatusWorkflow.DOCUMENTACAO_SOLICITADA,
+            StatusWorkflow.FAZER_CONSULTAS,
             TipoWorkflow.CLIENTE_NOVO
         ));
     }
@@ -448,23 +448,23 @@ class WorkflowServiceTest {
     }
 
     /**
-     * Test 17: Transição para DOCUMENTACAO_ENVIADA deve iniciar análise
+     * Test 17: Transição para EM_ANALISE_CLIENTE_NOVO deve iniciar análise
      */
     @Test
-    void transicionar_paraDocEnviada_iniciaAnalise() {
+    void transicionar_paraEmAnaliseClienteNovo_iniciaAnalise() {
         // Arrange
         pedido.setBloqueio("80");  // CLIENTE_NOVO
         pedido.setWorkflow(TipoWorkflow.CLIENTE_NOVO);
-        analise.setStatusWorkflow(StatusWorkflow.DOCUMENTACAO_SOLICITADA);
+        analise.setStatusWorkflow(StatusWorkflow.CONSULTA_SCORE_RESTRICOES);
         analise.setDataInicio(null);
 
         when(analiseRepository.save(any(Analise.class))).thenReturn(analise);
 
         // Act
-        workflowService.transicionar(analise, StatusWorkflow.DOCUMENTACAO_ENVIADA, "analista@teste.com");
+        workflowService.transicionar(analise, StatusWorkflow.EM_ANALISE_CLIENTE_NOVO, "analista@teste.com");
 
         // Assert
-        assertEquals(StatusWorkflow.DOCUMENTACAO_ENVIADA, analise.getStatusWorkflow());
+        assertEquals(StatusWorkflow.EM_ANALISE_CLIENTE_NOVO, analise.getStatusWorkflow());
         assertNotNull(analise.getDataInicio());
         verify(analiseRepository).save(analise);
     }
@@ -532,5 +532,105 @@ class WorkflowServiceTest {
         // Assert
         assertEquals(StatusWorkflow.FINALIZADO, analise.getStatusWorkflow());
         verify(grupoEconomicoRepository, never()).save(any());
+    }
+
+    // ==================== Pipeline CLIENTE_NOVO Tests ====================
+
+    /**
+     * Test 21: PENDENTE → SOLICITAR_CANCELAMENTO (terminal)
+     */
+    @Test
+    void transicionar_clienteNovo_pendenteParaCancelamento_sucesso() {
+        pedido.setBloqueio("80");
+        pedido.setWorkflow(TipoWorkflow.CLIENTE_NOVO);
+        analise.setStatusWorkflow(StatusWorkflow.PENDENTE);
+
+        when(analiseRepository.save(any(Analise.class))).thenReturn(analise);
+
+        workflowService.transicionar(analise, StatusWorkflow.SOLICITAR_CANCELAMENTO, "analista@teste.com");
+
+        assertEquals(StatusWorkflow.SOLICITAR_CANCELAMENTO, analise.getStatusWorkflow());
+        assertNotNull(analise.getDataFim());
+    }
+
+    /**
+     * Test 22: PENDENTE → ENCAMINHADO_ANTECIPADO (terminal)
+     */
+    @Test
+    void transicionar_clienteNovo_pendenteParaAntecipado_sucesso() {
+        pedido.setBloqueio("80");
+        pedido.setWorkflow(TipoWorkflow.CLIENTE_NOVO);
+        analise.setStatusWorkflow(StatusWorkflow.PENDENTE);
+
+        when(clienteRepository.findById(1L)).thenReturn(Optional.of(cliente));
+        when(clienteRepository.save(any(Cliente.class))).thenReturn(cliente);
+        when(analiseRepository.save(any(Analise.class))).thenReturn(analise);
+
+        workflowService.transicionar(analise, StatusWorkflow.ENCAMINHADO_ANTECIPADO, "analista@teste.com");
+
+        assertEquals(StatusWorkflow.ENCAMINHADO_ANTECIPADO, analise.getStatusWorkflow());
+        assertNotNull(analise.getDataFim());
+        assertEquals(TipoCliente.ANTECIPADO, cliente.getTipoCliente());
+    }
+
+    /**
+     * Test 23: CONSULTA_PROTESTOS → VERIFICACAO_LOJA_FISICA
+     */
+    @Test
+    void transicionar_clienteNovo_protestosParaVerifLoja_sucesso() {
+        pedido.setBloqueio("80");
+        pedido.setWorkflow(TipoWorkflow.CLIENTE_NOVO);
+        analise.setStatusWorkflow(StatusWorkflow.CONSULTA_PROTESTOS);
+
+        when(analiseRepository.save(any(Analise.class))).thenReturn(analise);
+
+        workflowService.transicionar(analise, StatusWorkflow.VERIFICACAO_LOJA_FISICA, "analista@teste.com");
+
+        assertEquals(StatusWorkflow.VERIFICACAO_LOJA_FISICA, analise.getStatusWorkflow());
+    }
+
+    /**
+     * Test 24: SOLICITAR_CANCELAMENTO is terminal - no transitions allowed
+     */
+    @Test
+    void transicionar_cancelamentoTerminal_lancaExcecao() {
+        pedido.setBloqueio("80");
+        pedido.setWorkflow(TipoWorkflow.CLIENTE_NOVO);
+        analise.setStatusWorkflow(StatusWorkflow.SOLICITAR_CANCELAMENTO);
+
+        assertThrows(IllegalStateException.class, () -> {
+            workflowService.transicionar(analise, StatusWorkflow.FINALIZADO, "analista@teste.com");
+        });
+    }
+
+    /**
+     * Test 25: ENCAMINHADO_ANTECIPADO is terminal - no transitions allowed
+     */
+    @Test
+    void transicionar_antecipadoTerminal_lancaExcecao() {
+        pedido.setBloqueio("80");
+        pedido.setWorkflow(TipoWorkflow.CLIENTE_NOVO);
+        analise.setStatusWorkflow(StatusWorkflow.ENCAMINHADO_ANTECIPADO);
+
+        assertThrows(IllegalStateException.class, () -> {
+            workflowService.transicionar(analise, StatusWorkflow.FINALIZADO, "analista@teste.com");
+        });
+    }
+
+    /**
+     * Test 26: getStatusPermitidos for PENDENTE in CLIENTE_NOVO pipeline
+     */
+    @Test
+    void getStatusPermitidos_clienteNovoPendente_retornaStatusPipeline() {
+        Set<StatusWorkflow> permitidos = workflowService.getStatusPermitidos(
+            StatusWorkflow.PENDENTE,
+            TipoWorkflow.CLIENTE_NOVO
+        );
+
+        assertEquals(4, permitidos.size());
+        assertTrue(permitidos.contains(StatusWorkflow.FAZER_CONSULTAS));
+        assertTrue(permitidos.contains(StatusWorkflow.CONSULTA_PROTESTOS));
+        assertTrue(permitidos.contains(StatusWorkflow.SOLICITAR_CANCELAMENTO));
+        assertTrue(permitidos.contains(StatusWorkflow.ENCAMINHADO_ANTECIPADO));
     }
 }

@@ -43,6 +43,172 @@
             </a>
         </div>
 
+        <!-- Pipeline Panel for CLIENTE_NOVO -->
+        <div th:if="${isPipeline}" class="pipeline-panel animate-in mb-theme">
+            <!-- Progress Steps -->
+            <div class="pipeline-steps">
+                <div class="pipeline-step"
+                     th:classappend="${pipelineStatus.name() == 'PENDENTE'} ? 'active' : (${pipelineStatus.name() != 'PENDENTE' and pipelineStatus.name() != 'SOLICITAR_CANCELAMENTO' and pipelineStatus.name() != 'ENCAMINHADO_ANTECIPADO'} ? 'completed' : '')">
+                    <span class="pipeline-step-number">1</span>
+                    <span class="pipeline-step-label">Pendente</span>
+                </div>
+                <div class="pipeline-step"
+                     th:classappend="${pipelineStatus.name() == 'FAZER_CONSULTAS'} ? 'active' : (${pipelineStatus.name() == 'CONSULTA_PROTESTOS' or pipelineStatus.name() == 'VERIFICACAO_LOJA_FISICA' or pipelineStatus.name() == 'CONSULTA_SCORE_RESTRICOES' or pipelineStatus.name() == 'EM_ANALISE_CLIENTE_NOVO' or pipelineStatus.name() == 'PARECER_APROVADO' or pipelineStatus.name() == 'PARECER_REPROVADO' or pipelineStatus.name() == 'FINALIZADO'} ? 'completed' : '')">
+                    <span class="pipeline-step-number">2</span>
+                    <span class="pipeline-step-label">Consultas</span>
+                </div>
+                <div class="pipeline-step"
+                     th:classappend="${pipelineStatus.name() == 'CONSULTA_PROTESTOS'} ? 'active' : (${pipelineStatus.name() == 'VERIFICACAO_LOJA_FISICA' or pipelineStatus.name() == 'CONSULTA_SCORE_RESTRICOES' or pipelineStatus.name() == 'EM_ANALISE_CLIENTE_NOVO' or pipelineStatus.name() == 'PARECER_APROVADO' or pipelineStatus.name() == 'PARECER_REPROVADO' or pipelineStatus.name() == 'FINALIZADO'} ? 'completed' : '')">
+                    <span class="pipeline-step-number">3</span>
+                    <span class="pipeline-step-label">Protestos</span>
+                </div>
+                <div class="pipeline-step"
+                     th:classappend="${pipelineStatus.name() == 'VERIFICACAO_LOJA_FISICA'} ? 'active' : (${pipelineStatus.name() == 'CONSULTA_SCORE_RESTRICOES' or pipelineStatus.name() == 'EM_ANALISE_CLIENTE_NOVO' or pipelineStatus.name() == 'PARECER_APROVADO' or pipelineStatus.name() == 'PARECER_REPROVADO' or pipelineStatus.name() == 'FINALIZADO'} ? 'completed' : '')">
+                    <span class="pipeline-step-number">4</span>
+                    <span class="pipeline-step-label">Loja Física</span>
+                </div>
+                <div class="pipeline-step"
+                     th:classappend="${pipelineStatus.name() == 'CONSULTA_SCORE_RESTRICOES'} ? 'active' : (${pipelineStatus.name() == 'EM_ANALISE_CLIENTE_NOVO' or pipelineStatus.name() == 'PARECER_APROVADO' or pipelineStatus.name() == 'PARECER_REPROVADO' or pipelineStatus.name() == 'FINALIZADO'} ? 'completed' : '')">
+                    <span class="pipeline-step-number">5</span>
+                    <span class="pipeline-step-label">Score</span>
+                </div>
+                <div class="pipeline-step"
+                     th:classappend="${pipelineStatus.name() == 'EM_ANALISE_CLIENTE_NOVO'} ? 'active' : (${pipelineStatus.name() == 'PARECER_APROVADO' or pipelineStatus.name() == 'PARECER_REPROVADO' or pipelineStatus.name() == 'FINALIZADO'} ? 'completed' : '')">
+                    <span class="pipeline-step-number">6</span>
+                    <span class="pipeline-step-label">Análise</span>
+                </div>
+            </div>
+
+            <!-- Terminal state banners -->
+            <div th:if="${pipelineStatus.name() == 'SOLICITAR_CANCELAMENTO'}" class="alert-theme-danger mt-3">
+                <i class="bi bi-x-octagon-fill"></i>
+                <strong>CANCELAMENTO SOLICITADO</strong>
+                <span th:if="${analise.motivoDesvio != null}"> &mdash; <span th:text="${analise.motivoDesvio}">Motivo</span></span>
+            </div>
+            <div th:if="${pipelineStatus.name() == 'ENCAMINHADO_ANTECIPADO'}" class="alert-theme-warning mt-3">
+                <i class="bi bi-fast-forward-fill"></i>
+                <strong>ENCAMINHADO PARA ANTECIPADO</strong>
+                <span th:if="${analise.motivoDesvio != null}"> &mdash; <span th:text="${analise.motivoDesvio}">Motivo</span></span>
+            </div>
+
+            <!-- Contextual forms per step -->
+            <!-- PENDENTE: Iniciar Pipeline -->
+            <div th:if="${pipelineStatus.name() == 'PENDENTE'}" class="pipeline-form mt-3">
+                <form th:action="@{/analise/{id}/iniciar-pipeline(id=${analise.id})}" method="post">
+                    <p style="font-size:0.85rem;color:var(--text-muted);margin-bottom:0.75rem;">
+                        <i class="bi bi-info-circle"></i> Clique para iniciar a validação do pipeline de cliente novo.
+                    </p>
+                    <button type="submit" class="btn-gold">
+                        <i class="bi bi-play-fill"></i> Iniciar Pipeline
+                    </button>
+                </form>
+            </div>
+
+            <!-- FAZER_CONSULTAS: Form de dados de consulta -->
+            <div th:if="${pipelineStatus.name() == 'FAZER_CONSULTAS'}" class="pipeline-form mt-3">
+                <h5 style="font-size:0.95rem;font-weight:600;margin-bottom:0.75rem;">
+                    <i class="bi bi-search text-gold"></i> Informar Dados de Consulta
+                </h5>
+                <form th:action="@{/analise/{id}/consultas-realizadas(id=${analise.id})}" method="post">
+                    <div class="row">
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label-theme">Status Receita Federal</label>
+                            <select name="statusReceita" class="form-select form-select-theme" required>
+                                <option value="">Selecione...</option>
+                                <option value="ATIVA" th:selected="${cliente.statusReceita == 'ATIVA'}">ATIVA</option>
+                                <option value="BAIXADA" th:selected="${cliente.statusReceita == 'BAIXADA'}">BAIXADA</option>
+                                <option value="SUSPENSA" th:selected="${cliente.statusReceita == 'SUSPENSA'}">SUSPENSA</option>
+                                <option value="INAPTA" th:selected="${cliente.statusReceita == 'INAPTA'}">INAPTA</option>
+                                <option value="NULA" th:selected="${cliente.statusReceita == 'NULA'}">NULA</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label-theme">Simples Nacional</label>
+                            <select name="statusSimples" class="form-select form-select-theme">
+                                <option value="">Selecione...</option>
+                                <option value="OPTANTE" th:selected="${cliente.statusSimples == 'OPTANTE'}">OPTANTE</option>
+                                <option value="NAO_OPTANTE" th:selected="${cliente.statusSimples == 'NAO_OPTANTE'}">NÃO OPTANTE</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label-theme">Sintegra</label>
+                            <select name="sintegra" class="form-select form-select-theme" required>
+                                <option value="">Selecione...</option>
+                                <option value="HABILITADO" th:selected="${cliente.sintegra == 'HABILITADO'}">HABILITADO</option>
+                                <option value="INABILITADO" th:selected="${cliente.sintegra == 'INABILITADO'}">INABILITADO</option>
+                                <option value="SUSPENSO" th:selected="${cliente.sintegra == 'SUSPENSO'}">SUSPENSO</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label-theme">CNAE Principal</label>
+                            <input type="text" name="cnae" class="form-control form-control-theme"
+                                   th:value="${cliente.cnae}" placeholder="Ex: 4781400">
+                        </div>
+                    </div>
+                    <button type="submit" class="btn-gold">
+                        <i class="bi bi-check-circle"></i> Consultas Realizadas
+                    </button>
+                </form>
+            </div>
+
+            <!-- CONSULTA_PROTESTOS: Confirmar protestos -->
+            <div th:if="${pipelineStatus.name() == 'CONSULTA_PROTESTOS'}" class="pipeline-form mt-3">
+                <h5 style="font-size:0.95rem;font-weight:600;margin-bottom:0.75rem;">
+                    <i class="bi bi-exclamation-triangle text-gold"></i> Verificar Protestos
+                </h5>
+                <p style="font-size:0.85rem;color:var(--text-muted);margin-bottom:0.75rem;">
+                    Insira os protestos encontrados na aba <strong>Restrições</strong>, depois confirme abaixo.
+                </p>
+                <form th:action="@{/analise/{id}/confirmar-protestos(id=${analise.id})}" method="post">
+                    <button type="submit" class="btn-gold">
+                        <i class="bi bi-check-circle"></i> Confirmar Protestos e Continuar
+                    </button>
+                </form>
+            </div>
+
+            <!-- VERIFICACAO_LOJA_FISICA: Informar data da loja -->
+            <div th:if="${pipelineStatus.name() == 'VERIFICACAO_LOJA_FISICA'}" class="pipeline-form mt-3">
+                <h5 style="font-size:0.95rem;font-weight:600;margin-bottom:0.75rem;">
+                    <i class="bi bi-shop text-gold"></i> Verificação Loja Física
+                </h5>
+                <form th:action="@{/analise/{id}/confirmar-loja(id=${analise.id})}" method="post">
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label-theme">Data de Abertura da Loja</label>
+                            <input type="date" name="dataAberturaLoja" class="form-control form-control-theme"
+                                   th:value="${cliente.dataAberturaLoja}" required>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn-gold">
+                        <i class="bi bi-check-circle"></i> Confirmar Loja
+                    </button>
+                </form>
+            </div>
+
+            <!-- CONSULTA_SCORE_RESTRICOES: Confirmar score e restrições -->
+            <div th:if="${pipelineStatus.name() == 'CONSULTA_SCORE_RESTRICOES'}" class="pipeline-form mt-3">
+                <h5 style="font-size:0.95rem;font-weight:600;margin-bottom:0.75rem;">
+                    <i class="bi bi-graph-up text-gold"></i> Verificar Score e Restrições
+                </h5>
+                <p style="font-size:0.85rem;color:var(--text-muted);margin-bottom:0.75rem;">
+                    Verifique o score e insira restrições nas abas <strong>Restrições</strong> e <strong>Financeiro</strong>, depois confirme abaixo.
+                </p>
+                <form th:action="@{/analise/{id}/confirmar-score-restricoes(id=${analise.id})}" method="post">
+                    <button type="submit" class="btn-gold">
+                        <i class="bi bi-check-circle"></i> Confirmar Score/Restrições e Continuar
+                    </button>
+                </form>
+            </div>
+
+            <!-- EM_ANALISE_CLIENTE_NOVO: Info -->
+            <div th:if="${pipelineStatus.name() == 'EM_ANALISE_CLIENTE_NOVO'}" class="pipeline-form mt-3">
+                <div class="alert-theme-success">
+                    <i class="bi bi-check-circle-fill"></i>
+                    <strong>Todas as validações foram aprovadas.</strong> Defina o limite e parecer no painel lateral.
+                </div>
+            </div>
+        </div>
+
         <div class="row">
             <!-- Left Column: Wizard (70%) -->
             <div class="col-md-8">

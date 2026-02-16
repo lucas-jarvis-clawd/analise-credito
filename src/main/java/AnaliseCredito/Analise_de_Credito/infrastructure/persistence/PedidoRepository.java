@@ -27,4 +27,20 @@ public interface PedidoRepository extends JpaRepository<Pedido, Long> {
      * @return Lista de pedidos com o workflow especificado
      */
     List<Pedido> findByWorkflow(TipoWorkflow workflow);
+
+    /**
+     * Busca todos os pedidos de uma coleção para todos os clientes de um grupo econômico.
+     * @param grupoEconomicoId ID do grupo econômico
+     * @param colecao Coleção no formato AAAAMM
+     * @return Lista de pedidos do grupo na coleção
+     */
+    @org.springframework.data.jpa.repository.Query(
+        "SELECT p FROM Pedido p JOIN FETCH p.cliente c " +
+        "WHERE c.grupoEconomico.id = :grupoEconomicoId AND p.colecao = :colecao " +
+        "ORDER BY c.cnpj, p.marca, p.numero"
+    )
+    List<Pedido> findByGrupoEconomicoIdAndColecao(
+        @org.springframework.data.repository.query.Param("grupoEconomicoId") Long grupoEconomicoId,
+        @org.springframework.data.repository.query.Param("colecao") Integer colecao
+    );
 }

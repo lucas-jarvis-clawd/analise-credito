@@ -144,6 +144,50 @@
                 </div>
             </div>
 
+            <!-- Pipeline Cliente Novo -->
+            <div class="config-card animate-in">
+                <div class="config-card-header gold">
+                    <i class="bi bi-person-plus"></i> Regras Pipeline Cliente Novo
+                </div>
+                <div class="config-card-body">
+                    <div class="row">
+                        <div class="col-md-12 mb-3">
+                            <label for="cnaesPermitidos" class="form-label-theme">CNAEs Permitidos</label>
+                            <textarea th:field="*{cnaesPermitidos}"
+                                      class="form-control form-control-theme" id="cnaesPermitidos" rows="3"
+                                      placeholder="Ex: 4781400,4782201,4789099 (separados por vírgula, vazio = todos permitidos)"></textarea>
+                            <div class="form-text-theme">Lista de CNAEs permitidos separados por vírgula. Deixe vazio para permitir todos.</div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-3 mb-3">
+                            <label for="protestoThresholdAntecipado" class="form-label-theme">Threshold Protesto (R$)</label>
+                            <input type="number" step="0.01" th:field="*{protestoThresholdAntecipado}"
+                                   class="form-control form-control-theme" id="protestoThresholdAntecipado">
+                            <div class="form-text-theme">Protesto acima deste valor encaminha para antecipado</div>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label for="restricaoThresholdAntecipado" class="form-label-theme">Threshold Restrições (R$)</label>
+                            <input type="number" step="0.01" th:field="*{restricaoThresholdAntecipado}"
+                                   class="form-control form-control-theme" id="restricaoThresholdAntecipado">
+                            <div class="form-text-theme">Total de restrições acima deste valor encaminha para antecipado</div>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label for="mesesLojaThreshold" class="form-label-theme">Meses Loja Mínimos</label>
+                            <input type="number" th:field="*{mesesLojaThreshold}"
+                                   class="form-control form-control-theme" id="mesesLojaThreshold">
+                            <div class="form-text-theme">Loja com menos meses que este valor encaminha para antecipado</div>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label for="mesesFundacaoThreshold" class="form-label-theme">Meses Fundação Mínimos</label>
+                            <input type="number" th:field="*{mesesFundacaoThreshold}"
+                                   class="form-control form-control-theme" id="mesesFundacaoThreshold">
+                            <div class="form-text-theme">Empresa com menos meses que este valor encaminha para antecipado</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <div style="display:flex;justify-content:flex-end;gap:0.75rem;margin-bottom:3rem;" class="animate-in">
                 <a href="/" class="btn-ghost" style="padding:0.65rem 1.5rem;font-size:0.95rem;">
                     <i class="bi bi-arrow-left"></i> Voltar

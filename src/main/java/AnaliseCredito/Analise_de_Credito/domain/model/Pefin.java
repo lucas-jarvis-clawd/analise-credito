@@ -10,13 +10,13 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 
 /**
- * Pefin - Restrição de crédito PEFIN (Serasa).
- * Registro de pendências financeiras cadastradas.
+ * Pefin - Restricao de credito PEFIN (Serasa).
+ * Cada registro representa uma ocorrencia individual, inserida manualmente pelo analista.
  */
 @Entity
 @Table(name = "pefin", indexes = {
     @Index(name = "idx_pefin_cliente", columnList = "cliente_id"),
-    @Index(name = "idx_pefin_data", columnList = "data")
+    @Index(name = "idx_pefin_data", columnList = "data_ocorrencia")
 })
 @Data
 @NoArgsConstructor
@@ -33,22 +33,21 @@ public class Pefin {
     private Cliente cliente;
 
     /**
-     * Quantidade de ocorrências
+     * Origem da restricao (ex: "Serasa", "SPC", "Banco X")
      */
-    @Column(nullable = false)
-    private Integer quantidade = 0;
+    @Column(length = 200)
+    private String origem;
 
     /**
-     * Valor total das restrições
+     * Valor da restricao
      */
     @NotNull
     @Column(nullable = false, precision = 15, scale = 2)
     private BigDecimal valor = BigDecimal.ZERO;
 
     /**
-     * Data da última atualização/registro
+     * Data da ocorrencia
      */
-    @NotNull
-    @Column(nullable = false)
-    private LocalDate data;
+    @Column(name = "data_ocorrencia")
+    private LocalDate dataOcorrencia;
 }

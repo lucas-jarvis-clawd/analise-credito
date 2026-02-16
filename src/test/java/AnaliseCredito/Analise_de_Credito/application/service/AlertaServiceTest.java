@@ -269,16 +269,16 @@ class AlertaServiceTest {
         Protesto protesto1 = new Protesto();
         protesto1.setId(1L);
         protesto1.setCliente(cliente);
-        protesto1.setQuantidade(1);
+        protesto1.setCartorio("1o Cartorio");
         protesto1.setValor(new BigDecimal("5000"));
-        protesto1.setData(LocalDate.now().minusMonths(6));
+        protesto1.setDataProtesto(LocalDate.now().minusMonths(6));
 
         Protesto protesto2 = new Protesto();
         protesto2.setId(2L);
         protesto2.setCliente(cliente);
-        protesto2.setQuantidade(1);
+        protesto2.setCartorio("2o Cartorio");
         protesto2.setValor(new BigDecimal("3000"));
-        protesto2.setData(LocalDate.now().minusMonths(3));
+        protesto2.setDataProtesto(LocalDate.now().minusMonths(3));
 
         cliente.getProtestos().add(protesto1);
         cliente.getProtestos().add(protesto2);
@@ -287,9 +287,9 @@ class AlertaServiceTest {
         Pefin pefin = new Pefin();
         pefin.setId(1L);
         pefin.setCliente(cliente);
-        pefin.setQuantidade(1);
+        pefin.setOrigem("Serasa");
         pefin.setValor(new BigDecimal("2000"));
-        pefin.setData(LocalDate.now().minusMonths(4));
+        pefin.setDataOcorrencia(LocalDate.now().minusMonths(4));
 
         cliente.getPefins().add(pefin);
 
@@ -365,9 +365,9 @@ class AlertaServiceTest {
         Protesto protesto = new Protesto();
         protesto.setId(1L);
         protesto.setCliente(cliente);
-        protesto.setQuantidade(1);
+        protesto.setCartorio("Cartorio Central");
         protesto.setValor(new BigDecimal("1000"));
-        protesto.setData(LocalDate.now());
+        protesto.setDataProtesto(LocalDate.now());
         cliente.getProtestos().add(protesto);
 
         // Act
