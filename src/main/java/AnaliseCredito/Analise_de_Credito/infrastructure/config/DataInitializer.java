@@ -48,7 +48,7 @@ public class DataInitializer implements CommandLineRunner {
 
         // 1. Criar Configuração Padrão
         Configuracao config = new Configuracao();
-        config.setId(1L);
+        // Não setar ID manualmente - deixar @GeneratedValue auto-gerar
         config.setLimiteSimei(new BigDecimal("50000.00"));
         config.setMaxSimeisPorGrupo(3);
         config.setValorAprovacaoGestor(new BigDecimal("100000.00"));
@@ -59,12 +59,14 @@ public class DataInitializer implements CommandLineRunner {
 
         // 2. Criar Grupos Econômicos
         GrupoEconomico grupo1 = new GrupoEconomico();
+        grupo1.setCodigo("GRP-ABC");  // Campo obrigatório @NotBlank
         grupo1.setNome("Grupo Comercial ABC");
         grupo1.setLimiteAprovado(new BigDecimal("200000.00"));
         grupo1.setLimiteDisponivel(new BigDecimal("150000.00"));
         grupoEconomicoRepository.save(grupo1);
 
         GrupoEconomico grupo2 = new GrupoEconomico();
+        grupo2.setCodigo("GRP-XYZ");  // Campo obrigatório @NotBlank
         grupo2.setNome("Grupo Varejo XYZ");
         grupo2.setLimiteAprovado(new BigDecimal("100000.00"));
         grupo2.setLimiteDisponivel(new BigDecimal("80000.00"));
@@ -195,6 +197,7 @@ public class DataInitializer implements CommandLineRunner {
         analise.setStatusWorkflow(status);
         analise.setScoreNoMomento(pedido.getCliente().getScoreBoaVista());
         analise.setRequerAprovacaoGestor(false);
+        analise.setDataInicio(LocalDateTime.now());  // Campo obrigatório @NotNull
         return analise;
     }
 }

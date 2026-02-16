@@ -44,7 +44,7 @@ import static org.junit.jupiter.api.Assertions.*;
  * manual test scenarios. These automated tests focus on verifying the application
  * stack loads correctly and basic flows work.
  */
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 public class AcceptanceTest {
 
     @Autowired
