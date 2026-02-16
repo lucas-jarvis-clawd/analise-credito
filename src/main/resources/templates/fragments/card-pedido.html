@@ -30,11 +30,14 @@
             </span>
         </div>
 
-        <!-- Data do Pedido -->
+        <!-- Data mais antiga sem decisão do grupo -->
         <div class="card-info">
             <span>
                 <i class="bi bi-calendar"></i>
-                <span th:text="${#temporals.format(analise.pedido.data, 'dd/MM/yyyy')}">00/00/0000</span>
+                <span th:if="${dataMaisAntigaPorGrupo != null and dataMaisAntigaPorGrupo.containsKey(analise.grupoEconomicoId)}"
+                      th:text="${#temporals.format(dataMaisAntigaPorGrupo[analise.grupoEconomicoId], 'dd/MM/yyyy')}">00/00/0000</span>
+                <span th:unless="${dataMaisAntigaPorGrupo != null and dataMaisAntigaPorGrupo.containsKey(analise.grupoEconomicoId)}"
+                      th:text="${#temporals.format(analise.pedido.data, 'dd/MM/yyyy')}">00/00/0000</span>
             </span>
         </div>
 

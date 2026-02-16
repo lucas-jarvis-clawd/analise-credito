@@ -14,7 +14,9 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.util.EnumMap;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -68,6 +70,20 @@ public class KanbanController {
 
         // Buscar todas as análises (eager fetching de pedido e cliente)
         List<Analise> analises = analiseRepository.findAll();
+
+        // Calcular data do pedido mais antigo sem decisão por grupo econômico
+        Map<Long, LocalDate> dataMaisAntigaPorGrupo = new HashMap<>();
+        for (Analise a : analises) {
+            if (a.getDecisao() == null) {
+                Long grupoId = a.getGrupoEconomicoId();
+                LocalDate dataPedido = a.getPedido().getData();
+                if (grupoId != null && dataPedido != null) {
+                    dataMaisAntigaPorGrupo.merge(grupoId, dataPedido,
+                        (existente, nova) -> nova.isBefore(existente) ? nova : existente);
+                }
+            }
+        }
+        model.addAttribute("dataMaisAntigaPorGrupo", dataMaisAntigaPorGrupo);
 
         // Aplicar filtro se necessário
         if ("PRAZO".equals(filtro)) {
@@ -127,6 +143,15 @@ public class KanbanController {
         model.addAttribute("REANALISADO_APROVADO", StatusWorkflow.REANALISADO_APROVADO);
         model.addAttribute("REANALISADO_REPROVADO", StatusWorkflow.REANALISADO_REPROVADO);
         model.addAttribute("FINALIZADO", StatusWorkflow.FINALIZADO);
+
+        // Pipeline CLIENTE_NOVO states
+        model.addAttribute("FAZER_CONSULTAS", StatusWorkflow.FAZER_CONSULTAS);
+        model.addAttribute("SOLICITAR_CANCELAMENTO", StatusWorkflow.SOLICITAR_CANCELAMENTO);
+        model.addAttribute("CONSULTA_PROTESTOS", StatusWorkflow.CONSULTA_PROTESTOS);
+        model.addAttribute("VERIFICACAO_LOJA_FISICA", StatusWorkflow.VERIFICACAO_LOJA_FISICA);
+        model.addAttribute("CONSULTA_SCORE_RESTRICOES", StatusWorkflow.CONSULTA_SCORE_RESTRICOES);
+        model.addAttribute("ENCAMINHADO_ANTECIPADO", StatusWorkflow.ENCAMINHADO_ANTECIPADO);
+        model.addAttribute("EM_ANALISE_CLIENTE_NOVO", StatusWorkflow.EM_ANALISE_CLIENTE_NOVO);
 
         return "kanban";
     }
