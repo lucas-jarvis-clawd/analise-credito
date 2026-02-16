@@ -3,6 +3,7 @@ package AnaliseCredito.Analise_de_Credito.infrastructure.persistence;
 import AnaliseCredito.Analise_de_Credito.domain.enums.StatusWorkflow;
 import AnaliseCredito.Analise_de_Credito.domain.model.Analise;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -35,4 +36,18 @@ public interface AnaliseRepository extends JpaRepository<Analise, Long> {
      * @return Lista de análises do cliente
      */
     List<Analise> findByClienteId(Long clienteId);
+
+    /**
+     * Busca todas as análises com fetch join de Pedido, Cliente, GrupoEconomico e Clientes do Grupo.
+     * Necessário para evitar LazyInitializationException quando acessando relações
+     * fora da transação (ex: em AlertaService que acessa grupo.getClientes()).
+     *
+     * @return Lista de análises com todas as relações carregadas
+     */
+    @Query("SELECT DISTINCT a FROM Analise a " +
+           "JOIN FETCH a.pedido p " +
+           "JOIN FETCH p.cliente c " +
+           "JOIN FETCH c.grupoEconomico g " +
+           "LEFT JOIN FETCH g.clientes")
+    List<Analise> findAllWithPedidoAndCliente();
 }
