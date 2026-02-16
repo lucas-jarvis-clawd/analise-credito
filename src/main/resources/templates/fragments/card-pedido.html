@@ -4,7 +4,7 @@
 <th:block th:fragment="kanban-cards(analises)">
     <div th:if="${analises == null or analises.isEmpty()}" class="empty-column">
         <i class="bi bi-inbox"></i><br>
-        Nenhuma análise
+        Nenhuma analise
     </div>
     <div th:each="analise : ${analises}"
          class="kanban-card"
@@ -13,7 +13,7 @@
          th:id="'card-' + ${analise.id}">
 
         <!-- Cliente Info -->
-        <div class="card-cliente" th:text="${analise.pedido.cliente.razaoSocial}">Razão Social</div>
+        <div class="card-cliente" th:text="${analise.pedido.cliente.razaoSocial}">Razao Social</div>
         <div class="card-cnpj" th:text="${analise.pedido.cliente.cnpj}">00.000.000/0000-00</div>
 
         <!-- Pedido Info -->
@@ -52,9 +52,9 @@
                   th:text="'Score: ' + ${analise.pedido.cliente.scoreBoaVista}">Score: 0</span>
         </div>
 
-        <!-- Botão Analisar -->
+        <!-- Botao Analisar -->
         <a th:href="@{/analise/{id}(id=${analise.id})}"
-           class="btn btn-primary btn-analisar mt-2">
+           class="btn-analisar mt-2">
             <i class="bi bi-clipboard-check"></i> Analisar
         </a>
     </div>

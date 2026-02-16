@@ -3,52 +3,51 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistema de Análise de Crédito</title>
+    <title>Sistema de Analise de Credito</title>
     <link rel="stylesheet" th:href="@{/webjars/bootstrap/5.3.2/css/bootstrap.min.css}">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link rel="stylesheet" th:href="@{/css/theme.css}">
 </head>
-<body class="bg-light">
-    <div class="container mt-5">
-        <div class="row justify-content-center">
-            <div class="col-md-6">
-                <div class="card shadow">
-                    <div class="card-header bg-primary text-white text-center">
-                        <h3 class="mb-0">Sistema de Análise de Crédito</h3>
-                    </div>
-                    <div class="card-body text-center py-5">
-                        <p class="lead mb-4">Selecione seu perfil para continuar:</p>
+<body>
+    <div class="login-page">
+        <div class="login-card">
+            <div class="login-card-header">
+                <div style="margin-bottom:0.75rem;">
+                    <span class="brand-icon" style="width:48px;height:48px;font-size:1.5rem;display:inline-flex;align-items:center;justify-content:center;background:linear-gradient(135deg, var(--gold), var(--gold-dark));border-radius:10px;color:#fff;">
+                        <i class="bi bi-graph-up"></i>
+                    </span>
+                </div>
+                <h3>Analise de Credito</h3>
+                <div class="brand-sub">Sistema de Gestao</div>
+            </div>
 
-                        <form action="/perfil/selecionar" method="post" class="mt-4">
-                            <div class="d-grid gap-3">
-                                <button type="submit" name="perfil" value="FINANCEIRO"
-                                        class="btn btn-primary btn-lg">
-                                    <i class="bi bi-calculator"></i> Entrar como Financeiro
-                                </button>
+            <div class="login-card-body">
+                <p style="text-align:center;color:var(--text-muted);font-size:0.9rem;margin-bottom:1.5rem;">
+                    Selecione seu perfil para continuar:
+                </p>
 
-                                <button type="submit" name="perfil" value="COMERCIAL"
-                                        class="btn btn-success btn-lg">
-                                    <i class="bi bi-person-badge"></i> Entrar como Comercial
-                                </button>
-                            </div>
-                        </form>
+                <form action="/perfil/selecionar" method="post">
+                    <div style="display:flex;flex-direction:column;gap:0.85rem;">
+                        <button type="submit" name="perfil" value="FINANCEIRO" class="login-btn login-btn-financeiro">
+                            <i class="bi bi-calculator"></i> Entrar como Financeiro
+                        </button>
+
+                        <button type="submit" name="perfil" value="COMERCIAL" class="login-btn login-btn-comercial">
+                            <i class="bi bi-person-badge"></i> Entrar como Comercial
+                        </button>
                     </div>
-                    <div class="card-footer bg-light">
-                        <div class="text-center mb-3">
-                            <small class="text-muted">Versão 1.0.0 - Sistema de Gestão de Análise de Crédito</small>
-                        </div>
-                        <hr class="my-2">
-                        <div class="text-center">
-                            <small class="text-muted d-block mb-2">Área Administrativa:</small>
-                            <div class="d-flex justify-content-center gap-2">
-                                <a th:href="@{/importacao}" class="btn btn-outline-primary btn-sm">
-                                    <i class="bi bi-file-earmark-arrow-up"></i> Importação
-                                </a>
-                                <a th:href="@{/configuracao}" class="btn btn-outline-secondary btn-sm">
-                                    <i class="bi bi-gear"></i> Configuração
-                                </a>
-                            </div>
-                        </div>
-                    </div>
+                </form>
+            </div>
+
+            <div class="login-footer">
+                <small>Versao 1.0.0 - Sistema de Gestao de Analise de Credito</small>
+                <div class="login-admin-links">
+                    <a th:href="@{/importacao}">
+                        <i class="bi bi-file-earmark-arrow-up"></i> Importacao
+                    </a>
+                    <a th:href="@{/configuracao}">
+                        <i class="bi bi-gear"></i> Configuracao
+                    </a>
                 </div>
             </div>
         </div>
