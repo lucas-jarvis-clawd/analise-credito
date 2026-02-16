@@ -220,9 +220,9 @@
                     <div class="kanban-column-header">
                         <span>Pendente</span>
                         <span class="kanban-column-count"
-                              th:text="${kanbanData.get(T(AnaliseCredito.Analise_de_Credito.domain.enums.TipoWorkflow).BASE_PRAZO).get(T(AnaliseCredito.Analise_de_Credito.domain.enums.StatusWorkflow).PENDENTE)?.size() ?: 0}">0</span>
+                              th:text="${kanbanData.get(BASE_PRAZO).get(PENDENTE)?.size() ?: 0}">0</span>
                     </div>
-                    <div th:replace="~{fragments/card-pedido :: kanban-cards(${kanbanData.get(T(AnaliseCredito.Analise_de_Credito.domain.enums.TipoWorkflow).BASE_PRAZO).get(T(AnaliseCredito.Analise_de_Credito.domain.enums.StatusWorkflow).PENDENTE)})}"></div>
+                    <div th:replace="~{fragments/card-pedido :: kanban-cards(${kanbanData.get(BASE_PRAZO).get(PENDENTE)})}"></div>
                 </div>
 
                 <!-- EM_ANALISE_FINANCEIRO Column -->
@@ -230,9 +230,9 @@
                     <div class="kanban-column-header">
                         <span>Em Análise</span>
                         <span class="kanban-column-count"
-                              th:text="${kanbanData.get(T(AnaliseCredito.Analise_de_Credito.domain.enums.TipoWorkflow).BASE_PRAZO).get(T(AnaliseCredito.Analise_de_Credito.domain.enums.StatusWorkflow).EM_ANALISE_FINANCEIRO)?.size() ?: 0}">0</span>
+                              th:text="${kanbanData.get(BASE_PRAZO).get(EM_ANALISE_FINANCEIRO)?.size() ?: 0}">0</span>
                     </div>
-                    <div th:replace="~{fragments/card-pedido :: kanban-cards(${kanbanData.get(T(AnaliseCredito.Analise_de_Credito.domain.enums.TipoWorkflow).BASE_PRAZO).get(T(AnaliseCredito.Analise_de_Credito.domain.enums.StatusWorkflow).EM_ANALISE_FINANCEIRO)})}"></div>
+                    <div th:replace="~{fragments/card-pedido :: kanban-cards(${kanbanData.get(BASE_PRAZO).get(EM_ANALISE_FINANCEIRO)})}"></div>
                 </div>
 
                 <!-- PARECER_APROVADO Column -->
@@ -240,9 +240,9 @@
                     <div class="kanban-column-header">
                         <span>Aprovado</span>
                         <span class="kanban-column-count"
-                              th:text="${kanbanData.get(T(AnaliseCredito.Analise_de_Credito.domain.enums.TipoWorkflow).BASE_PRAZO).get(T(AnaliseCredito.Analise_de_Credito.domain.enums.StatusWorkflow).PARECER_APROVADO)?.size() ?: 0}">0</span>
+                              th:text="${kanbanData.get(BASE_PRAZO).get(PARECER_APROVADO)?.size() ?: 0}">0</span>
                     </div>
-                    <div th:replace="~{fragments/card-pedido :: kanban-cards(${kanbanData.get(T(AnaliseCredito.Analise_de_Credito.domain.enums.TipoWorkflow).BASE_PRAZO).get(T(AnaliseCredito.Analise_de_Credito.domain.enums.StatusWorkflow).PARECER_APROVADO)})}"></div>
+                    <div th:replace="~{fragments/card-pedido :: kanban-cards(${kanbanData.get(BASE_PRAZO).get(PARECER_APROVADO)})}"></div>
                 </div>
 
                 <!-- PARECER_REPROVADO Column -->
@@ -250,9 +250,9 @@
                     <div class="kanban-column-header">
                         <span>Reprovado</span>
                         <span class="kanban-column-count"
-                              th:text="${kanbanData.get(T(AnaliseCredito.Analise_de_Credito.domain.enums.TipoWorkflow).BASE_PRAZO).get(T(AnaliseCredito.Analise_de_Credito.domain.enums.StatusWorkflow).PARECER_REPROVADO)?.size() ?: 0}">0</span>
+                              th:text="${kanbanData.get(BASE_PRAZO).get(PARECER_REPROVADO)?.size() ?: 0}">0</span>
                     </div>
-                    <div th:replace="~{fragments/card-pedido :: kanban-cards(${kanbanData.get(T(AnaliseCredito.Analise_de_Credito.domain.enums.TipoWorkflow).BASE_PRAZO).get(T(AnaliseCredito.Analise_de_Credito.domain.enums.StatusWorkflow).PARECER_REPROVADO)})}"></div>
+                    <div th:replace="~{fragments/card-pedido :: kanban-cards(${kanbanData.get(BASE_PRAZO).get(PARECER_REPROVADO)})}"></div>
                 </div>
 
                 <!-- FINALIZADO Column -->
@@ -260,9 +260,9 @@
                     <div class="kanban-column-header">
                         <span>Finalizado</span>
                         <span class="kanban-column-count"
-                              th:text="${kanbanData.get(T(AnaliseCredito.Analise_de_Credito.domain.enums.TipoWorkflow).BASE_PRAZO).get(T(AnaliseCredito.Analise_de_Credito.domain.enums.StatusWorkflow).FINALIZADO)?.size() ?: 0}">0</span>
+                              th:text="${kanbanData.get(BASE_PRAZO).get(FINALIZADO)?.size() ?: 0}">0</span>
                     </div>
-                    <div th:replace="~{fragments/card-pedido :: kanban-cards(${kanbanData.get(T(AnaliseCredito.Analise_de_Credito.domain.enums.TipoWorkflow).BASE_PRAZO).get(T(AnaliseCredito.Analise_de_Credito.domain.enums.StatusWorkflow).FINALIZADO)})}"></div>
+                    <div th:replace="~{fragments/card-pedido :: kanban-cards(${kanbanData.get(BASE_PRAZO).get(FINALIZADO)})}"></div>
                 </div>
             </div>
         </div>
@@ -279,9 +279,9 @@
                     <div class="kanban-column-header">
                         <span>Pendente</span>
                         <span class="kanban-column-count"
-                              th:text="${kanbanData.get(T(AnaliseCredito.Analise_de_Credito.domain.enums.TipoWorkflow).CLIENTE_NOVO).get(T(AnaliseCredito.Analise_de_Credito.domain.enums.StatusWorkflow).PENDENTE)?.size() ?: 0}">0</span>
+                              th:text="${kanbanData.get(CLIENTE_NOVO).get(PENDENTE)?.size() ?: 0}">0</span>
                     </div>
-                    <div th:replace="~{fragments/card-pedido :: kanban-cards(${kanbanData.get(T(AnaliseCredito.Analise_de_Credito.domain.enums.TipoWorkflow).CLIENTE_NOVO).get(T(AnaliseCredito.Analise_de_Credito.domain.enums.StatusWorkflow).PENDENTE)})}"></div>
+                    <div th:replace="~{fragments/card-pedido :: kanban-cards(${kanbanData.get(CLIENTE_NOVO).get(PENDENTE)})}"></div>
                 </div>
 
                 <!-- DOCUMENTACAO_SOLICITADA Column -->
@@ -289,9 +289,9 @@
                     <div class="kanban-column-header">
                         <span>Doc. Solicitada</span>
                         <span class="kanban-column-count"
-                              th:text="${kanbanData.get(T(AnaliseCredito.Analise_de_Credito.domain.enums.TipoWorkflow).CLIENTE_NOVO).get(T(AnaliseCredito.Analise_de_Credito.domain.enums.StatusWorkflow).DOCUMENTACAO_SOLICITADA)?.size() ?: 0}">0</span>
+                              th:text="${kanbanData.get(CLIENTE_NOVO).get(DOCUMENTACAO_SOLICITADA)?.size() ?: 0}">0</span>
                     </div>
-                    <div th:replace="~{fragments/card-pedido :: kanban-cards(${kanbanData.get(T(AnaliseCredito.Analise_de_Credito.domain.enums.TipoWorkflow).CLIENTE_NOVO).get(T(AnaliseCredito.Analise_de_Credito.domain.enums.StatusWorkflow).DOCUMENTACAO_SOLICITADA)})}"></div>
+                    <div th:replace="~{fragments/card-pedido :: kanban-cards(${kanbanData.get(CLIENTE_NOVO).get(DOCUMENTACAO_SOLICITADA)})}"></div>
                 </div>
 
                 <!-- DOCUMENTACAO_ENVIADA Column -->
@@ -299,9 +299,9 @@
                     <div class="kanban-column-header">
                         <span>Doc. Enviada</span>
                         <span class="kanban-column-count"
-                              th:text="${kanbanData.get(T(AnaliseCredito.Analise_de_Credito.domain.enums.TipoWorkflow).CLIENTE_NOVO).get(T(AnaliseCredito.Analise_de_Credito.domain.enums.StatusWorkflow).DOCUMENTACAO_ENVIADA)?.size() ?: 0}">0</span>
+                              th:text="${kanbanData.get(CLIENTE_NOVO).get(DOCUMENTACAO_ENVIADA)?.size() ?: 0}">0</span>
                     </div>
-                    <div th:replace="~{fragments/card-pedido :: kanban-cards(${kanbanData.get(T(AnaliseCredito.Analise_de_Credito.domain.enums.TipoWorkflow).CLIENTE_NOVO).get(T(AnaliseCredito.Analise_de_Credito.domain.enums.StatusWorkflow).DOCUMENTACAO_ENVIADA)})}"></div>
+                    <div th:replace="~{fragments/card-pedido :: kanban-cards(${kanbanData.get(CLIENTE_NOVO).get(DOCUMENTACAO_ENVIADA)})}"></div>
                 </div>
 
                 <!-- PARECER_APROVADO Column -->
@@ -309,9 +309,9 @@
                     <div class="kanban-column-header">
                         <span>Aprovado</span>
                         <span class="kanban-column-count"
-                              th:text="${kanbanData.get(T(AnaliseCredito.Analise_de_Credito.domain.enums.TipoWorkflow).CLIENTE_NOVO).get(T(AnaliseCredito.Analise_de_Credito.domain.enums.StatusWorkflow).PARECER_APROVADO)?.size() ?: 0}">0</span>
+                              th:text="${kanbanData.get(CLIENTE_NOVO).get(PARECER_APROVADO)?.size() ?: 0}">0</span>
                     </div>
-                    <div th:replace="~{fragments/card-pedido :: kanban-cards(${kanbanData.get(T(AnaliseCredito.Analise_de_Credito.domain.enums.TipoWorkflow).CLIENTE_NOVO).get(T(AnaliseCredito.Analise_de_Credito.domain.enums.StatusWorkflow).PARECER_APROVADO)})}"></div>
+                    <div th:replace="~{fragments/card-pedido :: kanban-cards(${kanbanData.get(CLIENTE_NOVO).get(PARECER_APROVADO)})}"></div>
                 </div>
 
                 <!-- PARECER_REPROVADO Column -->
@@ -319,9 +319,9 @@
                     <div class="kanban-column-header">
                         <span>Reprovado</span>
                         <span class="kanban-column-count"
-                              th:text="${kanbanData.get(T(AnaliseCredito.Analise_de_Credito.domain.enums.TipoWorkflow).CLIENTE_NOVO).get(T(AnaliseCredito.Analise_de_Credito.domain.enums.StatusWorkflow).PARECER_REPROVADO)?.size() ?: 0}">0</span>
+                              th:text="${kanbanData.get(CLIENTE_NOVO).get(PARECER_REPROVADO)?.size() ?: 0}">0</span>
                     </div>
-                    <div th:replace="~{fragments/card-pedido :: kanban-cards(${kanbanData.get(T(AnaliseCredito.Analise_de_Credito.domain.enums.TipoWorkflow).CLIENTE_NOVO).get(T(AnaliseCredito.Analise_de_Credito.domain.enums.StatusWorkflow).PARECER_REPROVADO)})}"></div>
+                    <div th:replace="~{fragments/card-pedido :: kanban-cards(${kanbanData.get(CLIENTE_NOVO).get(PARECER_REPROVADO)})}"></div>
                 </div>
 
                 <!-- FINALIZADO Column -->
@@ -329,9 +329,9 @@
                     <div class="kanban-column-header">
                         <span>Finalizado</span>
                         <span class="kanban-column-count"
-                              th:text="${kanbanData.get(T(AnaliseCredito.Analise_de_Credito.domain.enums.TipoWorkflow).CLIENTE_NOVO).get(T(AnaliseCredito.Analise_de_Credito.domain.enums.StatusWorkflow).FINALIZADO)?.size() ?: 0}">0</span>
+                              th:text="${kanbanData.get(CLIENTE_NOVO).get(FINALIZADO)?.size() ?: 0}">0</span>
                     </div>
-                    <div th:replace="~{fragments/card-pedido :: kanban-cards(${kanbanData.get(T(AnaliseCredito.Analise_de_Credito.domain.enums.TipoWorkflow).CLIENTE_NOVO).get(T(AnaliseCredito.Analise_de_Credito.domain.enums.StatusWorkflow).FINALIZADO)})}"></div>
+                    <div th:replace="~{fragments/card-pedido :: kanban-cards(${kanbanData.get(CLIENTE_NOVO).get(FINALIZADO)})}"></div>
                 </div>
             </div>
         </div>

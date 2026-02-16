@@ -1,0 +1,693 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Análise de Crédito - [[${cliente.razaoSocial}]]</title>
+    <link rel="stylesheet" th:href="@{/webjars/bootstrap/5.3.2/css/bootstrap.min.css}">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <style>
+        body {
+            background-color: #f0f2f5;
+        }
+
+        .wizard-container {
+            background-color: white;
+            border-radius: 8px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .decision-panel {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 20px;
+        }
+
+        .nav-tabs .nav-link {
+            color: #495057;
+            font-weight: 500;
+        }
+
+        .nav-tabs .nav-link.active {
+            color: #0d6efd;
+            font-weight: 600;
+        }
+
+        .tab-content {
+            padding-top: 1.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: #495057;
+            margin-bottom: 0.25rem;
+        }
+
+        .info-value {
+            color: #212529;
+            margin-bottom: 1rem;
+        }
+
+        .score-badge {
+            font-size: 3rem;
+            font-weight: 700;
+            padding: 1rem 2rem;
+            border-radius: 12px;
+        }
+
+        .score-alto {
+            background-color: #28a745;
+            color: white;
+        }
+
+        .score-medio {
+            background-color: #ffc107;
+            color: #212529;
+        }
+
+        .score-baixo {
+            background-color: #dc3545;
+            color: white;
+        }
+
+        .limite-display {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #0d6efd;
+        }
+
+        .readonly-field {
+            background-color: #e9ecef;
+            cursor: not-allowed;
+        }
+
+        .table-sm td, .table-sm th {
+            font-size: 0.875rem;
+        }
+
+        .parecer-box {
+            background-color: #f8f9fa;
+            border-left: 4px solid #0d6efd;
+            padding: 1rem;
+            font-family: monospace;
+            font-size: 0.875rem;
+            word-break: break-all;
+        }
+
+        .alert-dismissible {
+            margin-bottom: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation Bar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/">
+                <i class="bi bi-clipboard-check"></i> Análise de Crédito
+            </a>
+            <div class="d-flex align-items-center gap-3">
+                <a href="/analise/kanban" class="btn btn-outline-light btn-sm">
+                    <i class="bi bi-arrow-left"></i> Voltar ao Kanban
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Container -->
+    <div class="container-fluid mt-4 mb-5">
+        <!-- Flash Messages -->
+        <div th:if="${mensagem}" class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="bi bi-check-circle"></i> <span th:text="${mensagem}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        <div th:if="${erro}" class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="bi bi-exclamation-triangle"></i> <span th:text="${erro}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+
+        <!-- Page Header -->
+        <div class="row mb-3">
+            <div class="col">
+                <h2>
+                    <i class="bi bi-building"></i>
+                    <span th:text="${cliente.razaoSocial}">Razão Social</span>
+                </h2>
+                <p class="text-muted mb-0">
+                    <strong>CNPJ:</strong> <span th:text="${cliente.cnpj}">00.000.000/0000-00</span>
+                    <span class="ms-3"><strong>Pedido:</strong> <span th:text="${pedido.numero}">000000</span></span>
+                    <span class="ms-3"><strong>Valor:</strong> R$ <span th:text="${#numbers.formatDecimal(pedido.valor, 1, 'POINT', 2, 'COMMA')}">0,00</span></span>
+                </p>
+            </div>
+        </div>
+
+        <div class="row">
+            <!-- Left Column: Wizard (70%) -->
+            <div class="col-md-8">
+                <div class="wizard-container">
+                    <!-- Tabs Navigation -->
+                    <ul class="nav nav-tabs" id="wizardTabs" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active" id="cadastrais-tab" data-bs-toggle="tab"
+                                    data-bs-target="#cadastrais" type="button" role="tab">
+                                <i class="bi bi-person-vcard"></i> Dados Cadastrais
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="vinculos-tab" data-bs-toggle="tab"
+                                    data-bs-target="#vinculos" type="button" role="tab">
+                                <i class="bi bi-diagram-3"></i> Vínculos e Sócios
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="restricoes-tab" data-bs-toggle="tab"
+                                    data-bs-target="#restricoes" type="button" role="tab">
+                                <i class="bi bi-exclamation-triangle"></i> Restrições
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="financeiro-tab" data-bs-toggle="tab"
+                                    data-bs-target="#financeiro" type="button" role="tab">
+                                <i class="bi bi-currency-dollar"></i> Financeiro
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="documentos-tab" data-bs-toggle="tab"
+                                    data-bs-target="#documentos" type="button" role="tab">
+                                <i class="bi bi-file-earmark-text"></i> Documentos
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="historico-tab" data-bs-toggle="tab"
+                                    data-bs-target="#historico" type="button" role="tab">
+                                <i class="bi bi-clock-history"></i> Histórico
+                            </button>
+                        </li>
+                    </ul>
+
+                    <!-- Tabs Content -->
+                    <div class="tab-content" id="wizardTabsContent">
+                        <!-- Tab 1: Dados Cadastrais -->
+                        <div class="tab-pane fade show active" id="cadastrais" role="tabpanel">
+                            <h4 class="mb-4">Dados Cadastrais</h4>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="info-label">CNPJ</div>
+                                    <div class="info-value" th:text="${cliente.cnpj}">00.000.000/0000-00</div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="info-label">Tipo de Cliente</div>
+                                    <div class="info-value" th:text="${cliente.tipoCliente}">TIPO</div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-12">
+                                    <div class="info-label">Razão Social</div>
+                                    <div class="info-value" th:text="${cliente.razaoSocial}">Razão Social</div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-12">
+                                    <div class="info-label">Nome Fantasia</div>
+                                    <div class="info-value" th:text="${cliente.nomeFantasia ?: 'N/D'}">Nome Fantasia</div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <div class="info-label">Data de Fundação</div>
+                                    <div class="info-value" th:text="${cliente.dataFundacao != null ? #temporals.format(cliente.dataFundacao, 'dd/MM/yyyy') : 'N/D'}">00/00/0000</div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="info-label">SIMEI</div>
+                                    <div class="info-value">
+                                        <span th:if="${cliente.simei}" class="badge bg-success">SIM</span>
+                                        <span th:unless="${cliente.simei}" class="badge bg-secondary">NÃO</span>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="info-label">Estado (UF)</div>
+                                    <div class="info-value" th:text="${cliente.estado ?: 'N/D'}">UF</div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="info-label">Telefone</div>
+                                    <div class="info-value" th:text="${cliente.telefone ?: 'N/D'}">Telefone</div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="info-label">E-mail</div>
+                                    <div class="info-value" th:text="${cliente.email ?: 'N/D'}">email@example.com</div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <div class="info-label">Cluster</div>
+                                    <div class="info-value" th:text="${cliente.cluster ?: 'N/D'}">Cluster</div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="info-label">Situação Crédito</div>
+                                    <div class="info-value" th:text="${cliente.situacaoCredito ?: 'N/D'}">Situação</div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="info-label">Sintegra</div>
+                                    <div class="info-value" th:text="${cliente.sintegra ?: 'N/D'}">Sintegra</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Tab 2: Vínculos e Sócios -->
+                        <div class="tab-pane fade" id="vinculos" role="tabpanel">
+                            <h4 class="mb-4">Vínculos e Sócios</h4>
+
+                            <!-- Sócios -->
+                            <h5 class="mb-3">Sócios (<span th:text="${#lists.size(socios)}">0</span>)</h5>
+                            <div th:if="${#lists.isEmpty(socios)}" class="alert alert-info">
+                                <i class="bi bi-info-circle"></i> Nenhum sócio cadastrado.
+                            </div>
+                            <div th:unless="${#lists.isEmpty(socios)}">
+                                <table class="table table-sm table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th>CPF/CNPJ</th>
+                                            <th>Nome</th>
+                                            <th>Participação (%)</th>
+                                            <th>Data Entrada</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr th:each="socio : ${socios}">
+                                            <td th:text="${socio.cpfCnpj}">000.000.000-00</td>
+                                            <td th:text="${socio.nome}">Nome do Sócio</td>
+                                            <td th:text="${socio.participacao != null ? socio.participacao + '%' : 'N/D'}">0%</td>
+                                            <td th:text="${socio.dataEntrada != null ? #temporals.format(socio.dataEntrada, 'dd/MM/yyyy') : 'N/D'}">00/00/0000</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <!-- Participações -->
+                            <h5 class="mb-3 mt-4">Participações em Outras Empresas (<span th:text="${#lists.size(participacoes)}">0</span>)</h5>
+                            <div th:if="${#lists.isEmpty(participacoes)}" class="alert alert-info">
+                                <i class="bi bi-info-circle"></i> Nenhuma participação cadastrada.
+                            </div>
+                            <div th:unless="${#lists.isEmpty(participacoes)}">
+                                <table class="table table-sm table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th>CNPJ</th>
+                                            <th>Razão Social</th>
+                                            <th>Participação (%)</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr th:each="participacao : ${participacoes}">
+                                            <td th:text="${participacao.cnpjParticipada}">00.000.000/0000-00</td>
+                                            <td th:text="${participacao.razaoSocialParticipada}">Razão Social</td>
+                                            <td th:text="${participacao.percentual != null ? participacao.percentual + '%' : 'N/D'}">0%</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- Tab 3: Restrições -->
+                        <div class="tab-pane fade" id="restricoes" role="tabpanel">
+                            <h4 class="mb-4">Restrições Financeiras</h4>
+
+                            <!-- Score Summary -->
+                            <div class="alert alert-light border mb-4">
+                                <div class="row align-items-center">
+                                    <div class="col-md-6">
+                                        <strong>Score Boa Vista:</strong>
+                                        <span class="ms-2 badge"
+                                              th:classappend="${cliente.scoreBoaVista >= 700} ? 'bg-success' : (${cliente.scoreBoaVista >= 400} ? 'bg-warning text-dark' : 'bg-danger')"
+                                              th:text="${cliente.scoreBoaVista ?: 'N/D'}">0</span>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <strong>Total de Restrições:</strong>
+                                        <span class="ms-2 badge bg-danger" th:text="${#lists.size(pefins) + #lists.size(protestos) + #lists.size(acoesJudiciais) + #lists.size(cheques)}">0</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- PEFIN -->
+                            <h5 class="mb-3">PEFIN (<span th:text="${#lists.size(pefins)}">0</span>)</h5>
+                            <div th:if="${#lists.isEmpty(pefins)}" class="alert alert-success">
+                                <i class="bi bi-check-circle"></i> Nenhuma ocorrência.
+                            </div>
+                            <table th:unless="${#lists.isEmpty(pefins)}" class="table table-sm table-striped mb-4">
+                                <thead>
+                                    <tr>
+                                        <th>Origem</th>
+                                        <th>Valor</th>
+                                        <th>Data</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr th:each="pefin : ${pefins}">
+                                        <td th:text="${pefin.origem}">Origem</td>
+                                        <td>R$ <span th:text="${#numbers.formatDecimal(pefin.valor, 1, 'POINT', 2, 'COMMA')}">0,00</span></td>
+                                        <td th:text="${pefin.dataOcorrencia != null ? #temporals.format(pefin.dataOcorrencia, 'dd/MM/yyyy') : 'N/D'}">00/00/0000</td>
+                                    </tr>
+                                </tbody>
+                                <tfoot>
+                                    <tr class="table-warning">
+                                        <th>TOTAL</th>
+                                        <th>R$ <span th:text="${#numbers.formatDecimal(totalPefin, 1, 'POINT', 2, 'COMMA')}">0,00</span></th>
+                                        <th></th>
+                                    </tr>
+                                </tfoot>
+                            </table>
+
+                            <!-- Protestos -->
+                            <h5 class="mb-3">Protestos (<span th:text="${#lists.size(protestos)}">0</span>)</h5>
+                            <div th:if="${#lists.isEmpty(protestos)}" class="alert alert-success">
+                                <i class="bi bi-check-circle"></i> Nenhuma ocorrência.
+                            </div>
+                            <table th:unless="${#lists.isEmpty(protestos)}" class="table table-sm table-striped mb-4">
+                                <thead>
+                                    <tr>
+                                        <th>Cartório</th>
+                                        <th>Valor</th>
+                                        <th>Data</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr th:each="protesto : ${protestos}">
+                                        <td th:text="${protesto.cartorio}">Cartório</td>
+                                        <td>R$ <span th:text="${#numbers.formatDecimal(protesto.valor, 1, 'POINT', 2, 'COMMA')}">0,00</span></td>
+                                        <td th:text="${protesto.dataProtesto != null ? #temporals.format(protesto.dataProtesto, 'dd/MM/yyyy') : 'N/D'}">00/00/0000</td>
+                                    </tr>
+                                </tbody>
+                                <tfoot>
+                                    <tr class="table-warning">
+                                        <th>TOTAL</th>
+                                        <th>R$ <span th:text="${#numbers.formatDecimal(totalProtesto, 1, 'POINT', 2, 'COMMA')}">0,00</span></th>
+                                        <th></th>
+                                    </tr>
+                                </tfoot>
+                            </table>
+
+                            <!-- Ações Judiciais -->
+                            <h5 class="mb-3">Ações Judiciais (<span th:text="${#lists.size(acoesJudiciais)}">0</span>)</h5>
+                            <div th:if="${#lists.isEmpty(acoesJudiciais)}" class="alert alert-success">
+                                <i class="bi bi-check-circle"></i> Nenhuma ocorrência.
+                            </div>
+                            <table th:unless="${#lists.isEmpty(acoesJudiciais)}" class="table table-sm table-striped mb-4">
+                                <thead>
+                                    <tr>
+                                        <th>Tipo</th>
+                                        <th>Vara</th>
+                                        <th>Data</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr th:each="acao : ${acoesJudiciais}">
+                                        <td th:text="${acao.tipo}">Tipo</td>
+                                        <td th:text="${acao.vara}">Vara</td>
+                                        <td th:text="${acao.dataDistribuicao != null ? #temporals.format(acao.dataDistribuicao, 'dd/MM/yyyy') : 'N/D'}">00/00/0000</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+
+                            <!-- Cheques -->
+                            <h5 class="mb-3">Cheques Sem Fundos (<span th:text="${#lists.size(cheques)}">0</span>)</h5>
+                            <div th:if="${#lists.isEmpty(cheques)}" class="alert alert-success">
+                                <i class="bi bi-check-circle"></i> Nenhuma ocorrência.
+                            </div>
+                            <table th:unless="${#lists.isEmpty(cheques)}" class="table table-sm table-striped mb-4">
+                                <thead>
+                                    <tr>
+                                        <th>Banco</th>
+                                        <th>Agência</th>
+                                        <th>Valor</th>
+                                        <th>Data</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr th:each="cheque : ${cheques}">
+                                        <td th:text="${cheque.banco}">Banco</td>
+                                        <td th:text="${cheque.agencia}">Agência</td>
+                                        <td>R$ <span th:text="${#numbers.formatDecimal(cheque.valor, 1, 'POINT', 2, 'COMMA')}">0,00</span></td>
+                                        <td th:text="${cheque.dataOcorrencia != null ? #temporals.format(cheque.dataOcorrencia, 'dd/MM/yyyy') : 'N/D'}">00/00/0000</td>
+                                    </tr>
+                                </tbody>
+                                <tfoot>
+                                    <tr class="table-warning">
+                                        <th colspan="2">TOTAL</th>
+                                        <th>R$ <span th:text="${#numbers.formatDecimal(totalCheque, 1, 'POINT', 2, 'COMMA')}">0,00</span></th>
+                                        <th></th>
+                                    </tr>
+                                </tfoot>
+                            </table>
+
+                            <!-- Total Geral -->
+                            <div class="alert alert-danger">
+                                <strong>TOTAL GERAL DE RESTRIÇÕES:</strong>
+                                R$ <span th:text="${#numbers.formatDecimal(totalRestricoes, 1, 'POINT', 2, 'COMMA')}">0,00</span>
+                            </div>
+                        </div>
+
+                        <!-- Tab 4: Financeiro -->
+                        <div class="tab-pane fade" id="financeiro" role="tabpanel">
+                            <h4 class="mb-4">Dados Financeiros</h4>
+
+                            <!-- Dados BI -->
+                            <h5 class="mb-3">Dados de Business Intelligence</h5>
+                            <div th:if="${#lists.isEmpty(dadosBI)}" class="alert alert-info">
+                                <i class="bi bi-info-circle"></i> Nenhum dado de BI disponível.
+                            </div>
+                            <div th:unless="${#lists.isEmpty(dadosBI)}">
+                                <table class="table table-sm table-striped mb-4">
+                                    <thead>
+                                        <tr>
+                                            <th>Coleção</th>
+                                            <th>Valor Vencido</th>
+                                            <th>Crédito</th>
+                                            <th>Score Interno</th>
+                                            <th>Atraso Médio</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr th:each="dado : ${dadosBI}">
+                                            <td th:text="${dado.colecaoFormatada}">Jan/2026</td>
+                                            <td>R$ <span th:text="${#numbers.formatDecimal(dado.valorVencido, 1, 'POINT', 2, 'COMMA')}">0,00</span></td>
+                                            <td>R$ <span th:text="${#numbers.formatDecimal(dado.credito, 1, 'POINT', 2, 'COMMA')}">0,00</span></td>
+                                            <td th:text="${dado.score ?: 'N/D'}">0</td>
+                                            <td th:text="${dado.atrasoMedio != null ? dado.atrasoMedio + ' dias' : 'N/D'}">0 dias</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <!-- Duplicatas -->
+                            <h5 class="mb-3">Duplicatas em Aberto (<span th:text="${#lists.size(duplicatas)}">0</span>)</h5>
+                            <div th:if="${#lists.isEmpty(duplicatas)}" class="alert alert-info">
+                                <i class="bi bi-info-circle"></i> Nenhuma duplicata em aberto.
+                            </div>
+                            <div th:unless="${#lists.isEmpty(duplicatas)}">
+                                <table class="table table-sm table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th>Portador</th>
+                                            <th>Vencimento</th>
+                                            <th>Valor</th>
+                                            <th>Saldo</th>
+                                            <th>Dias Atraso</th>
+                                            <th>Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr th:each="duplicata : ${duplicatas}">
+                                            <td th:text="${duplicata.portador ?: 'N/D'}">Portador</td>
+                                            <td th:text="${duplicata.vencimento != null ? #temporals.format(duplicata.vencimento, 'dd/MM/yyyy') : 'N/D'}">00/00/0000</td>
+                                            <td>R$ <span th:text="${#numbers.formatDecimal(duplicata.valor, 1, 'POINT', 2, 'COMMA')}">0,00</span></td>
+                                            <td>R$ <span th:text="${#numbers.formatDecimal(duplicata.saldo, 1, 'POINT', 2, 'COMMA')}">0,00</span></td>
+                                            <td th:text="${duplicata.atraso ?: 0}">0</td>
+                                            <td>
+                                                <span th:if="${duplicata.pago}" class="badge bg-success">Pago</span>
+                                                <span th:unless="${duplicata.pago}" class="badge bg-warning text-dark">Em Aberto</span>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- Tab 5: Documentos -->
+                        <div class="tab-pane fade" id="documentos" role="tabpanel">
+                            <h4 class="mb-4">Documentos Anexados</h4>
+                            <div th:if="${#lists.isEmpty(documentos)}" class="alert alert-info">
+                                <i class="bi bi-info-circle"></i> Nenhum documento anexado.
+                            </div>
+                            <div th:unless="${#lists.isEmpty(documentos)}">
+                                <table class="table table-sm table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th>Tipo</th>
+                                            <th>Nome do Arquivo</th>
+                                            <th>Data Upload</th>
+                                            <th>Ações</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr th:each="documento : ${documentos}">
+                                            <td th:text="${documento.tipo}">Tipo</td>
+                                            <td th:text="${documento.nomeArquivo}">arquivo.pdf</td>
+                                            <td th:text="${documento.dataUpload != null ? #temporals.format(documento.dataUpload, 'dd/MM/yyyy HH:mm') : 'N/D'}">00/00/0000 00:00</td>
+                                            <td>
+                                                <a th:href="@{/documentos/download/{id}(id=${documento.id})}"
+                                                   class="btn btn-sm btn-outline-primary">
+                                                    <i class="bi bi-download"></i> Download
+                                                </a>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- Tab 6: Histórico -->
+                        <div class="tab-pane fade" id="historico" role="tabpanel">
+                            <h4 class="mb-4">Histórico da Análise</h4>
+                            <div class="timeline">
+                                <div class="card mb-3">
+                                    <div class="card-body">
+                                        <h6 class="card-subtitle mb-2 text-muted">
+                                            <i class="bi bi-calendar"></i>
+                                            Início da Análise
+                                        </h6>
+                                        <p class="card-text">
+                                            <strong>Data:</strong> <span th:text="${analise.dataInicio != null ? #temporals.format(analise.dataInicio, 'dd/MM/yyyy HH:mm') : 'N/D'}">00/00/0000 00:00</span><br>
+                                            <strong>Status:</strong> <span th:text="${analise.statusWorkflow}">PENDENTE</span><br>
+                                            <strong>Workflow:</strong> <span th:text="${pedido.workflow}">BASE_PRAZO</span>
+                                        </p>
+                                    </div>
+                                </div>
+                                <div th:if="${analise.dataFim != null}" class="card mb-3">
+                                    <div class="card-body">
+                                        <h6 class="card-subtitle mb-2 text-muted">
+                                            <i class="bi bi-check-circle"></i>
+                                            Análise Concluída
+                                        </h6>
+                                        <p class="card-text">
+                                            <strong>Data:</strong> <span th:text="${#temporals.format(analise.dataFim, 'dd/MM/yyyy HH:mm')}">00/00/0000 00:00</span><br>
+                                            <strong>Decisão:</strong> <span th:text="${analise.decisao}">APROVADO</span><br>
+                                            <strong>Analista:</strong> <span th:text="${analise.analistaResponsavel}">SISTEMA</span><br>
+                                            <strong>Duração:</strong> <span th:text="${analise.duracaoHoras + ' horas'}">0 horas</span>
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column: Decision Panel (30%) -->
+            <div class="col-md-4">
+                <div class="decision-panel">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0"><i class="bi bi-clipboard-check"></i> Decisão de Crédito</h5>
+                    </div>
+                    <div class="card-body">
+                        <!-- Score Badge -->
+                        <div class="text-center mb-4">
+                            <div th:if="${cliente.scoreBoaVista != null}"
+                                 class="score-badge d-inline-block"
+                                 th:classappend="${cliente.scoreBoaVista >= 700} ? 'score-alto' : (${cliente.scoreBoaVista >= 400} ? 'score-medio' : 'score-baixo')"
+                                 th:text="${cliente.scoreBoaVista}">0</div>
+                            <div th:unless="${cliente.scoreBoaVista != null}"
+                                 class="score-badge d-inline-block score-baixo">N/D</div>
+                            <div class="text-muted small mt-2">Score Boa Vista</div>
+                        </div>
+
+                        <!-- Limites -->
+                        <div class="mb-4">
+                            <dl class="row mb-2">
+                                <dt class="col-sm-6">Limite Atual:</dt>
+                                <dd class="col-sm-6 text-end limite-display">
+                                    R$ <span th:text="${#numbers.formatDecimal(grupo.limiteAprovado, 1, 'POINT', 2, 'COMMA')}">0,00</span>
+                                </dd>
+                            </dl>
+                            <dl class="row mb-0">
+                                <dt class="col-sm-6">Limite Sugerido:</dt>
+                                <dd class="col-sm-6 text-end limite-display text-success">
+                                    R$ <span th:text="${#numbers.formatDecimal(analise.limiteSugerido, 1, 'POINT', 2, 'COMMA')}">0,00</span>
+                                </dd>
+                            </dl>
+                        </div>
+
+                        <hr>
+
+                        <!-- Decision Form -->
+                        <form th:action="@{/analise/{id}/concluir(id=${analise.id})}" method="post" id="decisionForm">
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Parecer:</label>
+                                <select name="decisao" id="decisaoSelect" class="form-select" required>
+                                    <option value="">Selecione...</option>
+                                    <option value="APROVADO">Aprovado sem restrição</option>
+                                    <option value="LIMITADO">Limitado a R$ X</option>
+                                    <option value="REPROVADO">Reprovar</option>
+                                </select>
+                            </div>
+
+                            <div class="mb-3" id="limiteField" style="display:none;">
+                                <label class="form-label fw-bold">Limite Aprovado (R$):</label>
+                                <input type="number" name="limiteAprovado" class="form-control"
+                                       step="0.01" min="0" placeholder="0,00">
+                                <div class="form-text">Digite o valor do limite aprovado</div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Justificativa:</label>
+                                <textarea name="justificativa" class="form-control" rows="4"
+                                          required placeholder="Descreva os motivos da sua decisão..."></textarea>
+                            </div>
+
+                            <hr>
+
+                            <!-- Parecer CRM Preview (only for CLIENTE_NOVO) -->
+                            <div th:if="${parecerPreview != null}" class="mb-3">
+                                <label class="form-label fw-bold">Preview Parecer CRM:</label>
+                                <div class="parecer-box" th:text="${parecerPreview}">Parecer...</div>
+                            </div>
+
+                            <button type="submit" class="btn btn-primary w-100 btn-lg">
+                                <i class="bi bi-check-circle"></i> Concluir Análise
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script th:src="@{/webjars/bootstrap/5.3.2/js/bootstrap.bundle.min.js}"></script>
+    <script>
+        // Show/hide limite field based on decision
+        document.getElementById('decisaoSelect').addEventListener('change', function() {
+            const limiteField = document.getElementById('limiteField');
+            if (this.value === 'LIMITADO') {
+                limiteField.style.display = 'block';
+                limiteField.querySelector('input').required = true;
+            } else {
+                limiteField.style.display = 'none';
+                limiteField.querySelector('input').required = false;
+            }
+        });
+
+        // Confirm before submitting
+        document.getElementById('decisionForm').addEventListener('submit', function(e) {
+            const decisao = document.getElementById('decisaoSelect').value;
+            if (!confirm('Tem certeza que deseja concluir a análise com a decisão: ' + decisao + '?')) {
+                e.preventDefault();
+            }
+        });
+    </script>
+</body>
+</html>

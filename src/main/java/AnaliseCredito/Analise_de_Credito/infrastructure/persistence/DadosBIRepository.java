@@ -20,4 +20,11 @@ public interface DadosBIRepository extends JpaRepository<DadosBI, Long> {
      * @return Lista de dados de BI ordenados por coleção (mais recente primeiro)
      */
     List<DadosBI> findByGrupoEconomicoIdOrderByColecaoDesc(Long grupoEconomicoId);
+
+    /**
+     * Busca todos os dados de BI de um grupo econômico.
+     * @param grupoEconomicoId ID do grupo econômico
+     * @return Lista de dados de BI do grupo
+     */
+    List<DadosBI> findByGrupoEconomicoId(Long grupoEconomicoId);
 }
