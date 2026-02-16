@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -70,6 +71,9 @@ public class AnaliseController {
 
     @Autowired
     private DocumentoRepository documentoRepository;
+
+    @Autowired
+    private PedidoRepository pedidoRepository;
 
     @Autowired
     private ScoringService scoringService;
@@ -133,6 +137,14 @@ public class AnaliseController {
         // Load documents
         List<Documento> documentos = documentoRepository.findByClienteId(cliente.getId());
 
+        // Load ALL orders from the economic group
+        List<Pedido> pedidosGrupo = pedidoRepository.findByClienteGrupoEconomicoId(grupo.getId());
+
+        // Calculate total value of all group orders
+        BigDecimal totalPedidosGrupo = pedidosGrupo.stream()
+                .map(Pedido::getValor)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
         // Generate parecer preview for CLIENTE_NOVO
         String parecerPreview = null;
         if (pedido.getWorkflow() == TipoWorkflow.CLIENTE_NOVO) {
@@ -161,6 +173,8 @@ public class AnaliseController {
         model.addAttribute("duplicatas", duplicatas);
         model.addAttribute("documentos", documentos);
         model.addAttribute("parecerPreview", parecerPreview);
+        model.addAttribute("pedidosGrupo", pedidosGrupo);
+        model.addAttribute("totalPedidosGrupo", totalPedidosGrupo);
 
         // Calculate totals for display
         BigDecimal totalPefin = pefins.stream()
@@ -298,5 +312,298 @@ public class AnaliseController {
             case "REPROVADO" -> StatusWorkflow.PARECER_REPROVADO;
             default -> StatusWorkflow.FINALIZADO;
         };
+    }
+
+    // ========== ENDPOINTS PARA EDIÇÃO MANUAL ==========
+
+    /**
+     * POST /analise/{id}/cliente/instagram - Atualiza o Instagram do cliente.
+     *
+     * @param id ID da análise
+     * @param instagram Novo Instagram a ser atribuído
+     * @param redirectAttributes Atributos para mensagem flash
+     * @return Redirect para a análise
+     */
+    @PostMapping("/{id}/cliente/instagram")
+    public String atualizarInstagram(@PathVariable Long id,
+                                      @RequestParam String instagram,
+                                      RedirectAttributes redirectAttributes) {
+        try {
+            Analise analise = analiseRepository.findById(id)
+                    .orElseThrow(() -> new IllegalArgumentException("Análise não encontrada: " + id));
+
+            Cliente cliente = clienteRepository.findById(analise.getClienteId())
+                    .orElseThrow(() -> new IllegalArgumentException("Cliente não encontrado"));
+
+            cliente.setInstagram(instagram);
+            clienteRepository.save(cliente);
+
+            redirectAttributes.addFlashAttribute("mensagem",
+                    "Instagram atualizado com sucesso para " + instagram);
+            return "redirect:/analise/" + id;
+
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("erro",
+                    "Erro ao atualizar Instagram: " + e.getMessage());
+            return "redirect:/analise/" + id;
+        }
+    }
+
+    /**
+     * PUT /analise/{id}/cliente/score - Atualiza o score Boa Vista do cliente.
+     *
+     * @param id ID da análise
+     * @param scoreBoaVista Novo score a ser atribuído
+     * @param redirectAttributes Atributos para mensagem flash
+     * @return Redirect para a análise
+     */
+    @PutMapping("/{id}/cliente/score")
+    public String atualizarScore(@PathVariable Long id,
+                                  @RequestParam Integer scoreBoaVista,
+                                  RedirectAttributes redirectAttributes) {
+        try {
+            Analise analise = analiseRepository.findById(id)
+                    .orElseThrow(() -> new IllegalArgumentException("Análise não encontrada: " + id));
+
+            Cliente cliente = clienteRepository.findById(analise.getClienteId())
+                    .orElseThrow(() -> new IllegalArgumentException("Cliente não encontrado"));
+
+            cliente.setScoreBoaVista(scoreBoaVista);
+            clienteRepository.save(cliente);
+
+            redirectAttributes.addFlashAttribute("mensagem",
+                    "Score atualizado com sucesso para " + scoreBoaVista);
+            return "redirect:/analise/" + id;
+
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("erro",
+                    "Erro ao atualizar score: " + e.getMessage());
+            return "redirect:/analise/" + id;
+        }
+    }
+
+    /**
+     * POST /analise/{id}/cliente/restricoes/pefin - Adiciona novo registro Pefin.
+     *
+     * @param id ID da análise
+     * @param data Data do registro
+     * @param valor Valor da restrição
+     * @param quantidade Quantidade de ocorrências (opcional, default 1)
+     * @param redirectAttributes Atributos para mensagem flash
+     * @return Redirect para a análise
+     */
+    @PostMapping("/{id}/cliente/restricoes/pefin")
+    public String adicionarPefin(@PathVariable Long id,
+                                  @RequestParam LocalDate data,
+                                  @RequestParam BigDecimal valor,
+                                  @RequestParam(defaultValue = "1") Integer quantidade,
+                                  RedirectAttributes redirectAttributes) {
+        try {
+            Analise analise = analiseRepository.findById(id)
+                    .orElseThrow(() -> new IllegalArgumentException("Análise não encontrada: " + id));
+
+            Cliente cliente = clienteRepository.findById(analise.getClienteId())
+                    .orElseThrow(() -> new IllegalArgumentException("Cliente não encontrado"));
+
+            Pefin pefin = new Pefin();
+            pefin.setCliente(cliente);
+            pefin.setData(data);
+            pefin.setValor(valor);
+            pefin.setQuantidade(quantidade);
+
+            pefinRepository.save(pefin);
+
+            redirectAttributes.addFlashAttribute("mensagem",
+                    "Registro Pefin adicionado com sucesso");
+            return "redirect:/analise/" + id;
+
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("erro",
+                    "Erro ao adicionar Pefin: " + e.getMessage());
+            return "redirect:/analise/" + id;
+        }
+    }
+
+    /**
+     * POST /analise/{id}/cliente/restricoes/protesto - Adiciona novo protesto.
+     *
+     * @param id ID da análise
+     * @param data Data do protesto
+     * @param valor Valor do protesto
+     * @param quantidade Quantidade de protestos (opcional, default 1)
+     * @param redirectAttributes Atributos para mensagem flash
+     * @return Redirect para a análise
+     */
+    @PostMapping("/{id}/cliente/restricoes/protesto")
+    public String adicionarProtesto(@PathVariable Long id,
+                                     @RequestParam LocalDate data,
+                                     @RequestParam BigDecimal valor,
+                                     @RequestParam(defaultValue = "1") Integer quantidade,
+                                     RedirectAttributes redirectAttributes) {
+        try {
+            Analise analise = analiseRepository.findById(id)
+                    .orElseThrow(() -> new IllegalArgumentException("Análise não encontrada: " + id));
+
+            Cliente cliente = clienteRepository.findById(analise.getClienteId())
+                    .orElseThrow(() -> new IllegalArgumentException("Cliente não encontrado"));
+
+            Protesto protesto = new Protesto();
+            protesto.setCliente(cliente);
+            protesto.setData(data);
+            protesto.setValor(valor);
+            protesto.setQuantidade(quantidade);
+
+            protestoRepository.save(protesto);
+
+            redirectAttributes.addFlashAttribute("mensagem",
+                    "Protesto adicionado com sucesso");
+            return "redirect:/analise/" + id;
+
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("erro",
+                    "Erro ao adicionar protesto: " + e.getMessage());
+            return "redirect:/analise/" + id;
+        }
+    }
+
+    /**
+     * POST /analise/{id}/cliente/restricoes/acao - Adiciona nova ação judicial.
+     *
+     * @param id ID da análise
+     * @param data Data da ação
+     * @param valor Valor da ação
+     * @param quantidade Quantidade de ações (opcional, default 1)
+     * @param redirectAttributes Atributos para mensagem flash
+     * @return Redirect para a análise
+     */
+    @PostMapping("/{id}/cliente/restricoes/acao")
+    public String adicionarAcaoJudicial(@PathVariable Long id,
+                                         @RequestParam LocalDate data,
+                                         @RequestParam BigDecimal valor,
+                                         @RequestParam(defaultValue = "1") Integer quantidade,
+                                         RedirectAttributes redirectAttributes) {
+        try {
+            Analise analise = analiseRepository.findById(id)
+                    .orElseThrow(() -> new IllegalArgumentException("Análise não encontrada: " + id));
+
+            Cliente cliente = clienteRepository.findById(analise.getClienteId())
+                    .orElseThrow(() -> new IllegalArgumentException("Cliente não encontrado"));
+
+            AcaoJudicial acao = new AcaoJudicial();
+            acao.setCliente(cliente);
+            acao.setData(data);
+            acao.setValor(valor);
+            acao.setQuantidade(quantidade);
+
+            acaoJudicialRepository.save(acao);
+
+            redirectAttributes.addFlashAttribute("mensagem",
+                    "Ação judicial adicionada com sucesso");
+            return "redirect:/analise/" + id;
+
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("erro",
+                    "Erro ao adicionar ação judicial: " + e.getMessage());
+            return "redirect:/analise/" + id;
+        }
+    }
+
+    /**
+     * POST /analise/{id}/cliente/restricoes/cheque - Adiciona novo cheque sem fundo.
+     *
+     * @param id ID da análise
+     * @param data Data do cheque
+     * @param valor Valor do cheque
+     * @param quantidade Quantidade de cheques (opcional, default 1)
+     * @param redirectAttributes Atributos para mensagem flash
+     * @return Redirect para a análise
+     */
+    @PostMapping("/{id}/cliente/restricoes/cheque")
+    public String adicionarCheque(@PathVariable Long id,
+                                   @RequestParam LocalDate data,
+                                   @RequestParam BigDecimal valor,
+                                   @RequestParam(defaultValue = "1") Integer quantidade,
+                                   RedirectAttributes redirectAttributes) {
+        try {
+            Analise analise = analiseRepository.findById(id)
+                    .orElseThrow(() -> new IllegalArgumentException("Análise não encontrada: " + id));
+
+            Cliente cliente = clienteRepository.findById(analise.getClienteId())
+                    .orElseThrow(() -> new IllegalArgumentException("Cliente não encontrado"));
+
+            Cheque cheque = new Cheque();
+            cheque.setCliente(cliente);
+            cheque.setData(data);
+            cheque.setValor(valor);
+            cheque.setQuantidade(quantidade);
+
+            chequeRepository.save(cheque);
+
+            redirectAttributes.addFlashAttribute("mensagem",
+                    "Cheque sem fundo adicionado com sucesso");
+            return "redirect:/analise/" + id;
+
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("erro",
+                    "Erro ao adicionar cheque: " + e.getMessage());
+            return "redirect:/analise/" + id;
+        }
+    }
+
+    /**
+     * DELETE /restricoes/{tipo}/{id} - Remove uma restrição.
+     *
+     * @param tipo Tipo da restrição (pefin, protesto, acao, cheque)
+     * @param id ID da restrição a ser removida
+     * @param redirectAttributes Atributos para mensagem flash
+     * @return Redirect para a análise de origem
+     */
+    @DeleteMapping("/restricoes/{tipo}/{id}")
+    public String removerRestricao(@PathVariable String tipo,
+                                    @PathVariable Long id,
+                                    @RequestParam(required = false) Long analiseId,
+                                    RedirectAttributes redirectAttributes) {
+        try {
+            switch (tipo.toLowerCase()) {
+                case "pefin" -> {
+                    Pefin pefin = pefinRepository.findById(id)
+                            .orElseThrow(() -> new IllegalArgumentException("Pefin não encontrado"));
+                    pefinRepository.delete(pefin);
+                    redirectAttributes.addFlashAttribute("mensagem", "Pefin removido com sucesso");
+                }
+                case "protesto" -> {
+                    Protesto protesto = protestoRepository.findById(id)
+                            .orElseThrow(() -> new IllegalArgumentException("Protesto não encontrado"));
+                    protestoRepository.delete(protesto);
+                    redirectAttributes.addFlashAttribute("mensagem", "Protesto removido com sucesso");
+                }
+                case "acao" -> {
+                    AcaoJudicial acao = acaoJudicialRepository.findById(id)
+                            .orElseThrow(() -> new IllegalArgumentException("Ação judicial não encontrada"));
+                    acaoJudicialRepository.delete(acao);
+                    redirectAttributes.addFlashAttribute("mensagem", "Ação judicial removida com sucesso");
+                }
+                case "cheque" -> {
+                    Cheque cheque = chequeRepository.findById(id)
+                            .orElseThrow(() -> new IllegalArgumentException("Cheque não encontrado"));
+                    chequeRepository.delete(cheque);
+                    redirectAttributes.addFlashAttribute("mensagem", "Cheque removido com sucesso");
+                }
+                default -> throw new IllegalArgumentException("Tipo de restrição inválido: " + tipo);
+            }
+
+            if (analiseId != null) {
+                return "redirect:/analise/" + analiseId;
+            }
+            return "redirect:/analise/kanban";
+
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("erro",
+                    "Erro ao remover restrição: " + e.getMessage());
+            if (analiseId != null) {
+                return "redirect:/analise/" + analiseId;
+            }
+            return "redirect:/analise/kanban";
+        }
     }
 }

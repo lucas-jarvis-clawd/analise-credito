@@ -33,7 +33,7 @@ AnaliseCredito.Analise_de_Credito/
 │   └── storage/        # FileStorageService (uploads)
 └── presentation/
     ├── controller/     # MVC Controllers
-    └── dto/            # Form/View DTOs
+    └── dto/            # Form/View DTOs (inclui GrupoKanbanDTO para Kanban)
 ```
 
 ## Domain Model (Core Entities)
@@ -44,6 +44,7 @@ AnaliseCredito.Analise_de_Credito/
 
 **Cliente**
 - N:1 → GrupoEconomico (OBRIGATÓRIO)
+- `instagram` (String, 100 chars, opcional) - handle ou URL do Instagram da loja
 - 1:N → Pedido, Documento, Duplicata, Socio, Participacao, Restrições
 
 **Pedido**
@@ -84,6 +85,28 @@ PENDENTE → DOCUMENTACAO_SOLICITADA → DOCUMENTACAO_ENVIADA → PARECER_APROVA
 
 **Diferença crítica:** CLIENTE_NOVO gera `parecerCRM` automaticamente (formato: "[DECISÃO] DATA - TIPO - FUNDAÇÃO - SIMEI - RESTRIÇÕES - CRED - SCORE - SÓCIOS - PARTS")
 
+## Kanban Grouping Pattern
+
+**IMPORTANTE:** Kanban agrupa por **GrupoEconomico**, NÃO por pedidos individuais.
+
+**1 card = 1 grupo econômico** (pode ter múltiplos pedidos/clientes)
+
+**Card mostra (GrupoKanbanDTO):**
+- Nome/código do grupo
+- Lista de todos os clientes do grupo
+- Quantidade total de pedidos
+- Valor total consolidado
+- Pior score entre os clientes (badge colorido)
+- Alertas consolidados de todos os pedidos
+- Botão "Analisar" → abre análise principal (pedido mais antigo)
+
+**Lógica de agrupamento (KanbanController):**
+```java
+// Agrupa análises por GrupoEconomico.id
+// Status do card = status da análise mais antiga do grupo
+// analisePrincipalId = ID da análise mais antiga (para botão Analisar)
+```
+
 ## Key Business Rules
 
 ### 1. Grupo Econômico Sempre Existe
@@ -122,17 +145,19 @@ analise.requerAprovacaoGestor = (
 
 ## Implementation Plan
 
-**Status:** ✅ **80% COMPLETE - MVP FUNCIONAL!**
+**Status:** ✅ **90% COMPLETE - MVP FUNCIONAL COM MELHORIAS!**
 
 **Phases:**
 1. ✅ Fundação: Pacotes, enums (6), entities (14), repos (14), config
 2. ✅ Importação: ImportacaoService (Apache POI), XLSX parsing - 684 linhas, 14 testes
 3. ✅ Services Core: Scoring (9 tests), Alertas (13 tests), Workflow (20 tests), Parecer (20 tests)
 4. ✅ UI Kanban: Dashboard com drag-and-drop JavaScript, filtros, badges dinâmicos
-5. ✅ Wizard Análise: 6 tabs (Cadastrais, Vínculos, Restrições, Financeiro, Docs, Histórico) + painel decisão
+5. ✅ Wizard Análise: 7 tabs (Cadastrais, Vínculos, Restrições, Financeiro, Docs, Pedidos Grupo, Histórico) + painel decisão
 6. ✅ CRUD/Admin: Home, Importação, Configuração, FileStorage, Documentos
-7. ⏳ Testes: 77 testes unitários passando, E2E pendente
-8. ⏳ Deploy: Docs, build scripts, perfil produção
+7. ✅ Edição Manual: Financeiro pode editar score e adicionar/remover restrições
+8. ✅ Kanban Agrupado: Cards agrupados por GrupoEconomico com informações consolidadas
+9. ⏳ Testes: 77 testes unitários passando, E2E pendente
+10. ⏳ Deploy: Docs, build scripts, perfil produção
 
 **Execution Strategy:**
 - ✅ Executado com subagent-driven-development
@@ -171,6 +196,25 @@ analise.requerAprovacaoGestor = (
 - Tipos permitidos: PDF, imagens
 - Max size: configurável em application.properties
 
+### Manual Data Editing (Financeiro)
+
+Financeiro pode editar manualmente dados do cliente na tela de análise:
+
+**Score Boa Vista:**
+- PUT `/analise/{id}/cliente/score` - atualizar scoreBoaVista
+
+**Restrições (adicionar/remover individualmente):**
+- POST `/analise/{id}/cliente/restricoes/pefin` - adicionar Pefin
+- POST `/analise/{id}/cliente/restricoes/protesto` - adicionar Protesto
+- POST `/analise/{id}/cliente/restricoes/acao` - adicionar Ação Judicial
+- POST `/analise/{id}/cliente/restricoes/cheque` - adicionar Cheque
+- DELETE `/restricoes/{tipo}/{id}` - remover restrição
+
+**Instagram:**
+- POST `/analise/{id}/cliente/instagram` - atualizar Instagram do cliente
+
+**Localização UI:** Aba "Restrições" + "Dados Cadastrais" na tela de análise
+
 ## Gotchas & Non-Obvious Patterns
 
 1. **GrupoEconomico nunca é null** - Todo cliente TEM grupo (mesmo que seja só ele)
@@ -181,6 +225,9 @@ analise.requerAprovacaoGestor = (
 6. **Limite no grupo, não no cliente** - Cliente.limiteAprovado NÃO existe
 7. **HTMX para Kanban** - Drag-and-drop sem JavaScript pesado
 8. **DadosBI por coleção** - Cada linha = 1 coleção de 1 grupo (não por cliente)
+9. **Kanban agrupado por grupo** - 1 card = 1 GrupoEconomico (não 1 pedido). Drag-and-drop usa analisePrincipalId
+10. **GrupoKanbanDTO no Kanban** - Template recebe List<GrupoKanbanDTO>, não List<Analise>
+11. **Edição manual sempre disponível** - Score e restrições editáveis em qualquer status do workflow
 
 ## Configuration
 

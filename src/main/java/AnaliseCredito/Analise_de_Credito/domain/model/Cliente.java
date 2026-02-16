@@ -59,6 +59,9 @@ public class Cliente {
     @Column(length = 100)
     private String email;
 
+    @Column(length = 100)
+    private String instagram;
+
     /**
      * UF - sigla do estado (2 letras)
      */

@@ -27,4 +27,11 @@ public interface PedidoRepository extends JpaRepository<Pedido, Long> {
      * @return Lista de pedidos com o workflow especificado
      */
     List<Pedido> findByWorkflow(TipoWorkflow workflow);
+
+    /**
+     * Busca todos os pedidos de clientes pertencentes a um grupo econômico.
+     * @param grupoEconomicoId ID do grupo econômico
+     * @return Lista de pedidos de todos os clientes do grupo
+     */
+    List<Pedido> findByClienteGrupoEconomicoId(Long grupoEconomicoId);
 }
