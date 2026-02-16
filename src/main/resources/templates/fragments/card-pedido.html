@@ -1,60 +1,67 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
-<!-- Kanban Card Fragment -->
+<!-- Fragment de Card Kanban - Grupos Econômicos -->
 <th:block th:fragment="kanban-cards(analises)">
-    <div th:if="${analises == null or analises.isEmpty()}" class="empty-column">
-        <i class="bi bi-inbox"></i><br>
-        Nenhuma análise
+    <div th:if="${analises == null or analises.isEmpty()}" class="espacamento-vazio">
+        <i class="bi bi-inbox"></i>
+        Nenhuma análise encontrada
     </div>
-    <div th:each="analise : ${analises}"
+
+    <div th:each="grupo : ${analises}"
          class="kanban-card"
          draggable="true"
-         th:attr="data-analise-id=${analise.id}"
-         th:id="'card-' + ${analise.id}">
+         th:attr="data-analise-id=${grupo.analisePrincipalId}"
+         th:id="'card-' + ${grupo.analisePrincipalId}">
 
-        <!-- Cliente Info -->
-        <div class="card-cliente" th:text="${analise.pedido.cliente.razaoSocial}">Razão Social</div>
-        <div class="card-cnpj" th:text="${analise.pedido.cliente.cnpj}">00.000.000/0000-00</div>
+        <!-- Cabeçalho - Grupo Econômico -->
+        <div class="card-cliente">
+            <i class="bi bi-building"></i> <span th:text="${grupo.grupoNome}">Nome do Grupo</span>
+        </div>
 
-        <!-- Pedido Info -->
+        <!-- Lista de Clientes -->
+        <div class="card-clientes-grupo mb-2">
+            <small class="text-muted">
+                <i class="bi bi-people"></i> Clientes:
+            </small>
+            <ul class="list-unstyled mb-0 mt-1" style="font-size: 0.85rem;">
+                <li th:each="razaoSocial : ${grupo.clientesRazaoSocial}">
+                    <i class="bi bi-dot"></i>
+                    <span th:text="${razaoSocial}">Razão Social</span>
+                </li>
+            </ul>
+        </div>
+
+        <!-- Info Consolidada do Grupo -->
         <div class="card-info">
-            <span th:if="${analise.pedido.marca}">
-                <i class="bi bi-tag"></i> <span th:text="${analise.pedido.marca}">Marca</span>
-            </span>
             <span>
-                <i class="bi bi-file-text"></i> <span th:text="${analise.pedido.numero}">Pedido</span>
+                <i class="bi bi-file-text"></i>
+                <strong th:text="${grupo.quantidadePedidos}">0</strong>
+                <span th:text="${grupo.quantidadePedidos == 1} ? 'pedido' : 'pedidos'">pedidos</span>
             </span>
             <span>
                 <i class="bi bi-currency-dollar"></i>
-                <span th:text="${#numbers.formatDecimal(analise.pedido.valor, 1, 'POINT', 2, 'COMMA')}">0,00</span>
+                <strong th:text="${#numbers.formatDecimal(grupo.valorTotal, 1, 'POINT', 2, 'COMMA')}">0,00</strong>
             </span>
         </div>
 
-        <!-- Data do Pedido -->
-        <div class="card-info">
-            <span>
-                <i class="bi bi-calendar"></i>
-                <span th:text="${#temporals.format(analise.pedido.data, 'dd/MM/yyyy')}">00/00/0000</span>
-            </span>
+        <!-- Pior Score do Grupo -->
+        <div class="card-badges" th:if="${grupo.piorScore != null}">
+            <span class="badge-tc badge-score"
+                  th:classappend="${grupo.piorScore >= 700} ? 'score-alto' : (${grupo.piorScore >= 400} ? 'score-medio' : 'score-baixo')"
+                  th:text="'Pior Score: ' + ${grupo.piorScore}">Pior Score: 0</span>
         </div>
 
-        <!-- Alertas -->
-        <div class="card-badges" th:if="${analise.pedido.alerts != null and !analise.pedido.alerts.isEmpty()}">
-            <span th:each="alert : ${analise.pedido.alerts}"
-                  class="badge bg-danger badge-alert"
+        <!-- Alertas Consolidados -->
+        <div class="card-badges" th:if="${grupo.alertasConsolidados != null and !grupo.alertasConsolidados.isEmpty()}">
+            <span th:each="alert : ${grupo.alertasConsolidados}"
+                  class="badge-tc badge-perigo"
                   th:text="${alert}">Alerta</span>
         </div>
 
-        <!-- Score Badge -->
-        <div class="card-badges" th:if="${analise.pedido.cliente.scoreBoaVista != null}">
-            <span class="badge badge-score"
-                  th:classappend="${analise.pedido.cliente.scoreBoaVista >= 700} ? 'score-alto' : (${analise.pedido.cliente.scoreBoaVista >= 400} ? 'score-medio' : 'score-baixo')"
-                  th:text="'Score: ' + ${analise.pedido.cliente.scoreBoaVista}">Score: 0</span>
-        </div>
-
         <!-- Botão Analisar -->
-        <a th:href="@{/analise/{id}(id=${analise.id})}"
-           class="btn btn-primary btn-analisar mt-2">
+        <a th:href="@{/analise/{id}(id=${grupo.analisePrincipalId})}"
+           class="btn btn-tc btn-tc-primary btn-sm mt-3"
+           style="width: 100%;">
             <i class="bi bi-clipboard-check"></i> Analisar
         </a>
     </div>

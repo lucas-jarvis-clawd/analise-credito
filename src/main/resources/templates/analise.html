@@ -1,20 +1,21 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org" lang="pt-BR">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Análise de Crédito - [[${cliente.razaoSocial}]]</title>
     <link rel="stylesheet" th:href="@{/webjars/bootstrap/5.3.2/css/bootstrap.min.css}">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link rel="stylesheet" th:href="@{/css/texcotton-theme.css}">
     <style>
         body {
-            background-color: #f0f2f5;
+            background: var(--tc-cinza-claro);
         }
 
         .wizard-container {
             background-color: white;
             border-radius: 8px;
-            padding: 1.5rem;
+            padding: 1rem;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
 
@@ -29,6 +30,8 @@
         .nav-tabs .nav-link {
             color: #495057;
             font-weight: 500;
+            font-size: 0.8rem;
+            padding: 0.5rem 0.75rem;
         }
 
         .nav-tabs .nav-link.active {
@@ -37,25 +40,27 @@
         }
 
         .tab-content {
-            padding-top: 1.5rem;
+            padding-top: 1rem;
         }
 
         .info-label {
             font-weight: 600;
             color: #495057;
             margin-bottom: 0.25rem;
+            font-size: 0.75rem;
         }
 
         .info-value {
             color: #212529;
-            margin-bottom: 1rem;
+            margin-bottom: 0.75rem;
+            font-size: 0.85rem;
         }
 
         .score-badge {
-            font-size: 3rem;
+            font-size: 1.75rem;
             font-weight: 700;
-            padding: 1rem 2rem;
-            border-radius: 12px;
+            padding: 0.6rem 1.2rem;
+            border-radius: 8px;
         }
 
         .score-alto {
@@ -74,7 +79,7 @@
         }
 
         .limite-display {
-            font-size: 1.25rem;
+            font-size: 0.95rem;
             font-weight: 600;
             color: #0d6efd;
         }
@@ -85,15 +90,16 @@
         }
 
         .table-sm td, .table-sm th {
-            font-size: 0.875rem;
+            font-size: 0.75rem;
+            padding: 0.4rem;
         }
 
         .parecer-box {
             background-color: #f8f9fa;
-            border-left: 4px solid #0d6efd;
-            padding: 1rem;
+            border-left: 3px solid #0d6efd;
+            padding: 0.75rem;
             font-family: monospace;
-            font-size: 0.875rem;
+            font-size: 0.7rem;
             word-break: break-all;
         }
 
@@ -104,14 +110,18 @@
 </head>
 <body>
     <!-- Navigation Bar -->
-    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
-        <div class="container-fluid">
+    <nav class="navbar navbar-expand-lg navbar-texcotton">
+        <div class="container-fluid px-4">
             <a class="navbar-brand" href="/">
-                <i class="bi bi-clipboard-check"></i> Análise de Crédito
+                <i class="bi bi-cash-coin"></i>
+                <span>TEX COTTON</span>
             </a>
-            <div class="d-flex align-items-center gap-3">
-                <a href="/analise/kanban" class="btn btn-outline-light btn-sm">
-                    <i class="bi bi-arrow-left"></i> Voltar ao Kanban
+            <div class="navbar-nav ms-auto d-flex align-items-center gap-3">
+                <a class="nav-link" href="/analise/kanban">
+                    <i class="bi bi-kanban"></i> Dashboard
+                </a>
+                <a href="/analise/kanban" class="btn btn-tc btn-tc-secondary btn-sm">
+                    <i class="bi bi-arrow-left"></i> Voltar
                 </a>
             </div>
         </div>
@@ -178,6 +188,12 @@
                             <button class="nav-link" id="documentos-tab" data-bs-toggle="tab"
                                     data-bs-target="#documentos" type="button" role="tab">
                                 <i class="bi bi-file-earmark-text"></i> Documentos
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="pedidos-grupo-tab" data-bs-toggle="tab"
+                                    data-bs-target="#pedidos-grupo" type="button" role="tab">
+                                <i class="bi bi-box-seam"></i> Pedidos do Grupo
                             </button>
                         </li>
                         <li class="nav-item" role="presentation">
@@ -254,6 +270,71 @@
                                 <div class="col-md-4">
                                     <div class="info-label">Sintegra</div>
                                     <div class="info-value" th:text="${cliente.sintegra ?: 'N/D'}">Sintegra</div>
+                                </div>
+                            </div>
+
+                            <hr class="my-4">
+
+                            <!-- Grupo Econômico Section -->
+                            <h5 class="mb-3">
+                                <i class="bi bi-diagram-3"></i> Grupo Econômico
+                                <span th:if="${grupo.isGrupoReal()}" class="badge bg-primary ms-2">Grupo Real</span>
+                                <span th:unless="${grupo.isGrupoReal()}" class="badge bg-secondary ms-2">Singleton</span>
+                            </h5>
+                            <div class="card">
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="info-label">Código do Grupo</div>
+                                            <div class="info-value" th:text="${grupo.codigo}">Código</div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="info-label">Nome do Grupo</div>
+                                            <div class="info-value" th:text="${grupo.nome}">Nome do Grupo</div>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="info-label">Limite Aprovado</div>
+                                            <div class="info-value text-primary fw-bold">
+                                                R$ <span th:text="${#numbers.formatDecimal(grupo.limiteAprovado, 1, 'POINT', 2, 'COMMA')}">0,00</span>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="info-label">Limite Disponível</div>
+                                            <div class="info-value text-success fw-bold">
+                                                R$ <span th:text="${#numbers.formatDecimal(grupo.limiteDisponivel, 1, 'POINT', 2, 'COMMA')}">0,00</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-12">
+                                            <div class="info-label">Total de Clientes no Grupo</div>
+                                            <div class="info-value">
+                                                <span class="badge bg-info text-dark" th:text="${#lists.size(grupo.clientes)}">0</span>
+                                                <span th:if="${#lists.size(grupo.clientes) == 1}"> cliente</span>
+                                                <span th:unless="${#lists.size(grupo.clientes) == 1}"> clientes</span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Lista de Clientes do Grupo -->
+                                    <div th:if="${#lists.size(grupo.clientes) > 0}" class="mt-3">
+                                        <div class="info-label">Clientes do Grupo</div>
+                                        <ul class="list-group list-group-flush">
+                                            <li th:each="clienteGrupo : ${grupo.clientes}" class="list-group-item d-flex justify-content-between align-items-start">
+                                                <div class="ms-2 me-auto">
+                                                    <div class="fw-bold" th:text="${clienteGrupo.razaoSocial}">Razão Social</div>
+                                                    <small class="text-muted">
+                                                        CNPJ: <span th:text="${clienteGrupo.cnpj}">00.000.000/0000-00</span>
+                                                        <span th:if="${clienteGrupo.simei}" class="badge bg-warning text-dark ms-2">SIMEI</span>
+                                                        <span th:if="${clienteGrupo.id == cliente.id}" class="badge bg-primary ms-2">Atual</span>
+                                                    </small>
+                                                </div>
+                                                <span class="badge bg-light text-dark" th:text="${clienteGrupo.tipoCliente}">TIPO</span>
+                                            </li>
+                                        </ul>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -550,7 +631,91 @@
                             </div>
                         </div>
 
-                        <!-- Tab 6: Histórico -->
+                        <!-- Tab 6: Pedidos do Grupo Econômico -->
+                        <div class="tab-pane fade" id="pedidos-grupo" role="tabpanel">
+                            <h4 class="mb-4">Pedidos do Grupo Econômico</h4>
+
+                            <!-- Info do Grupo -->
+                            <div class="alert alert-light border mb-4">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <strong><i class="bi bi-diagram-3"></i> Grupo Econômico:</strong>
+                                        <span th:text="${grupo.nome}">Nome do Grupo</span>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <strong><i class="bi bi-box-seam"></i> Total de Pedidos:</strong>
+                                        <span class="badge bg-primary" th:text="${#lists.size(pedidosGrupo)}">0</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Tabela de Pedidos -->
+                            <div th:if="${#lists.isEmpty(pedidosGrupo)}" class="alert alert-info">
+                                <i class="bi bi-info-circle"></i> Nenhum pedido encontrado para este grupo econômico.
+                            </div>
+                            <div th:unless="${#lists.isEmpty(pedidosGrupo)}">
+                                <table class="table table-sm table-striped table-hover">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Cliente</th>
+                                            <th>Número do Pedido</th>
+                                            <th>Data</th>
+                                            <th>Valor</th>
+                                            <th>Status</th>
+                                            <th>Ações</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr th:each="pedidoItem : ${pedidosGrupo}"
+                                            th:classappend="${pedidoItem.id == pedido.id} ? 'table-warning' : ''">
+                                            <td>
+                                                <strong th:text="${pedidoItem.cliente.razaoSocial}">Cliente</strong>
+                                                <br>
+                                                <small class="text-muted" th:text="${pedidoItem.cliente.cnpj}">00.000.000/0000-00</small>
+                                                <span th:if="${pedidoItem.id == pedido.id}" class="badge bg-warning text-dark ms-2">
+                                                    <i class="bi bi-arrow-left-right"></i> Pedido Atual
+                                                </span>
+                                            </td>
+                                            <td th:text="${pedidoItem.numero}">000000</td>
+                                            <td th:text="${pedidoItem.data != null ? #temporals.format(pedidoItem.data, 'dd/MM/yyyy') : 'N/D'}">00/00/0000</td>
+                                            <td>
+                                                <strong>R$ <span th:text="${#numbers.formatDecimal(pedidoItem.valor, 1, 'POINT', 2, 'COMMA')}">0,00</span></strong>
+                                            </td>
+                                            <td>
+                                                <span th:if="${pedidoItem.analise != null}"
+                                                      class="badge"
+                                                      th:classappend="${pedidoItem.analise.statusWorkflow.name() == 'PARECER_APROVADO'} ? 'bg-success' :
+                                                                     (${pedidoItem.analise.statusWorkflow.name() == 'PARECER_REPROVADO'} ? 'bg-danger' :
+                                                                     (${pedidoItem.analise.statusWorkflow.name() == 'FINALIZADO'} ? 'bg-secondary' : 'bg-warning text-dark'))"
+                                                      th:text="${pedidoItem.analise.statusWorkflow}">STATUS</span>
+                                                <span th:unless="${pedidoItem.analise != null}" class="badge bg-light text-dark">Sem Análise</span>
+                                            </td>
+                                            <td>
+                                                <a th:if="${pedidoItem.analise != null}"
+                                                   th:href="@{/analise/{id}(id=${pedidoItem.analise.id})}"
+                                                   class="btn btn-sm btn-outline-primary"
+                                                   target="_blank">
+                                                    <i class="bi bi-eye"></i> Ver Análise
+                                                </a>
+                                                <span th:unless="${pedidoItem.analise != null}" class="text-muted">
+                                                    <small>Sem análise</small>
+                                                </span>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                    <tfoot class="table-light">
+                                        <tr>
+                                            <th colspan="3" class="text-end">TOTAL DO GRUPO:</th>
+                                            <th colspan="3">
+                                                <strong class="text-primary">R$ <span th:text="${#numbers.formatDecimal(totalPedidosGrupo, 1, 'POINT', 2, 'COMMA')}">0,00</span></strong>
+                                            </th>
+                                        </tr>
+                                    </tfoot>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- Tab 7: Histórico -->
                         <div class="tab-pane fade" id="historico" role="tabpanel">
                             <h4 class="mb-4">Histórico da Análise</h4>
                             <div class="timeline">
@@ -656,7 +821,7 @@
                                 <div class="parecer-box" th:text="${parecerPreview}">Parecer...</div>
                             </div>
 
-                            <button type="submit" class="btn btn-primary w-100 btn-lg">
+                            <button type="submit" class="btn btn-tc btn-tc-primary w-100 btn-lg">
                                 <i class="bi bi-check-circle"></i> Concluir Análise
                             </button>
                         </form>

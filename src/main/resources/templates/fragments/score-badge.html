@@ -1,10 +1,11 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <span th:fragment="badge(score)"
-      class="badge fs-5"
-      th:classappend="${score >= 700} ? 'bg-success' :
-                     (${score >= 400} ? 'bg-warning text-dark' : 'bg-danger')"
-      th:text="${score != null ? score : 'N/D'}">
+      class="badge-texcotton badge-score"
+      style="font-size: 1.1rem;"
+      th:classappend="${score >= 700} ? 'score-alto' :
+                     (${score >= 400} ? 'score-medio' : 'score-baixo')"
+      th:text="${score != null ? 'Score: ' + score : 'Score: N/D'}">
     Score
 </span>
 </html>
