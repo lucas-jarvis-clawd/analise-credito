@@ -3,13 +3,16 @@ package AnaliseCredito.Analise_de_Credito.presentation.controller;
 import AnaliseCredito.Analise_de_Credito.domain.model.Configuracao;
 import AnaliseCredito.Analise_de_Credito.infrastructure.persistence.ConfiguracaoRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.propertyeditors.CustomNumberEditor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.WebDataBinder;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
+import java.math.BigDecimal;
+import java.text.NumberFormat;
+import java.util.Locale;
 
 /**
  * ConfiguracaoController - Gerencia parâmetros globais do sistema.
@@ -27,6 +30,12 @@ public class ConfiguracaoController {
     /**
      * GET /configuracao - Exibe o formulário de configuração
      */
+    @InitBinder
+    public void initBinder(WebDataBinder binder) {
+        NumberFormat nf = NumberFormat.getNumberInstance(Locale.forLanguageTag("pt-BR"));
+        binder.registerCustomEditor(BigDecimal.class, new CustomNumberEditor(BigDecimal.class, nf, true));
+    }
+
     @GetMapping
     public String exibir(Model model) {
         Configuracao config = configuracaoRepository.findById(1L)

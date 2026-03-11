@@ -1,223 +1,156 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" lang="pt-BR">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard Kanban - Tex Cotton</title>
-    <link rel="stylesheet" th:href="@{/webjars/bootstrap/5.3.2/css/bootstrap.min.css}">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
-    <link rel="stylesheet" th:href="@{/css/texcotton-theme.css}">
-    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
-</head>
-<body class="pagina-texcotton">
-    <!-- Navbar -->
-    <nav class="navbar navbar-expand-lg navbar-texcotton">
-        <div class="container-fluid px-4">
-            <a class="navbar-brand" href="/">
-                <i class="bi bi-cash-coin"></i>
-                <span>TEX COTTON</span>
-            </a>
+<head th:replace="~{fragments/layout :: head('Dashboard Kanban — Tex Cotton')}"></head>
+<body>
+<div class="app-layout">
 
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent">
-                <span class="navbar-toggler-icon"></span>
-            </button>
+    <!-- Sidebar -->
+    <aside th:replace="~{fragments/layout :: sidebar('kanban', ${perfil})}"></aside>
 
-            <div class="collapse navbar-collapse" id="navbarContent">
-                <div class="navbar-nav ms-auto d-flex align-items-center gap-3">
-                    <a class="nav-link" th:href="@{/analise/kanban}">
-                        <i class="bi bi-kanban"></i> Dashboard
+    <!-- Main -->
+    <div class="main-wrapper">
+
+        <!-- Topbar -->
+        <header th:replace="~{fragments/layout :: topbar('Dashboard Kanban', ${perfil})}"></header>
+
+        <!-- Content -->
+        <main class="content-area">
+
+            <!-- Page Header -->
+            <div class="page-header">
+                <div>
+                    <h1 class="page-title">Dashboard Kanban</h1>
+                    <p class="page-subtitle">Gestão visual de análises de crédito por grupo econômico</p>
+                </div>
+                <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                    <a th:href="@{/analise/kanban(filtro='TODOS')}"
+                       th:class="${filtro == 'TODOS'} ? 'btn-tc btn-tc-primary' : 'btn-tc btn-tc-secondary'">
+                        <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+                        Todos
                     </a>
-                    <a class="nav-link" th:href="@{/importacao}">
-                        <i class="bi bi-upload"></i> Importar
+                    <a th:href="@{/analise/kanban(filtro='PRAZO')}"
+                       th:class="${filtro == 'PRAZO'} ? 'btn-tc btn-tc-primary' : 'btn-tc btn-tc-secondary'">
+                        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                        Base / Prazo
                     </a>
-                    <a class="nav-link" th:href="@{/configuracao}">
-                        <i class="bi bi-gear"></i> Configuração
-                    </a>
-
-                    <div th:if="${perfil}" class="badge-perfil ms-3">
-                        <i class="bi bi-person-circle"></i>
-                        <span th:text="${perfil}">FINANCEIRO</span>
-                    </div>
-
-                    <a href="/" class="btn btn-tc btn-tc-outline btn-sm">
-                        <i class="bi bi-box-arrow-left"></i> Sair
+                    <a th:href="@{/analise/kanban(filtro='NOVO')}"
+                       th:class="${filtro == 'NOVO'} ? 'btn-tc btn-tc-primary' : 'btn-tc btn-tc-secondary'">
+                        <svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
+                        Cliente Novo
                     </a>
                 </div>
             </div>
-        </div>
-    </nav>
 
-    <!-- Conteúdo Principal -->
-    <div class="conteudo-principal">
-        <div class="container-fluid">
-            <!-- Cabeçalho -->
-            <div class="row mb-5">
-                <div class="col">
-                    <div class="d-flex justify-content-between align-items-center flex-wrap gap-4">
-                        <div>
-                            <h2 class="mb-2" style="font-family: var(--fonte-display); font-size: 1.5rem; font-weight: 700;">
-                                <i class="bi bi-kanban texto-dourado" style="font-size: 1.3rem;"></i> Dashboard Kanban
-                            </h2>
-                            <p class="text-muted mb-0" style="font-size: 0.8rem;">Gestão visual de análises de crédito</p>
+            <!-- Filtros -->
+            <div class="filter-bar">
+                <form method="get" th:action="@{/analise/kanban}" id="filterForm">
+                    <input type="hidden" name="filtro" th:value="${filtro}">
+                    <div class="row g-3 align-items-end">
+                        <div class="col-md-2">
+                            <label class="form-label-tc">Estado (UF)</label>
+                            <select name="uf" class="form-select form-control-tc">
+                                <option value="">Todos</option>
+                                <option th:each="estado : ${ufs}"
+                                        th:value="${estado}"
+                                        th:text="${estado}"
+                                        th:selected="${estado == ufSelecionado}">SP</option>
+                            </select>
                         </div>
-
-                        <div class="btn-group shadow" role="group">
-                            <a th:href="@{/analise/kanban(filtro='TODOS')}"
-                               th:classappend="${filtro == 'TODOS'} ? 'btn-tc btn-tc-primary' : 'btn-tc btn-tc-outline'"
-                               class="btn">
-                                <i class="bi bi-grid-3x3"></i> Todos
-                            </a>
-                            <a th:href="@{/analise/kanban(filtro='PRAZO')}"
-                               th:classappend="${filtro == 'PRAZO'} ? 'btn-tc btn-tc-primary' : 'btn-tc btn-tc-outline'"
-                               class="btn">
-                                <i class="bi bi-clock"></i> Base/Prazo
-                            </a>
-                            <a th:href="@{/analise/kanban(filtro='NOVO')}"
-                               th:classappend="${filtro == 'NOVO'} ? 'btn-tc btn-tc-primary' : 'btn-tc btn-tc-outline'"
-                               class="btn">
-                                <i class="bi bi-person-plus"></i> Cliente Novo
-                            </a>
+                        <div class="col-md-3">
+                            <label class="form-label-tc">Faixa de Valor</label>
+                            <select name="faixaValor" class="form-select form-control-tc">
+                                <option value="">Todos os valores</option>
+                                <option value="ATE_20K"    th:selected="${faixaValorSelecionado == 'ATE_20K'}">Até R$ 20.000</option>
+                                <option value="20K_50K"    th:selected="${faixaValorSelecionado == '20K_50K'}">R$ 20.000 – 50.000</option>
+                                <option value="50K_100K"   th:selected="${faixaValorSelecionado == '50K_100K'}">R$ 50.000 – 100.000</option>
+                                <option value="ACIMA_100K" th:selected="${faixaValorSelecionado == 'ACIMA_100K'}">Acima de R$ 100.000</option>
+                            </select>
                         </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Filtros Operacionais -->
-            <div class="row mb-4">
-                <div class="col">
-                    <div class="card-tc">
-                        <div class="card-tc-header">
-                            <h5 class="mb-0">
-                                <i class="bi bi-funnel"></i> Filtros Operacionais
-                                <span th:if="${ufSelecionado != null or faixaValorSelecionado != null or diasAnaliseSelecionado != null or !buscaSelecionado.isEmpty()}"
-                                      class="badge-tc badge-info ms-2"
-                                      style="font-size: 0.7rem;">
-                                    Filtros Ativos
-                                </span>
-                            </h5>
+                        <div class="col-md-2">
+                            <label class="form-label-tc">SLA (Dias)</label>
+                            <select name="diasAnalise" class="form-select form-control-tc">
+                                <option value="">Todos</option>
+                                <option value="0" th:selected="${diasAnaliseSelecionado != null and diasAnaliseSelecionado == 0}">Menos de 1 dia</option>
+                                <option value="1" th:selected="${diasAnaliseSelecionado != null and diasAnaliseSelecionado == 1}">1–2 dias</option>
+                                <option value="3" th:selected="${diasAnaliseSelecionado != null and diasAnaliseSelecionado == 3}">3+ dias (Atrasado)</option>
+                            </select>
                         </div>
-                        <div class="card-tc-body" style="padding: 1.25rem;">
-                            <form method="get" th:action="@{/analise/kanban}" id="filterForm">
-                                <input type="hidden" name="filtro" th:value="${filtro}">
-
-                                <div class="row g-3">
-                                    <!-- UF Filter -->
-                                    <div class="col-md-2">
-                                        <label class="form-label-tc">
-                                            <i class="bi bi-map"></i> Estado (UF)
-                                        </label>
-                                        <select name="uf" class="form-select form-control-tc" th:value="${ufSelecionado}">
-                                            <option value="">Todos</option>
-                                            <option th:each="estado : ${ufs}"
-                                                    th:value="${estado}"
-                                                    th:text="${estado}"
-                                                    th:selected="${estado == ufSelecionado}">SP</option>
-                                        </select>
-                                    </div>
-
-                                    <!-- Faixa de Valor Filter -->
-                                    <div class="col-md-3">
-                                        <label class="form-label-tc">
-                                            <i class="bi bi-currency-dollar"></i> Faixa de Valor
-                                        </label>
-                                        <select name="faixaValor" class="form-select form-control-tc" th:value="${faixaValorSelecionado}">
-                                            <option value="">Todos os valores</option>
-                                            <option value="ATE_20K" th:selected="${faixaValorSelecionado == 'ATE_20K'}">Até R$ 20.000</option>
-                                            <option value="20K_50K" th:selected="${faixaValorSelecionado == '20K_50K'}">R$ 20.000 - R$ 50.000</option>
-                                            <option value="50K_100K" th:selected="${faixaValorSelecionado == '50K_100K'}">R$ 50.000 - R$ 100.000</option>
-                                            <option value="ACIMA_100K" th:selected="${faixaValorSelecionado == 'ACIMA_100K'}">Acima de R$ 100.000</option>
-                                        </select>
-                                    </div>
-
-                                    <!-- SLA/Dias em Análise Filter -->
-                                    <div class="col-md-2">
-                                        <label class="form-label-tc">
-                                            <i class="bi bi-clock-history"></i> SLA (Dias)
-                                        </label>
-                                        <select name="diasAnalise" class="form-select form-control-tc" th:value="${diasAnaliseSelecionado}">
-                                            <option value="">Todos</option>
-                                            <option value="0" th:selected="${diasAnaliseSelecionado != null and diasAnaliseSelecionado == 0}">Menos de 1 dia</option>
-                                            <option value="1" th:selected="${diasAnaliseSelecionado != null and diasAnaliseSelecionado == 1}">1-2 dias</option>
-                                            <option value="3" th:selected="${diasAnaliseSelecionado != null and diasAnaliseSelecionado == 3}">3+ dias (Atrasado)</option>
-                                        </select>
-                                    </div>
-
-                                    <!-- Search Filter -->
-                                    <div class="col-md-3">
-                                        <label class="form-label-tc">
-                                            <i class="bi bi-search"></i> Buscar
-                                        </label>
-                                        <input type="text"
-                                               name="busca"
-                                               class="form-control form-control-tc"
-                                               placeholder="CNPJ ou Razão Social"
-                                               th:value="${buscaSelecionado}">
-                                    </div>
-
-                                    <!-- Action Buttons -->
-                                    <div class="col-md-2 d-flex align-items-end gap-2">
-                                        <button type="submit" class="btn btn-tc btn-tc-primary flex-fill">
-                                            <i class="bi bi-filter"></i> Filtrar
-                                        </button>
-                                        <button type="button" class="btn btn-tc btn-tc-outline" onclick="limparFiltros()" title="Limpar Filtros">
-                                            <i class="bi bi-x-circle"></i>
-                                        </button>
-                                    </div>
-                                </div>
-                            </form>
+                        <div class="col-md-3">
+                            <label class="form-label-tc">Buscar</label>
+                            <input type="text" name="busca" class="form-control form-control-tc"
+                                   placeholder="CNPJ ou Razão Social" th:value="${buscaSelecionado}">
+                        </div>
+                        <div class="col-md-2 d-flex gap-2">
+                            <button type="submit" class="btn-tc btn-tc-primary flex-fill">
+                                <svg viewBox="0 0 24 24"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+                                Filtrar
+                            </button>
+                            <button type="button" class="btn-tc btn-tc-secondary" onclick="limparFiltros()" title="Limpar">
+                                <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                            </button>
                         </div>
                     </div>
-                </div>
+                </form>
             </div>
 
             <!-- Workflow BASE_PRAZO -->
-            <div th:if="${filtro == 'TODOS' or filtro == 'PRAZO'}" class="kanban-secao animar-slide-up">
-                <div class="kanban-titulo-workflow">
-                    <i class="bi bi-clock-history"></i>
-                    <span>Workflow: BASE/PRAZO</span>
+            <div th:if="${filtro == 'TODOS' or filtro == 'PRAZO'}" class="kanban-secao animate-in">
+                <div class="kanban-workflow-label">
+                    <span class="accent-dot"></span>
+                    Workflow: Base / Prazo
                 </div>
 
                 <div class="kanban-container">
-                    <!-- PENDENTE -->
                     <div class="kanban-coluna" data-status="PENDENTE" data-workflow="BASE_PRAZO">
                         <div class="kanban-coluna-header">
-                            <span><i class="bi bi-hourglass-split"></i> Pendente</span>
+                            <span>
+                                <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                                Pendente
+                            </span>
                             <span class="kanban-contador" th:text="${kanbanData.get(BASE_PRAZO).get(PENDENTE)?.size() ?: 0}">0</span>
                         </div>
                         <div th:replace="~{fragments/card-pedido :: kanban-cards(${kanbanData.get(BASE_PRAZO).get(PENDENTE)})}"></div>
                     </div>
 
-                    <!-- EM_ANALISE_FINANCEIRO -->
                     <div class="kanban-coluna" data-status="EM_ANALISE_FINANCEIRO" data-workflow="BASE_PRAZO">
                         <div class="kanban-coluna-header">
-                            <span><i class="bi bi-graph-up"></i> Em Análise</span>
+                            <span>
+                                <svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+                                Em Análise
+                            </span>
                             <span class="kanban-contador" th:text="${kanbanData.get(BASE_PRAZO).get(EM_ANALISE_FINANCEIRO)?.size() ?: 0}">0</span>
                         </div>
                         <div th:replace="~{fragments/card-pedido :: kanban-cards(${kanbanData.get(BASE_PRAZO).get(EM_ANALISE_FINANCEIRO)})}"></div>
                     </div>
 
-                    <!-- PARECER_APROVADO -->
                     <div class="kanban-coluna" data-status="PARECER_APROVADO" data-workflow="BASE_PRAZO">
                         <div class="kanban-coluna-header">
-                            <span><i class="bi bi-check-circle"></i> Aprovado</span>
+                            <span>
+                                <svg viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                                Aprovado
+                            </span>
                             <span class="kanban-contador" th:text="${kanbanData.get(BASE_PRAZO).get(PARECER_APROVADO)?.size() ?: 0}">0</span>
                         </div>
                         <div th:replace="~{fragments/card-pedido :: kanban-cards(${kanbanData.get(BASE_PRAZO).get(PARECER_APROVADO)})}"></div>
                     </div>
 
-                    <!-- PARECER_REPROVADO -->
                     <div class="kanban-coluna" data-status="PARECER_REPROVADO" data-workflow="BASE_PRAZO">
                         <div class="kanban-coluna-header">
-                            <span><i class="bi bi-x-circle"></i> Reprovado</span>
+                            <span>
+                                <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+                                Reprovado
+                            </span>
                             <span class="kanban-contador" th:text="${kanbanData.get(BASE_PRAZO).get(PARECER_REPROVADO)?.size() ?: 0}">0</span>
                         </div>
                         <div th:replace="~{fragments/card-pedido :: kanban-cards(${kanbanData.get(BASE_PRAZO).get(PARECER_REPROVADO)})}"></div>
                     </div>
 
-                    <!-- FINALIZADO -->
                     <div class="kanban-coluna" data-status="FINALIZADO" data-workflow="BASE_PRAZO">
                         <div class="kanban-coluna-header">
-                            <span><i class="bi bi-check-all"></i> Finalizado</span>
+                            <span>
+                                <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+                                Finalizado
+                            </span>
                             <span class="kanban-contador" th:text="${kanbanData.get(BASE_PRAZO).get(FINALIZADO)?.size() ?: 0}">0</span>
                         </div>
                         <div th:replace="~{fragments/card-pedido :: kanban-cards(${kanbanData.get(BASE_PRAZO).get(FINALIZADO)})}"></div>
@@ -226,184 +159,165 @@
             </div>
 
             <!-- Workflow CLIENTE_NOVO -->
-            <div th:if="${filtro == 'TODOS' or filtro == 'NOVO'}" class="kanban-secao animar-slide-up" style="animation-delay: 0.2s;">
-                <div class="kanban-titulo-workflow">
-                    <i class="bi bi-person-plus"></i>
-                    <span>Workflow: CLIENTE NOVO</span>
+            <div th:if="${filtro == 'TODOS' or filtro == 'NOVO'}" class="kanban-secao animate-in" style="animation-delay:0.1s;">
+                <div class="kanban-workflow-label">
+                    <span class="accent-dot"></span>
+                    Workflow: Cliente Novo
                 </div>
 
                 <div class="kanban-container">
-                    <!-- PENDENTE -->
                     <div class="kanban-coluna" data-status="PENDENTE" data-workflow="CLIENTE_NOVO">
                         <div class="kanban-coluna-header">
-                            <span><i class="bi bi-hourglass-split"></i> Pendente</span>
+                            <span>
+                                <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                                Pendente
+                            </span>
                             <span class="kanban-contador" th:text="${kanbanData.get(CLIENTE_NOVO).get(PENDENTE)?.size() ?: 0}">0</span>
                         </div>
                         <div th:replace="~{fragments/card-pedido :: kanban-cards(${kanbanData.get(CLIENTE_NOVO).get(PENDENTE)})}"></div>
                     </div>
 
-                    <!-- DOCUMENTACAO_SOLICITADA -->
                     <div class="kanban-coluna" data-status="DOCUMENTACAO_SOLICITADA" data-workflow="CLIENTE_NOVO">
                         <div class="kanban-coluna-header">
-                            <span><i class="bi bi-file-earmark-text"></i> Doc. Solicitada</span>
+                            <span>
+                                <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
+                                Doc. Solicitada
+                            </span>
                             <span class="kanban-contador" th:text="${kanbanData.get(CLIENTE_NOVO).get(DOCUMENTACAO_SOLICITADA)?.size() ?: 0}">0</span>
                         </div>
                         <div th:replace="~{fragments/card-pedido :: kanban-cards(${kanbanData.get(CLIENTE_NOVO).get(DOCUMENTACAO_SOLICITADA)})}"></div>
                     </div>
 
-                    <!-- DOCUMENTACAO_ENVIADA -->
                     <div class="kanban-coluna" data-status="DOCUMENTACAO_ENVIADA" data-workflow="CLIENTE_NOVO">
                         <div class="kanban-coluna-header">
-                            <span><i class="bi bi-file-earmark-check"></i> Doc. Enviada</span>
+                            <span>
+                                <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><polyline points="9 15 12 18 15 15"/><line x1="12" y1="12" x2="12" y2="18"/></svg>
+                                Doc. Enviada
+                            </span>
                             <span class="kanban-contador" th:text="${kanbanData.get(CLIENTE_NOVO).get(DOCUMENTACAO_ENVIADA)?.size() ?: 0}">0</span>
                         </div>
                         <div th:replace="~{fragments/card-pedido :: kanban-cards(${kanbanData.get(CLIENTE_NOVO).get(DOCUMENTACAO_ENVIADA)})}"></div>
                     </div>
 
-                    <!-- PARECER_APROVADO -->
                     <div class="kanban-coluna" data-status="PARECER_APROVADO" data-workflow="CLIENTE_NOVO">
                         <div class="kanban-coluna-header">
-                            <span><i class="bi bi-check-circle"></i> Aprovado</span>
+                            <span>
+                                <svg viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                                Aprovado
+                            </span>
                             <span class="kanban-contador" th:text="${kanbanData.get(CLIENTE_NOVO).get(PARECER_APROVADO)?.size() ?: 0}">0</span>
                         </div>
                         <div th:replace="~{fragments/card-pedido :: kanban-cards(${kanbanData.get(CLIENTE_NOVO).get(PARECER_APROVADO)})}"></div>
                     </div>
 
-                    <!-- PARECER_REPROVADO -->
                     <div class="kanban-coluna" data-status="PARECER_REPROVADO" data-workflow="CLIENTE_NOVO">
                         <div class="kanban-coluna-header">
-                            <span><i class="bi bi-x-circle"></i> Reprovado</span>
+                            <span>
+                                <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+                                Reprovado
+                            </span>
                             <span class="kanban-contador" th:text="${kanbanData.get(CLIENTE_NOVO).get(PARECER_REPROVADO)?.size() ?: 0}">0</span>
                         </div>
                         <div th:replace="~{fragments/card-pedido :: kanban-cards(${kanbanData.get(CLIENTE_NOVO).get(PARECER_REPROVADO)})}"></div>
                     </div>
 
-                    <!-- FINALIZADO -->
                     <div class="kanban-coluna" data-status="FINALIZADO" data-workflow="CLIENTE_NOVO">
                         <div class="kanban-coluna-header">
-                            <span><i class="bi bi-check-all"></i> Finalizado</span>
+                            <span>
+                                <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+                                Finalizado
+                            </span>
                             <span class="kanban-contador" th:text="${kanbanData.get(CLIENTE_NOVO).get(FINALIZADO)?.size() ?: 0}">0</span>
                         </div>
                         <div th:replace="~{fragments/card-pedido :: kanban-cards(${kanbanData.get(CLIENTE_NOVO).get(FINALIZADO)})}"></div>
                     </div>
                 </div>
             </div>
-        </div>
-    </div>
 
-    <!-- Scripts -->
-    <script th:src="@{/webjars/bootstrap/5.3.2/js/bootstrap.bundle.min.js}"></script>
-    <script>
-        // Drag and Drop
-        let draggedCard = null;
+        </main>
+    </div><!-- /main-wrapper -->
+</div><!-- /app-layout -->
 
-        document.addEventListener('DOMContentLoaded', function() {
-            initializeDragAndDrop();
-            animateCardsOnLoad();
+<div th:replace="~{fragments/layout :: scripts}"></div>
+<script src="https://unpkg.com/htmx.org@1.9.10"></script>
+<script>
+    let draggedCard = null;
+
+    document.addEventListener('DOMContentLoaded', function() {
+        initDragDrop();
+        animateCards();
+    });
+
+    function animateCards() {
+        document.querySelectorAll('.kanban-card').forEach((card, i) => {
+            card.style.opacity = '0';
+            card.style.transform = 'translateY(12px)';
+            setTimeout(() => {
+                card.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+                card.style.opacity = '1';
+                card.style.transform = 'translateY(0)';
+            }, i * 30);
+        });
+    }
+
+    function initDragDrop() {
+        document.querySelectorAll('.kanban-card').forEach(card => {
+            card.addEventListener('dragstart', e => {
+                draggedCard = card;
+                card.classList.add('dragging');
+                e.dataTransfer.effectAllowed = 'move';
+            });
+            card.addEventListener('dragend', () => {
+                card.classList.remove('dragging');
+                document.querySelectorAll('.kanban-coluna').forEach(c => c.classList.remove('drag-over'));
+            });
         });
 
-        function animateCardsOnLoad() {
-            const cards = document.querySelectorAll('.kanban-card');
-            cards.forEach((card, index) => {
-                card.style.opacity = '0';
-                card.style.transform = 'translateY(20px)';
-                setTimeout(() => {
-                    card.style.transition = 'all 0.4s ease-out';
-                    card.style.opacity = '1';
-                    card.style.transform = 'translateY(0)';
-                }, index * 40);
+        document.querySelectorAll('.kanban-coluna').forEach(col => {
+            col.addEventListener('dragover', e => {
+                e.preventDefault();
+                e.dataTransfer.dropEffect = 'move';
+                e.target.closest('.kanban-coluna')?.classList.add('drag-over');
             });
-        }
-
-        function initializeDragAndDrop() {
-            const cards = document.querySelectorAll('.kanban-card');
-            const columns = document.querySelectorAll('.kanban-coluna');
-
-            cards.forEach(card => {
-                card.addEventListener('dragstart', handleDragStart);
-                card.addEventListener('dragend', handleDragEnd);
+            col.addEventListener('dragleave', e => {
+                const col = e.target.closest('.kanban-coluna');
+                if (col && !col.contains(e.relatedTarget)) col.classList.remove('drag-over');
             });
-
-            columns.forEach(column => {
-                column.addEventListener('dragover', handleDragOver);
-                column.addEventListener('drop', handleDrop);
-                column.addEventListener('dragleave', handleDragLeave);
-            });
-        }
-
-        function handleDragStart(e) {
-            draggedCard = this;
-            this.classList.add('dragging');
-            e.dataTransfer.effectAllowed = 'move';
-            e.dataTransfer.setData('text/html', this.innerHTML);
-        }
-
-        function handleDragEnd(e) {
-            this.classList.remove('dragging');
-            document.querySelectorAll('.kanban-coluna').forEach(col => {
-                col.classList.remove('drag-over');
-            });
-        }
-
-        function handleDragOver(e) {
-            if (e.preventDefault) e.preventDefault();
-            e.dataTransfer.dropEffect = 'move';
-            const column = e.target.closest('.kanban-coluna');
-            if (column) column.classList.add('drag-over');
-            return false;
-        }
-
-        function handleDragLeave(e) {
-            const column = e.target.closest('.kanban-coluna');
-            if (column && !column.contains(e.relatedTarget)) {
+            col.addEventListener('drop', e => {
+                e.stopPropagation();
+                const column = e.target.closest('.kanban-coluna');
+                if (!column || !draggedCard) return;
                 column.classList.remove('drag-over');
-            }
-        }
+                updateStatus(draggedCard.getAttribute('data-analise-id'), column.getAttribute('data-status'));
+            });
+        });
+    }
 
-        function handleDrop(e) {
-            if (e.stopPropagation) e.stopPropagation();
-            const column = e.target.closest('.kanban-coluna');
-            if (!column || !draggedCard) return false;
-
-            column.classList.remove('drag-over');
-            const novoStatus = column.getAttribute('data-status');
-            const analiseId = draggedCard.getAttribute('data-analise-id');
-            updateStatus(analiseId, novoStatus);
-            return false;
-        }
-
-        function updateStatus(analiseId, novoStatus) {
-            const formData = new FormData();
-            formData.append('novoStatus', novoStatus);
-            draggedCard.style.opacity = '0.5';
-
-            fetch('/analise/' + analiseId + '/status', {
-                method: 'POST',
-                body: formData
-            })
-            .then(response => response.json())
+    function updateStatus(analiseId, novoStatus) {
+        if (!analiseId) return;
+        draggedCard.style.opacity = '0.4';
+        const form = new FormData();
+        form.append('novoStatus', novoStatus);
+        fetch('/analise/' + analiseId + '/status', { method: 'POST', body: form })
+            .then(r => r.json())
             .then(data => {
                 if (data.success) {
-                    draggedCard.style.transition = 'all 0.3s ease-out';
-                    draggedCard.style.transform = 'scale(0.8)';
+                    draggedCard.style.transition = 'all 0.25s ease';
+                    draggedCard.style.transform = 'scale(0.85)';
                     draggedCard.style.opacity = '0';
-                    setTimeout(() => window.location.reload(), 300);
+                    setTimeout(() => window.location.reload(), 280);
                 } else {
-                    alert('❌ Erro: ' + (data.error || 'Transição não permitida'));
+                    alert('Transição não permitida: ' + (data.error || ''));
                     window.location.reload();
                 }
             })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('❌ Erro ao atualizar status');
-                window.location.reload();
-            });
-        }
+            .catch(() => { alert('Erro ao atualizar status'); window.location.reload(); });
+    }
 
-        function limparFiltros() {
-            const filtro = new URLSearchParams(window.location.search).get('filtro') || 'TODOS';
-            window.location.href = '/analise/kanban?filtro=' + filtro;
-        }
-    </script>
+    function limparFiltros() {
+        const filtro = new URLSearchParams(window.location.search).get('filtro') || 'TODOS';
+        window.location.href = '/analise/kanban?filtro=' + filtro;
+    }
+</script>
 </body>
 </html>

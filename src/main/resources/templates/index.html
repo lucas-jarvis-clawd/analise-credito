@@ -3,52 +3,78 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tex Cotton - Sistema de Análise de Crédito</title>
+    <title>Análise de Crédito — Tex Cotton</title>
     <link rel="stylesheet" th:href="@{/webjars/bootstrap/5.3.2/css/bootstrap.min.css}">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <link rel="stylesheet" th:href="@{/css/texcotton-theme.css}">
+    <link rel="icon" type="image/svg+xml" th:href="@{/images/logo-icon.svg}">
 </head>
-<body class="login-pagina">
-    <div class="login-card">
-        <!-- Cabeçalho -->
+<body class="login-page">
+
+    <div class="login-card animate-in">
+        <!-- Header com logo -->
         <div class="login-header">
-            <div class="login-logo">
-                <i class="bi bi-cash-coin"></i>
-                <h1>TEX COTTON</h1>
-                <p>Análise de Crédito</p>
+            <div class="login-logo-wrap">
+                <!-- Logo: X formado por corações entrelaçados -->
+                <svg width="56" height="56" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <g transform="translate(20,20) rotate(-45)">
+                        <path d="M0,-9 C-4.5,-13.5 -12,-9 -12,-3.5 C-12,2 -6,7.5 0,14 C6,7.5 12,2 12,-3.5 C12,-9 4.5,-13.5 0,-9 Z"
+                              fill="#d4a843" opacity="0.95"/>
+                    </g>
+                    <g transform="translate(20,20) rotate(45)">
+                        <path d="M0,-9 C-4.5,-13.5 -12,-9 -12,-3.5 C-12,2 -6,7.5 0,14 C6,7.5 12,2 12,-3.5 C12,-9 4.5,-13.5 0,-9 Z"
+                              fill="#d4a843" opacity="0.7"/>
+                    </g>
+                </svg>
+                <div>
+                    <h1 class="login-sys-title">Análise de Crédito</h1>
+                    <div class="login-company-label">Tex Cotton</div>
+                </div>
             </div>
         </div>
 
-        <!-- Corpo -->
+        <!-- Body -->
         <div class="login-body">
-            <h2 class="login-titulo">
-                Selecione seu perfil para continuar
-            </h2>
+            <p class="login-prompt">Selecione seu perfil para continuar</p>
 
             <form action="/perfil/selecionar" method="post">
                 <button type="submit" name="perfil" value="FINANCEIRO" class="btn-perfil">
-                    <i class="bi bi-calculator"></i>
-                    <span>Entrar como Financeiro</span>
+                    <svg viewBox="0 0 24 24" fill="none" stroke-width="1.75">
+                        <rect x="2" y="3" width="20" height="14" rx="2"/>
+                        <line x1="8" y1="21" x2="16" y2="21"/>
+                        <line x1="12" y1="17" x2="12" y2="21"/>
+                    </svg>
+                    <div>
+                        <div style="font-weight: 600;">Financeiro</div>
+                        <div style="font-size: 11.5px; color: var(--text-secondary); font-weight: 400;">Análise e aprovação de crédito</div>
+                    </div>
                 </button>
 
                 <button type="submit" name="perfil" value="COMERCIAL" class="btn-perfil">
-                    <i class="bi bi-person-badge"></i>
-                    <span>Entrar como Comercial</span>
+                    <svg viewBox="0 0 24 24" fill="none" stroke-width="1.75">
+                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                        <circle cx="9" cy="7" r="4"/>
+                        <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                        <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                    </svg>
+                    <div>
+                        <div style="font-weight: 600;">Comercial</div>
+                        <div style="font-size: 11.5px; color: var(--text-secondary); font-weight: 400;">Acompanhamento de pedidos</div>
+                    </div>
                 </button>
             </form>
 
-            <div class="login-divisor"></div>
+            <div class="login-divider"></div>
 
             <!-- Área Administrativa -->
-            <div class="login-admin">
-                <p class="login-admin-titulo">Área Administrativa</p>
+            <div class="login-admin-section">
+                <div class="login-admin-label">Área Administrativa</div>
                 <div class="login-admin-links">
-                    <a th:href="@{/importacao}" class="link-admin">
-                        <i class="bi bi-file-earmark-arrow-up"></i>
+                    <a th:href="@{/importacao}" class="login-admin-link">
+                        <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
                         Importação
                     </a>
-                    <a th:href="@{/configuracao}" class="link-admin">
-                        <i class="bi bi-gear"></i>
+                    <a th:href="@{/configuracao}" class="login-admin-link">
+                        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
                         Configuração
                     </a>
                 </div>
@@ -57,8 +83,8 @@
     </div>
 
     <p class="login-footer">
-        <strong>Tex Cotton</strong> Sistema de Análise de Crédito © 2026<br>
-        Versão 1.0.0 | Todos os direitos reservados
+        Tex Cotton · Sistema de Análise de Crédito © 2026<br>
+        Versão 1.0.0 · O que nos une é o coração
     </p>
 
     <script th:src="@{/webjars/bootstrap/5.3.2/js/bootstrap.bundle.min.js}"></script>
