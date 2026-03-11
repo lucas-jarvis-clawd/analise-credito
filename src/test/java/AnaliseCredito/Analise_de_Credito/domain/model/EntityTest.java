@@ -241,4 +241,23 @@ public class EntityTest {
 
         assertFalse(grupo.isGrupoReal());
     }
+
+    // ========== HistoricoLimite Tests ==========
+
+    @Test
+    void historicoLimite_deveSetarDataRegistroAutomaticamente() {
+        GrupoEconomico grupo = new GrupoEconomico();
+        grupo.setCodigo("123");
+        grupo.setNome("Grupo Teste");
+
+        HistoricoLimite h = new HistoricoLimite();
+        h.setGrupoEconomico(grupo);
+        h.setValor(new BigDecimal("50000.00"));
+        h.setResponsavel("FINANCEIRO");
+        h.prePersist();
+
+        assertNotNull(h.getDataRegistro());
+        assertEquals(new BigDecimal("50000.00"), h.getValor());
+        assertEquals("FINANCEIRO", h.getResponsavel());
+    }
 }

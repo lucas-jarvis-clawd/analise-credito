@@ -72,6 +72,16 @@ public class GrupoEconomico {
     @OneToMany(mappedBy = "grupoEconomico", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<DadosBI> dadosBI = new ArrayList<>();
 
+    /**
+     * Histórico de limites aprovados para este grupo.
+     * Ordenado do mais recente para o mais antigo.
+     * NOTA: O campo limiteAprovado é sempre igual ao valor do registro mais recente.
+     * Grupos sem histórico têm limiteAprovado = ZERO (válido — limite ainda não definido).
+     */
+    @OneToMany(mappedBy = "grupoEconomico", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @OrderBy("dataRegistro DESC")
+    private List<HistoricoLimite> historicosLimite = new ArrayList<>();
+
     // ========== Métodos auxiliares (não JPA) ==========
 
     /**
