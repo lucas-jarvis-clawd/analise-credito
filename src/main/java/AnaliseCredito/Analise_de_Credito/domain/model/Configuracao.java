@@ -194,4 +194,25 @@ public class Configuracao {
     public boolean requerAprovacaoPorRestricoes(Integer numRestricoes) {
         return numRestricoes != null && numRestricoes >= restricoesAprovacaoGestor;
     }
+
+    /**
+     * Verifica se um CNAE é permitido para o pipeline de cliente novo.
+     * Se a lista de CNAEs permitidos estiver vazia/null, todos são permitidos.
+     */
+    @Transient
+    public boolean isCnaePermitido(String cnae) {
+        if (cnaesPermitidos == null || cnaesPermitidos.isBlank()) {
+            return true;
+        }
+        if (cnae == null || cnae.isBlank()) {
+            return false;
+        }
+        String[] permitidos = cnaesPermitidos.split(",");
+        for (String permitido : permitidos) {
+            if (permitido.trim().equals(cnae.trim())) {
+                return true;
+            }
+        }
+        return false;
+    }
 }

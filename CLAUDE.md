@@ -1,18 +1,18 @@
-# Sistema de Análise de Crédito
+# Sistema de Analise de Credito
 
-Webapp para digitalizar análise de crédito de lojistas, substituindo planilhas Excel por interface Kanban interativa com dois workflows distintos (clientes base prazo vs novos/antecipados).
+Webapp para digitalizar analise de credito de lojistas, substituindo planilhas Excel por interface Kanban interativa com dois workflows distintos (clientes base prazo vs novos/antecipados).
 
 ## Quick Start
 
 ```bash
 # Build
-./mvnw clean install
+mvn clean install
 
-# Run (H2 console at http://localhost:8080/h2-console)
-./mvnw spring-boot:run
+# Run (porta 8081, H2 console em http://localhost:8081/h2-console)
+mvn spring-boot:run
 
 # Test
-./mvnw test
+mvn test
 ```
 
 ## Design System
@@ -24,20 +24,20 @@ Webapp para digitalizar análise de crédito de lojistas, substituindo planilhas
 
 ## Architecture
 
-**Stack:** Spring Boot 4.0.2 + Java 25 + Thymeleaf + HTMX + Bootstrap 5 + H2 (→ Oracle produção)
+**Stack:** Spring Boot 3.5.7 + Java 21 + Thymeleaf + HTMX + Bootstrap 5 + H2 (-> Oracle producao)
 
 **Package Structure:**
 ```
 AnaliseCredito.Analise_de_Credito/
 ├── domain/
-│   ├── model/          # Entidades JPA
-│   ├── enums/          # TipoWorkflow, StatusWorkflow, TipoCliente, etc
-│   └── valueobjects/   # CNPJ, Score
+│   ├── model/          # 14 entidades JPA
+│   └── enums/          # TipoWorkflow, StatusWorkflow, TipoCliente, etc
 ├── application/
-│   └── service/        # ScoringService, AlertaService, WorkflowService, ParecerService
+│   └── service/        # ScoringService, AlertaService, WorkflowService, ParecerService, ImportacaoService
 ├── infrastructure/
-│   ├── persistence/    # Spring Data Repositories
-│   └── storage/        # FileStorageService (uploads)
+│   ├── persistence/    # 14 Spring Data Repositories
+│   ├── storage/        # FileStorageService (uploads)
+│   └── config/         # DataInitializer (seed data)
 └── presentation/
     ├── controller/     # MVC Controllers
     └── dto/            # Form/View DTOs (inclui GrupoKanbanDTO para Kanban)
@@ -47,7 +47,7 @@ AnaliseCredito.Analise_de_Credito/
 
 **GrupoEconomico** (SEMPRE existe - se cliente sem grupo, cria com codigo=cnpj)
 - `limiteAprovado`, `limiteDisponivel` (SEMPRE no grupo, nunca no Cliente)
-- 1:N → Cliente, DadosBI
+- 1:N -> Cliente, DadosBI
 
 **Cliente**
 - N:1 → GrupoEconomico (OBRIGATÓRIO)
@@ -56,12 +56,13 @@ AnaliseCredito.Analise_de_Credito/
 
 **Pedido**
 - `bloqueio` determina workflow: 80/36 = CLIENTE_NOVO, outros = BASE_PRAZO
+- `colecao` (Integer) - usada na cross-tab de pedidos do grupo
 - `alerts` (List<String>) - calculados dinamicamente por AlertaService
 - `colecao` (Integer), `nomeColecao` (String), `tipoOperacao` (TipoOperacao), `pedidoSazonal` (boolean)
 - N:1 → Cliente, 1:1 → Analise
 
 **Analise**
-- Referências: pedidoId, clienteId, grupoEconomicoId
+- Referencias: pedidoId, clienteId, grupoEconomicoId
 - `statusWorkflow` (enum), `tipoAnalista` (FINANCEIRO/COMERCIAL)
 - `parecerCRM` gerado APENAS para workflow CLIENTE_NOVO
 - `requerAprovacaoGestor` (boolean) - baseado em regras de alçada
@@ -72,16 +73,10 @@ AnaliseCredito.Analise_de_Credito/
 - `colecao` (Integer, ex: 202601), `credito`, `score` (**Score Tex** — interno Tex Cotton), `valorVencido`, `atrasoMedio`
 - `getVariacaoScore()`, `getVariacaoAtraso()`, `getTendencia()` — @Transient, calculados comparando coleções consecutivas
 
-**Duplicata**
-- `getAtraso()` (método calculado, NÃO coluna fixa):
-  ```java
-  if (vencimento < today) {
-    return (dataPagamento != null)
-      ? dataPagamento - vencimento
-      : today - vencimento
-  }
-  return 0
-  ```
+**Restricoes** (4 entidades: Pefin, Protesto, AcaoJudicial, Cheque)
+- Inseridas MANUALMENTE pelo analista na aba Restricoes (nao vem de planilha)
+- Cada registro = 1 ocorrencia individual com campos descritivos (origem, cartorio, banco, etc.)
+- CRUD inline via POST endpoints no AnaliseController
 
 **Configuracao** (tabela única, 1 registro, editável por admin)
 - Limites SIMEI, thresholds score, multiplicadores, critérios alçada
@@ -123,22 +118,14 @@ PENDENTE → DOCUMENTACAO_SOLICITADA → DOCUMENTACAO_ENVIADA → PARECER_APROVA
 
 ## Key Business Rules
 
-### 1. Grupo Econômico Sempre Existe
-```java
-// Ao importar Cliente sem grupoEconomicoId:
-if (grupoEconomicoId == null) {
-  grupoEconomico = new GrupoEconomico(codigo: cliente.cnpj)
-}
-```
+### 1. Grupo Economico Sempre Existe
+Ao importar Cliente sem grupoEconomicoId, cria-se grupo com codigo = cnpj do cliente.
 
-### 2. Cálculo de Limite Sugerido (ScoringService)
-```java
-// 1. Buscar últimas 2 coleções BI do grupo
-// 2. Pegar maior crédito entre as 2
-// 3. Aplicar multiplicador por score interno:
-//    >= 800: 1.5x | >= 600: 1.2x | >= 400: 1.0x | < 400: 0.7x
-// 4. Cap para SIMEI: se grupo tem SIMEI com pedido, max = limiteSimei
-```
+### 2. Calculo de Limite Sugerido (ScoringService)
+1. Buscar ultimas 2 colecoes BI do grupo
+2. Pegar maior credito entre as 2
+3. Aplicar multiplicador por score interno: >=800: 1.5x | >=600: 1.2x | >=400: 1.0x | <400: 0.7x
+4. Cap para SIMEI: se grupo tem SIMEI com pedido, max = limiteSimei
 
 ### 3. Sistema de Alertas (configuráveis)
 - 🔴 **SIMEI > LIMITE**: simei && pedido.valor > config.limiteSimei
@@ -150,7 +137,7 @@ if (grupoEconomicoId == null) {
 - 🟡 **PEDIDO ACIMA SAZONALIDADE**: valor > 1.5x média histórica da coleção
 - 🟡 **DETERIORAÇÃO SCORE / ATRASO CRESCENTE**: baseados em getTendencia() do DadosBI
 
-### 4. Regras de Alçada
+### 4. Regras de Alcada
 ```java
 analise.requerAprovacaoGestor = (
   pedido.valor > valorAprovacaoGestor ||
@@ -159,7 +146,7 @@ analise.requerAprovacaoGestor = (
 )
 ```
 
-## Implementation Plan
+## Wizard de Analise (7 tabs)
 
 **Status:** ✅ **95% COMPLETE - MVP FUNCIONAL COM 5 MELHORIAS CRÍTICAS!**
 
@@ -226,7 +213,7 @@ Financeiro pode editar manualmente dados do cliente na tela de análise:
 
 ## Gotchas & Non-Obvious Patterns
 
-1. **GrupoEconomico nunca é null** - Todo cliente TEM grupo (mesmo que seja só ele)
+1. **GrupoEconomico nunca e null** - Todo cliente TEM grupo (mesmo que seja so ele)
 2. **Workflow determinado por bloqueio** - Campo `bloqueio` do pedido define qual workflow (80/36 = novo)
 3. **Parecer CRM condicional** - Só gera para CLIENTE_NOVO, não para BASE_PRAZO
 4. **Atraso calculado, não armazenado** - Duplicata.getAtraso() é método getter, não coluna
@@ -243,14 +230,13 @@ Financeiro pode editar manualmente dados do cliente na tela de análise:
 
 ## Configuration
 
-### application.properties (H2)
+### application.properties
 ```properties
+server.port=8081
 spring.datasource.url=jdbc:h2:mem:analisedb
 spring.h2.console.enabled=true
-spring.jpa.show-sql=true
 spring.jpa.hibernate.ddl-auto=create-drop
 
-# File upload
 spring.servlet.multipart.max-file-size=10MB
 spring.servlet.multipart.max-request-size=10MB
 upload.path=/static/uploads/
@@ -278,10 +264,8 @@ upload.path=/static/uploads/
 
 ## MVP Scope (What's NOT Included)
 
-- ❌ Autenticação (usar seleção manual de perfil)
-- ❌ Integração ERP (usar importação XLSX)
-- ❌ Replicar cálculo BI (importar DadosBI.xlsx)
-- ❌ API REST (apenas MVC)
-- ❌ Oracle (usar H2 por enquanto)
-
-**Roadmap pós-MVP:** Migração Oracle → Integração ERP → Auth AD/SSO → Cálculo BI interno → API REST/Mobile
+- Autenticacao (usar selecao manual de perfil)
+- Integracao ERP (usar importacao XLSX)
+- Replicar calculo BI (importar DadosBI.xlsx)
+- API REST (apenas MVC)
+- Oracle (usar H2 por enquanto)

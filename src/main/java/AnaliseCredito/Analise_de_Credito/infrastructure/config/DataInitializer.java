@@ -56,6 +56,11 @@ public class DataInitializer implements CommandLineRunner {
         config.setTotalGrupoAprovacaoGestor(new BigDecimal("500000.00"));
         config.setRestricoesAprovacaoGestor(3);
         config.setScoreBaixoThreshold(400);
+        // Pipeline Cliente Novo defaults
+        config.setProtestoThresholdAntecipado(new BigDecimal("1000.00"));
+        config.setRestricaoThresholdAntecipado(new BigDecimal("1000.00"));
+        config.setMesesLojaThreshold(10);
+        config.setMesesFundacaoThreshold(12);
         configuracaoRepository.save(config);
 
         // 2. Criar Grupos Econômicos
@@ -96,7 +101,7 @@ public class DataInitializer implements CommandLineRunner {
         cliente2.setGrupoEconomico(grupo2);
         clienteRepository.save(cliente2);
 
-        // 4. Criar Clientes - CLIENTE_NOVO
+        // 4. Criar Clientes - CLIENTE_NOVO (com dados de pipeline)
         Cliente cliente3 = new Cliente();
         cliente3.setCnpj("11122233000144");
         cliente3.setRazaoSocial("Nova Empresa LTDA");
@@ -105,6 +110,10 @@ public class DataInitializer implements CommandLineRunner {
         cliente3.setSimei(true);
         cliente3.setScoreBoaVista(320);
         cliente3.setScoreBoaVistaData(LocalDate.now());
+        cliente3.setDataFundacao(LocalDate.now().minusYears(2));
+        cliente3.setStatusReceita("ATIVA");
+        cliente3.setSintegra("HABILITADO");
+        cliente3.setCnae("4781400");
         cliente3.setGrupoEconomico(grupo1);
         clienteRepository.save(cliente3);
 
@@ -116,6 +125,7 @@ public class DataInitializer implements CommandLineRunner {
         cliente4.setSimei(false);
         cliente4.setScoreBoaVista(620);
         cliente4.setScoreBoaVistaData(LocalDate.now());
+        cliente4.setDataFundacao(LocalDate.now().minusMonths(6)); // Fundação recente
         cliente4.setGrupoEconomico(grupo2);
         clienteRepository.save(cliente4);
 
@@ -143,26 +153,26 @@ public class DataInitializer implements CommandLineRunner {
         analiseRepository.save(analise3);
         pedido3.setAnalise(analise3);
 
-        // 6. Criar Pedidos e Análises - CLIENTE_NOVO
-        // Pedido 4 - PENDENTE
+        // 6. Criar Pedidos e Análises - CLIENTE_NOVO (pipeline)
+        // Pedido 4 - PENDENTE (aguardando iniciar pipeline)
         Pedido pedido4 = createPedido("PED-004", cliente3, new BigDecimal("15000.00"), "MARCA_C", "80");
         pedidoRepository.save(pedido4);
         Analise analise4 = createAnalise(pedido4, StatusWorkflow.PENDENTE);
         analiseRepository.save(analise4);
         pedido4.setAnalise(analise4);
 
-        // Pedido 5 - DOCUMENTACAO_SOLICITADA
+        // Pedido 5 - FAZER_CONSULTAS (analista precisa buscar dados)
         Pedido pedido5 = createPedido("PED-005", cliente4, new BigDecimal("45000.00"), "MARCA_D", "36");
         pedidoRepository.save(pedido5);
-        Analise analise5 = createAnalise(pedido5, StatusWorkflow.DOCUMENTACAO_SOLICITADA);
+        Analise analise5 = createAnalise(pedido5, StatusWorkflow.FAZER_CONSULTAS);
         analise5.setDataInicio(LocalDateTime.now().minusDays(1));
         analiseRepository.save(analise5);
         pedido5.setAnalise(analise5);
 
-        // Pedido 6 - DOCUMENTACAO_ENVIADA
+        // Pedido 6 - CONSULTA_PROTESTOS (aguardando verificação de protestos)
         Pedido pedido6 = createPedido("PED-006", cliente3, new BigDecimal("10000.00"), "MARCA_E", "80");
         pedidoRepository.save(pedido6);
-        Analise analise6 = createAnalise(pedido6, StatusWorkflow.DOCUMENTACAO_ENVIADA);
+        Analise analise6 = createAnalise(pedido6, StatusWorkflow.CONSULTA_PROTESTOS);
         analise6.setDataInicio(LocalDateTime.now().minusDays(3));
         analiseRepository.save(analise6);
         pedido6.setAnalise(analise6);

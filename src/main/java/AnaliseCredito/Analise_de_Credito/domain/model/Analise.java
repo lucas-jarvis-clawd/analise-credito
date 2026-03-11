@@ -193,7 +193,12 @@ public class Analise {
     @Transient
     public boolean isAguardandoAcao() {
         return StatusWorkflow.DOCUMENTACAO_SOLICITADA.equals(statusWorkflow) ||
-               StatusWorkflow.AGUARDANDO_APROVACAO_GESTOR.equals(statusWorkflow);
+               StatusWorkflow.AGUARDANDO_APROVACAO_GESTOR.equals(statusWorkflow) ||
+               StatusWorkflow.FAZER_CONSULTAS.equals(statusWorkflow) ||
+               StatusWorkflow.CONSULTA_PROTESTOS.equals(statusWorkflow) ||
+               StatusWorkflow.VERIFICACAO_LOJA_FISICA.equals(statusWorkflow) ||
+               StatusWorkflow.CONSULTA_SCORE_RESTRICOES.equals(statusWorkflow) ||
+               StatusWorkflow.EM_ANALISE_CLIENTE_NOVO.equals(statusWorkflow);
     }
 
     /**

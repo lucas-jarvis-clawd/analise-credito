@@ -1,5 +1,7 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
+
+<!-- Head Fragment -->
 <head th:fragment="head(title)">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -40,8 +42,8 @@
                 </div>
             </div>
         </div>
-    </div>
-</nav>
+    </header>
+</div>
 
 <footer th:fragment="footer" class="footer mt-auto py-3" style="background: linear-gradient(to top, #000 0%, #1a1a1a 100%); border-top: 2px solid var(--tx-gold);">
     <div class="container text-center">
@@ -54,6 +56,7 @@
     </div>
 </footer>
 
+<!-- Scripts Fragment -->
 <div th:fragment="scripts">
     <script th:src="@{/webjars/bootstrap/5.3.2/js/bootstrap.bundle.min.js}"></script>
 </div>

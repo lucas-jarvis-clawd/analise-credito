@@ -94,7 +94,7 @@ public class WorkflowService {
         basePrazoTransitions.put(StatusWorkflow.FINALIZADO,
             EnumSet.noneOf(StatusWorkflow.class)); // Terminal state
 
-        // CLIENTE_NOVO workflow transitions
+        // CLIENTE_NOVO workflow transitions (pipeline com gates)
         Map<StatusWorkflow, Set<StatusWorkflow>> clienteNovoTransitions = new EnumMap<>(StatusWorkflow.class);
         clienteNovoTransitions.put(StatusWorkflow.PENDENTE,
             EnumSet.of(StatusWorkflow.DOCUMENTACAO_SOLICITADA));
@@ -118,8 +118,13 @@ public class WorkflowService {
             EnumSet.of(StatusWorkflow.AGUARDANDO_APROVACAO_GESTOR, StatusWorkflow.FINALIZADO));
         clienteNovoTransitions.put(StatusWorkflow.REANALISADO_REPROVADO,
             EnumSet.of(StatusWorkflow.AGUARDANDO_APROVACAO_GESTOR, StatusWorkflow.FINALIZADO));
+        // Terminal states
+        clienteNovoTransitions.put(StatusWorkflow.SOLICITAR_CANCELAMENTO,
+            EnumSet.noneOf(StatusWorkflow.class));
+        clienteNovoTransitions.put(StatusWorkflow.ENCAMINHADO_ANTECIPADO,
+            EnumSet.noneOf(StatusWorkflow.class));
         clienteNovoTransitions.put(StatusWorkflow.FINALIZADO,
-            EnumSet.noneOf(StatusWorkflow.class)); // Terminal state
+            EnumSet.noneOf(StatusWorkflow.class));
 
         TRANSICOES_VALIDAS.put(TipoWorkflow.BASE_PRAZO, basePrazoTransitions);
         TRANSICOES_VALIDAS.put(TipoWorkflow.CLIENTE_NOVO, clienteNovoTransitions);
@@ -162,14 +167,18 @@ public class WorkflowService {
     private void aplicarLogicaEspecifica(Analise analise, StatusWorkflow novoStatus) {
         switch (novoStatus) {
             case EM_ANALISE_FINANCEIRO:
-                // Registrar início da análise apenas na primeira vez
                 if (analise.getDataInicio() == null) {
                     analise.setDataInicio(LocalDateTime.now());
                 }
                 break;
 
             case DOCUMENTACAO_ENVIADA:
-                // Cliente novo: documentação recebida, pode iniciar análise
+                if (analise.getDataInicio() == null) {
+                    analise.setDataInicio(LocalDateTime.now());
+                }
+                break;
+
+            case EM_ANALISE_CLIENTE_NOVO:
                 if (analise.getDataInicio() == null) {
                     analise.setDataInicio(LocalDateTime.now());
                 }
@@ -177,7 +186,6 @@ public class WorkflowService {
 
             case PARECER_APROVADO:
             case PARECER_REPROVADO:
-                // Verificar se requer aprovação de gestor
                 if (requerAprovacaoGestor(analise)) {
                     analise.setRequerAprovacaoGestor(true);
                 }
@@ -196,17 +204,29 @@ public class WorkflowService {
 
             case REANALISADO_APROVADO:
             case REANALISADO_REPROVADO:
-                // Reanálise comercial concluída - verificar alçada novamente
                 if (requerAprovacaoGestor(analise)) {
                     analise.setRequerAprovacaoGestor(true);
                 }
                 break;
 
-            case FINALIZADO:
-                // Registrar fim da análise
+            case SOLICITAR_CANCELAMENTO:
                 analise.setDataFim(LocalDateTime.now());
+                break;
 
-                // Aplicar limite aprovado ao grupo (se houver)
+            case ENCAMINHADO_ANTECIPADO:
+                analise.setDataFim(LocalDateTime.now());
+                // Atualizar tipo do cliente para ANTECIPADO
+                Cliente clienteAntecipado = clienteRepository.findById(analise.getClienteId())
+                        .orElse(null);
+                if (clienteAntecipado != null) {
+                    clienteAntecipado.setTipoCliente(
+                            AnaliseCredito.Analise_de_Credito.domain.enums.TipoCliente.ANTECIPADO);
+                    clienteRepository.save(clienteAntecipado);
+                }
+                break;
+
+            case FINALIZADO:
+                analise.setDataFim(LocalDateTime.now());
                 if (analise.getLimiteAprovado() != null &&
                     analise.getLimiteAprovado().compareTo(BigDecimal.ZERO) > 0) {
                     atualizarLimiteGrupo(analise);
@@ -214,7 +234,6 @@ public class WorkflowService {
                 break;
 
             default:
-                // Outros estados não requerem lógica especial
                 break;
         }
     }

@@ -281,6 +281,15 @@ public class KanbanController {
         model.addAttribute("REANALISADO_REPROVADO", StatusWorkflow.REANALISADO_REPROVADO);
         model.addAttribute("FINALIZADO", StatusWorkflow.FINALIZADO);
 
+        // Pipeline CLIENTE_NOVO states
+        model.addAttribute("FAZER_CONSULTAS", StatusWorkflow.FAZER_CONSULTAS);
+        model.addAttribute("SOLICITAR_CANCELAMENTO", StatusWorkflow.SOLICITAR_CANCELAMENTO);
+        model.addAttribute("CONSULTA_PROTESTOS", StatusWorkflow.CONSULTA_PROTESTOS);
+        model.addAttribute("VERIFICACAO_LOJA_FISICA", StatusWorkflow.VERIFICACAO_LOJA_FISICA);
+        model.addAttribute("CONSULTA_SCORE_RESTRICOES", StatusWorkflow.CONSULTA_SCORE_RESTRICOES);
+        model.addAttribute("ENCAMINHADO_ANTECIPADO", StatusWorkflow.ENCAMINHADO_ANTECIPADO);
+        model.addAttribute("EM_ANALISE_CLIENTE_NOVO", StatusWorkflow.EM_ANALISE_CLIENTE_NOVO);
+
         return "kanban";
     }
 

@@ -10,12 +10,13 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 
 /**
- * Protesto - Registro de títulos protestados em cartório.
+ * Protesto - Registro de titulo protestado em cartorio.
+ * Cada registro representa uma ocorrencia individual, inserida manualmente pelo analista.
  */
 @Entity
 @Table(name = "protesto", indexes = {
     @Index(name = "idx_protesto_cliente", columnList = "cliente_id"),
-    @Index(name = "idx_protesto_data", columnList = "data")
+    @Index(name = "idx_protesto_data", columnList = "data_protesto")
 })
 @Data
 @NoArgsConstructor
@@ -32,22 +33,21 @@ public class Protesto {
     private Cliente cliente;
 
     /**
-     * Quantidade de protestos
+     * Nome do cartorio onde foi protestado
      */
-    @Column(nullable = false)
-    private Integer quantidade = 0;
+    @Column(length = 200)
+    private String cartorio;
 
     /**
-     * Valor total dos protestos
+     * Valor do protesto
      */
     @NotNull
     @Column(nullable = false, precision = 15, scale = 2)
     private BigDecimal valor = BigDecimal.ZERO;
 
     /**
-     * Data do protesto ou última atualização
+     * Data do protesto
      */
-    @NotNull
-    @Column(nullable = false)
-    private LocalDate data;
+    @Column(name = "data_protesto")
+    private LocalDate dataProtesto;
 }

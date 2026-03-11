@@ -10,12 +10,13 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 
 /**
- * Ação Judicial - Registro de ações judiciais em andamento ou encerradas.
+ * Acao Judicial - Registro de acao judicial em andamento ou encerrada.
+ * Cada registro representa uma ocorrencia individual, inserida manualmente pelo analista.
  */
 @Entity
 @Table(name = "acao_judicial", indexes = {
     @Index(name = "idx_acao_judicial_cliente", columnList = "cliente_id"),
-    @Index(name = "idx_acao_judicial_data", columnList = "data")
+    @Index(name = "idx_acao_judicial_data", columnList = "data_distribuicao")
 })
 @Data
 @NoArgsConstructor
@@ -32,22 +33,26 @@ public class AcaoJudicial {
     private Cliente cliente;
 
     /**
-     * Quantidade de ações judiciais
+     * Tipo da acao (ex: "Execucao Fiscal", "Cobranca", "Falencia")
      */
-    @Column(nullable = false)
-    private Integer quantidade = 0;
+    @Column(length = 200)
+    private String tipo;
 
     /**
-     * Valor total das ações
+     * Vara onde tramita a acao
      */
-    @NotNull
-    @Column(nullable = false, precision = 15, scale = 2)
+    @Column(length = 200)
+    private String vara;
+
+    /**
+     * Valor da acao judicial
+     */
+    @Column(precision = 15, scale = 2)
     private BigDecimal valor = BigDecimal.ZERO;
 
     /**
-     * Data da ação ou última atualização
+     * Data de distribuicao da acao
      */
-    @NotNull
-    @Column(nullable = false)
-    private LocalDate data;
+    @Column(name = "data_distribuicao")
+    private LocalDate dataDistribuicao;
 }

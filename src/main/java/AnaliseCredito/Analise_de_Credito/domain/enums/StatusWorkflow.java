@@ -6,10 +6,8 @@ package AnaliseCredito.Analise_de_Credito.domain.enums;
  * Alguns estados são específicos para determinados tipos de workflow.
  */
 public enum StatusWorkflow {
+    // Shared states
     PENDENTE,
-    EM_ANALISE_FINANCEIRO,
-    DOCUMENTACAO_SOLICITADA,
-    DOCUMENTACAO_ENVIADA,
     PARECER_APROVADO,
     PARECER_REPROVADO,
     APROVADO_CONDICIONAL,
@@ -18,5 +16,21 @@ public enum StatusWorkflow {
     REANALISE_COMERCIAL_SOLICITADA,
     REANALISADO_APROVADO,
     REANALISADO_REPROVADO,
-    FINALIZADO
+    FINALIZADO,
+
+    // BASE_PRAZO specific
+    EM_ANALISE_FINANCEIRO,
+
+    // CLIENTE_NOVO legacy (kept for compatibility)
+    DOCUMENTACAO_SOLICITADA,
+    DOCUMENTACAO_ENVIADA,
+
+    // CLIENTE_NOVO pipeline states
+    FAZER_CONSULTAS,
+    SOLICITAR_CANCELAMENTO,
+    CONSULTA_PROTESTOS,
+    VERIFICACAO_LOJA_FISICA,
+    CONSULTA_SCORE_RESTRICOES,
+    ENCAMINHADO_ANTECIPADO,
+    EM_ANALISE_CLIENTE_NOVO
 }

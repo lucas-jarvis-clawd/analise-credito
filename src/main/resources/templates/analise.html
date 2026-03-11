@@ -27,26 +27,146 @@
     <!-- Main Container -->
     <div class="container-fluid" style="padding:0 0 32px;">
         <!-- Flash Messages -->
-        <div th:if="${mensagem}" class="alert alert-success alert-dismissible fade show" role="alert">
+        <div th:if="${mensagem}" class="alert-theme-success mb-theme animate-in" role="alert">
             <i class="bi bi-check-circle"></i> <span th:text="${mensagem}"></span>
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
-        <div th:if="${erro}" class="alert alert-danger alert-dismissible fade show" role="alert">
+        <div th:if="${erro}" class="alert-theme-danger mb-theme animate-in" role="alert">
             <i class="bi bi-exclamation-triangle"></i> <span th:text="${erro}"></span>
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
 
         <!-- Page Header -->
-        <div class="row mb-3">
-            <div class="col">
+        <div class="page-header animate-in">
+            <div>
                 <h2>
                     <i class="bi bi-building"></i>
                     <span th:text="${cliente.razaoSocial}">Razão Social</span>
                 </h2>
-                <p class="text-muted mb-0">
+                <div class="page-subtitle">
                     <strong>CNPJ:</strong> <span th:text="${cliente.cnpj}">00.000.000/0000-00</span>
                     <span class="ms-3"><strong>Pedido:</strong> <span th:text="${pedido.numero}">000000</span></span>
                     <span class="ms-3"><strong>Valor:</strong> R$ <span th:text="${#numbers.formatDecimal(pedido.valor, 1, 'POINT', 2, 'COMMA')}">0,00</span></span>
+                </div>
+            </div>
+            <a href="/analise/kanban" class="btn-ghost">
+                <i class="bi bi-arrow-left"></i> Voltar ao Kanban
+            </a>
+        </div>
+
+        <!-- Pipeline Panel for CLIENTE_NOVO -->
+        <div th:if="${isPipeline}" class="pipeline-panel animate-in mb-theme">
+            <!-- Progress Steps -->
+            <div class="pipeline-steps">
+                <div class="pipeline-step"
+                     th:classappend="${pipelineStatus.name() == 'PENDENTE'} ? 'active' : (${pipelineStatus.name() != 'PENDENTE' and pipelineStatus.name() != 'SOLICITAR_CANCELAMENTO' and pipelineStatus.name() != 'ENCAMINHADO_ANTECIPADO'} ? 'completed' : '')">
+                    <span class="pipeline-step-number">1</span>
+                    <span class="pipeline-step-label">Pendente</span>
+                </div>
+                <div class="pipeline-step"
+                     th:classappend="${pipelineStatus.name() == 'FAZER_CONSULTAS'} ? 'active' : (${pipelineStatus.name() == 'CONSULTA_PROTESTOS' or pipelineStatus.name() == 'VERIFICACAO_LOJA_FISICA' or pipelineStatus.name() == 'CONSULTA_SCORE_RESTRICOES' or pipelineStatus.name() == 'EM_ANALISE_CLIENTE_NOVO' or pipelineStatus.name() == 'PARECER_APROVADO' or pipelineStatus.name() == 'PARECER_REPROVADO' or pipelineStatus.name() == 'FINALIZADO'} ? 'completed' : '')">
+                    <span class="pipeline-step-number">2</span>
+                    <span class="pipeline-step-label">Consultas</span>
+                </div>
+                <div class="pipeline-step"
+                     th:classappend="${pipelineStatus.name() == 'CONSULTA_PROTESTOS'} ? 'active' : (${pipelineStatus.name() == 'VERIFICACAO_LOJA_FISICA' or pipelineStatus.name() == 'CONSULTA_SCORE_RESTRICOES' or pipelineStatus.name() == 'EM_ANALISE_CLIENTE_NOVO' or pipelineStatus.name() == 'PARECER_APROVADO' or pipelineStatus.name() == 'PARECER_REPROVADO' or pipelineStatus.name() == 'FINALIZADO'} ? 'completed' : '')">
+                    <span class="pipeline-step-number">3</span>
+                    <span class="pipeline-step-label">Protestos</span>
+                </div>
+                <div class="pipeline-step"
+                     th:classappend="${pipelineStatus.name() == 'VERIFICACAO_LOJA_FISICA'} ? 'active' : (${pipelineStatus.name() == 'CONSULTA_SCORE_RESTRICOES' or pipelineStatus.name() == 'EM_ANALISE_CLIENTE_NOVO' or pipelineStatus.name() == 'PARECER_APROVADO' or pipelineStatus.name() == 'PARECER_REPROVADO' or pipelineStatus.name() == 'FINALIZADO'} ? 'completed' : '')">
+                    <span class="pipeline-step-number">4</span>
+                    <span class="pipeline-step-label">Loja Física</span>
+                </div>
+                <div class="pipeline-step"
+                     th:classappend="${pipelineStatus.name() == 'CONSULTA_SCORE_RESTRICOES'} ? 'active' : (${pipelineStatus.name() == 'EM_ANALISE_CLIENTE_NOVO' or pipelineStatus.name() == 'PARECER_APROVADO' or pipelineStatus.name() == 'PARECER_REPROVADO' or pipelineStatus.name() == 'FINALIZADO'} ? 'completed' : '')">
+                    <span class="pipeline-step-number">5</span>
+                    <span class="pipeline-step-label">Score</span>
+                </div>
+                <div class="pipeline-step"
+                     th:classappend="${pipelineStatus.name() == 'EM_ANALISE_CLIENTE_NOVO'} ? 'active' : (${pipelineStatus.name() == 'PARECER_APROVADO' or pipelineStatus.name() == 'PARECER_REPROVADO' or pipelineStatus.name() == 'FINALIZADO'} ? 'completed' : '')">
+                    <span class="pipeline-step-number">6</span>
+                    <span class="pipeline-step-label">Análise</span>
+                </div>
+            </div>
+
+            <!-- Terminal state banners -->
+            <div th:if="${pipelineStatus.name() == 'SOLICITAR_CANCELAMENTO'}" class="alert-theme-danger mt-3">
+                <i class="bi bi-x-octagon-fill"></i>
+                <strong>CANCELAMENTO SOLICITADO</strong>
+                <span th:if="${analise.motivoDesvio != null}"> &mdash; <span th:text="${analise.motivoDesvio}">Motivo</span></span>
+            </div>
+            <div th:if="${pipelineStatus.name() == 'ENCAMINHADO_ANTECIPADO'}" class="alert-theme-warning mt-3">
+                <i class="bi bi-fast-forward-fill"></i>
+                <strong>ENCAMINHADO PARA ANTECIPADO</strong>
+                <span th:if="${analise.motivoDesvio != null}"> &mdash; <span th:text="${analise.motivoDesvio}">Motivo</span></span>
+            </div>
+
+            <!-- Contextual forms per step -->
+            <!-- PENDENTE: Iniciar Pipeline -->
+            <div th:if="${pipelineStatus.name() == 'PENDENTE'}" class="pipeline-form mt-3">
+                <form th:action="@{/analise/{id}/iniciar-pipeline(id=${analise.id})}" method="post">
+                    <p style="font-size:0.85rem;color:var(--text-muted);margin-bottom:0.75rem;">
+                        <i class="bi bi-info-circle"></i> Clique para iniciar a validação do pipeline de cliente novo.
+                    </p>
+                    <button type="submit" class="btn-gold">
+                        <i class="bi bi-play-fill"></i> Iniciar Pipeline
+                    </button>
+                </form>
+            </div>
+
+            <!-- FAZER_CONSULTAS: Form de dados de consulta -->
+            <div th:if="${pipelineStatus.name() == 'FAZER_CONSULTAS'}" class="pipeline-form mt-3">
+                <h5 style="font-size:0.95rem;font-weight:600;margin-bottom:0.75rem;">
+                    <i class="bi bi-search text-gold"></i> Informar Dados de Consulta
+                </h5>
+                <form th:action="@{/analise/{id}/consultas-realizadas(id=${analise.id})}" method="post">
+                    <div class="row">
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label-theme">Status Receita Federal</label>
+                            <select name="statusReceita" class="form-select form-select-theme" required>
+                                <option value="">Selecione...</option>
+                                <option value="ATIVA" th:selected="${cliente.statusReceita == 'ATIVA'}">ATIVA</option>
+                                <option value="BAIXADA" th:selected="${cliente.statusReceita == 'BAIXADA'}">BAIXADA</option>
+                                <option value="SUSPENSA" th:selected="${cliente.statusReceita == 'SUSPENSA'}">SUSPENSA</option>
+                                <option value="INAPTA" th:selected="${cliente.statusReceita == 'INAPTA'}">INAPTA</option>
+                                <option value="NULA" th:selected="${cliente.statusReceita == 'NULA'}">NULA</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label-theme">Simples Nacional</label>
+                            <select name="statusSimples" class="form-select form-select-theme">
+                                <option value="">Selecione...</option>
+                                <option value="OPTANTE" th:selected="${cliente.statusSimples == 'OPTANTE'}">OPTANTE</option>
+                                <option value="NAO_OPTANTE" th:selected="${cliente.statusSimples == 'NAO_OPTANTE'}">NÃO OPTANTE</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label-theme">Sintegra</label>
+                            <select name="sintegra" class="form-select form-select-theme" required>
+                                <option value="">Selecione...</option>
+                                <option value="HABILITADO" th:selected="${cliente.sintegra == 'HABILITADO'}">HABILITADO</option>
+                                <option value="INABILITADO" th:selected="${cliente.sintegra == 'INABILITADO'}">INABILITADO</option>
+                                <option value="SUSPENSO" th:selected="${cliente.sintegra == 'SUSPENSO'}">SUSPENSO</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label-theme">CNAE Principal</label>
+                            <input type="text" name="cnae" class="form-control form-control-theme"
+                                   th:value="${cliente.cnae}" placeholder="Ex: 4781400">
+                        </div>
+                    </div>
+                    <button type="submit" class="btn-gold">
+                        <i class="bi bi-check-circle"></i> Consultas Realizadas
+                    </button>
+                </form>
+            </div>
+
+            <!-- CONSULTA_PROTESTOS: Confirmar protestos -->
+            <div th:if="${pipelineStatus.name() == 'CONSULTA_PROTESTOS'}" class="pipeline-form mt-3">
+                <h5 style="font-size:0.95rem;font-weight:600;margin-bottom:0.75rem;">
+                    <i class="bi bi-exclamation-triangle text-gold"></i> Verificar Protestos
+                </h5>
+                <p style="font-size:0.85rem;color:var(--text-muted);margin-bottom:0.75rem;">
+                    Insira os protestos encontrados na aba <strong>Restrições</strong>, depois confirme abaixo.
                 </p>
                 <!-- Informações Sazonais -->
                 <p class="text-muted mb-0 mt-1" th:if="${pedido.nomeColecao != null || pedido.tipoOperacao != null || pedido.pedidoSazonal != null}">
@@ -74,13 +194,19 @@
         <div class="row">
             <!-- Left Column: Wizard (70%) -->
             <div class="col-md-8">
-                <div class="wizard-container">
+                <div class="wizard-container animate-in">
                     <!-- Tabs Navigation -->
-                    <ul class="nav nav-tabs" id="wizardTabs" role="tablist">
+                    <ul class="nav nav-tabs nav-tabs-theme" id="wizardTabs" role="tablist">
                         <li class="nav-item" role="presentation">
                             <button class="nav-link active" id="cadastrais-tab" data-bs-toggle="tab"
                                     data-bs-target="#cadastrais" type="button" role="tab">
                                 <i class="bi bi-person-vcard"></i> Dados Cadastrais
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="pedidosgrupo-tab" data-bs-toggle="tab"
+                                    data-bs-target="#pedidosgrupo" type="button" role="tab">
+                                <i class="bi bi-table"></i> Pedidos Grupo
                             </button>
                         </li>
                         <li class="nav-item" role="presentation">
@@ -122,10 +248,10 @@
                     </ul>
 
                     <!-- Tabs Content -->
-                    <div class="tab-content" id="wizardTabsContent">
+                    <div class="tab-content" id="wizardTabsContent" style="padding-top:1.5rem;">
                         <!-- Tab 1: Dados Cadastrais -->
                         <div class="tab-pane fade show active" id="cadastrais" role="tabpanel">
-                            <h4 class="mb-4">Dados Cadastrais</h4>
+                            <h4 class="mb-4" style="font-size:1.1rem;"><i class="bi bi-person-vcard text-gold"></i> Dados Cadastrais</h4>
                             <div class="row">
                                 <div class="col-md-6">
                                     <div class="info-label">CNPJ</div>
@@ -156,8 +282,8 @@
                                 <div class="col-md-4">
                                     <div class="info-label">SIMEI</div>
                                     <div class="info-value">
-                                        <span th:if="${cliente.simei}" class="badge bg-success">SIM</span>
-                                        <span th:unless="${cliente.simei}" class="badge bg-secondary">NÃO</span>
+                                        <span th:if="${cliente.simei}" class="badge-gold">SIM</span>
+                                        <span th:unless="${cliente.simei}" class="badge-dark">NÃO</span>
                                     </div>
                                 </div>
                                 <div class="col-md-4">
@@ -256,17 +382,111 @@
                             </div>
                         </div>
 
+                        <!-- Tab: Pedidos do Grupo Econômico (Cross-Tab) -->
+                        <div class="tab-pane fade" id="pedidosgrupo" role="tabpanel">
+                            <h4 class="mb-3" style="font-size:1.1rem;">
+                                <i class="bi bi-table text-gold"></i> Pedidos do Grupo Econômico
+                                <span th:if="${pedido.colecao != null}" class="badge-gold ms-2" style="font-size:0.75rem;">
+                                    Coleção <span th:text="${pedido.colecao}">202601</span>
+                                </span>
+                            </h4>
+                            <p style="font-size:0.82rem;color:var(--text-muted);margin-bottom:1rem;">
+                                <i class="bi bi-info-circle"></i>
+                                Grupo: <strong th:text="${grupo.codigo}">GRUPO</strong>
+                                &mdash; Clique em uma linha para expandir e ver os pedidos individuais.
+                            </p>
+
+                            <div th:if="${#lists.isEmpty(crossTabRows)}" class="alert-theme-info">
+                                <i class="bi bi-info-circle"></i> Nenhum pedido encontrado para esta coleção no grupo econômico.
+                            </div>
+
+                            <div th:unless="${#lists.isEmpty(crossTabRows)}" style="overflow-x:auto;">
+                                <table class="table-theme" style="width:100%;font-size:0.82rem;" id="crossTabTable">
+                                    <thead>
+                                        <tr>
+                                            <th style="min-width:180px;position:sticky;left:0;background:var(--sidebar-bg);color:var(--text-sidebar-hover);z-index:2;">
+                                                CNPJ / Razão Social
+                                            </th>
+                                            <th th:each="marca : ${marcas}" th:text="${marca}" style="text-align:right;min-width:120px;">Marca</th>
+                                            <th style="text-align:right;min-width:120px;font-weight:700;">TOTAL</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <th:block th:each="row, rowStat : ${crossTabRows}">
+                                            <!-- CNPJ summary row (clickable) -->
+                                            <tr class="crosstab-row" style="cursor:pointer;"
+                                                th:attr="onclick='toggleDetail(' + ${rowStat.index} + ')'">
+                                                <td style="position:sticky;left:0;background:var(--card-bg);z-index:1;">
+                                                    <div style="display:flex;align-items:center;gap:0.5rem;">
+                                                        <i class="bi bi-chevron-right crosstab-chevron" th:id="'chevron-' + ${rowStat.index}" style="transition:transform 0.2s;font-size:0.7rem;color:var(--gold);"></i>
+                                                        <div>
+                                                            <div style="font-weight:600;" th:text="${row['razaoSocial']}">Razão Social</div>
+                                                            <div style="font-size:0.72rem;color:var(--text-muted);" th:text="${row['cnpj']}">00000000000000</div>
+                                                        </div>
+                                                        <span class="badge" style="background:var(--gold-subtle);color:var(--gold-dark);font-size:0.65rem;margin-left:auto;"
+                                                              th:text="${row['pedidosCount'] + ' pedido(s)'}">0 pedido(s)</span>
+                                                    </div>
+                                                </td>
+                                                <td th:each="marca : ${marcas}" style="text-align:right;font-variant-numeric:tabular-nums;"
+                                                    th:with="val=${row['valoresPorMarca'].get(marca)}">
+                                                    <span th:if="${val != null and val.compareTo(T(java.math.BigDecimal).ZERO) > 0}"
+                                                          th:text="'R$ ' + ${#numbers.formatDecimal(val, 1, 'POINT', 2, 'COMMA')}">R$ 0,00</span>
+                                                    <span th:if="${val == null or val.compareTo(T(java.math.BigDecimal).ZERO) == 0}"
+                                                          style="color:var(--text-muted);">&mdash;</span>
+                                                </td>
+                                                <td style="text-align:right;font-weight:700;font-variant-numeric:tabular-nums;color:var(--gold-dark);"
+                                                    th:text="'R$ ' + ${#numbers.formatDecimal(row['total'], 1, 'POINT', 2, 'COMMA')}">R$ 0,00</td>
+                                            </tr>
+                                            <!-- Expanded detail rows (hidden by default) -->
+                                            <tr th:each="pd : ${row['pedidosDetalhe']}" class="crosstab-detail" style="display:none;"
+                                                th:classappend="'detail-' + ${rowStat.index}">
+                                                <td style="position:sticky;left:0;background:var(--content-bg);z-index:1;padding-left:2.5rem;">
+                                                    <div style="font-size:0.78rem;">
+                                                        <i class="bi bi-receipt" style="color:var(--gold);"></i>
+                                                        Pedido <strong th:text="${pd['numero']}">000</strong>
+                                                        <span th:if="${pd['data'] != null}" style="color:var(--text-muted);margin-left:0.5rem;"
+                                                              th:text="${#temporals.format(pd['data'], 'dd/MM/yyyy')}">00/00/0000</span>
+                                                        <span th:if="${pd['bloqueio'] != null}" class="badge" style="font-size:0.6rem;background:var(--danger-bg);color:var(--danger);margin-left:0.3rem;"
+                                                              th:text="'Bloq: ' + ${pd['bloqueio']}">Bloq: 80</span>
+                                                        <span th:if="${pd['condicaoPagamento'] != null}" style="color:var(--text-muted);font-size:0.72rem;margin-left:0.5rem;"
+                                                              th:text="${pd['condicaoPagamento']}">30/60/90</span>
+                                                    </div>
+                                                </td>
+                                                <td th:each="m : ${marcas}" style="text-align:right;background:var(--content-bg);font-size:0.78rem;">
+                                                    <span th:if="${pd['marca'] == m}"
+                                                          th:text="'R$ ' + ${#numbers.formatDecimal(pd['valor'], 1, 'POINT', 2, 'COMMA')}">R$ 0,00</span>
+                                                </td>
+                                                <td style="text-align:right;background:var(--content-bg);font-weight:600;font-size:0.78rem;"
+                                                    th:text="'R$ ' + ${#numbers.formatDecimal(pd['valor'], 1, 'POINT', 2, 'COMMA')}">R$ 0,00</td>
+                                            </tr>
+                                        </th:block>
+                                    </tbody>
+                                    <tfoot>
+                                        <tr style="font-weight:700;border-top:2px solid var(--gold);">
+                                            <td style="position:sticky;left:0;background:var(--card-bg);z-index:1;">
+                                                TOTAL GRUPO
+                                            </td>
+                                            <td th:each="marca : ${marcas}" style="text-align:right;font-variant-numeric:tabular-nums;"
+                                                th:with="totalM=${totalPorMarca.get(marca)}"
+                                                th:text="${totalM != null} ? 'R$ ' + ${#numbers.formatDecimal(totalM, 1, 'POINT', 2, 'COMMA')} : 'R$ 0,00'">R$ 0,00</td>
+                                            <td style="text-align:right;color:var(--gold-dark);font-variant-numeric:tabular-nums;"
+                                                th:text="'R$ ' + ${#numbers.formatDecimal(grandTotal, 1, 'POINT', 2, 'COMMA')}">R$ 0,00</td>
+                                        </tr>
+                                    </tfoot>
+                                </table>
+                            </div>
+                        </div>
+
                         <!-- Tab 2: Vínculos e Sócios -->
                         <div class="tab-pane fade" id="vinculos" role="tabpanel">
-                            <h4 class="mb-4">Vínculos e Sócios</h4>
+                            <h4 class="mb-4" style="font-size:1.1rem;"><i class="bi bi-diagram-3 text-gold"></i> Vínculos e Sócios</h4>
 
-                            <!-- Sócios -->
-                            <h5 class="mb-3">Sócios (<span th:text="${#lists.size(socios)}">0</span>)</h5>
-                            <div th:if="${#lists.isEmpty(socios)}" class="alert alert-info">
+                            <h5 class="mb-3" style="font-size:0.95rem;font-weight:600;">Sócios (<span th:text="${#lists.size(socios)}">0</span>)</h5>
+                            <div th:if="${#lists.isEmpty(socios)}" class="alert-theme-info">
                                 <i class="bi bi-info-circle"></i> Nenhum sócio cadastrado.
                             </div>
                             <div th:unless="${#lists.isEmpty(socios)}">
-                                <table class="table table-sm table-striped">
+                                <table class="table-theme" style="width:100%">
                                     <thead>
                                         <tr>
                                             <th>CPF/CNPJ</th>
@@ -286,13 +506,12 @@
                                 </table>
                             </div>
 
-                            <!-- Participações -->
-                            <h5 class="mb-3 mt-4">Participações em Outras Empresas (<span th:text="${#lists.size(participacoes)}">0</span>)</h5>
-                            <div th:if="${#lists.isEmpty(participacoes)}" class="alert alert-info">
+                            <h5 class="mb-3 mt-4" style="font-size:0.95rem;font-weight:600;">Participações em Outras Empresas (<span th:text="${#lists.size(participacoes)}">0</span>)</h5>
+                            <div th:if="${#lists.isEmpty(participacoes)}" class="alert-theme-info">
                                 <i class="bi bi-info-circle"></i> Nenhuma participação cadastrada.
                             </div>
                             <div th:unless="${#lists.isEmpty(participacoes)}">
-                                <table class="table table-sm table-striped">
+                                <table class="table-theme" style="width:100%">
                                     <thead>
                                         <tr>
                                             <th>CNPJ</th>
@@ -313,153 +532,278 @@
 
                         <!-- Tab 3: Restrições -->
                         <div class="tab-pane fade" id="restricoes" role="tabpanel">
-                            <h4 class="mb-4">Restrições Financeiras</h4>
+                            <h4 class="mb-4" style="font-size:1.1rem;"><i class="bi bi-exclamation-triangle text-gold"></i> Restrições Financeiras</h4>
 
                             <!-- Score Summary -->
-                            <div class="alert alert-light border mb-4">
-                                <div class="row align-items-center">
-                                    <div class="col-md-6">
-                                        <strong>Score Boa Vista:</strong>
-                                        <span class="ms-2 badge"
-                                              th:classappend="${cliente.scoreBoaVista >= 700} ? 'bg-success' : (${cliente.scoreBoaVista >= 400} ? 'bg-warning text-dark' : 'bg-danger')"
-                                              th:text="${cliente.scoreBoaVista ?: 'N/D'}">0</span>
+                            <div style="display:flex;gap:1rem;margin-bottom:1.5rem;">
+                                <div class="stat-card" style="flex:1">
+                                    <div class="stat-card-info">
+                                        <span class="stat-card-label">Score Boa Vista</span>
+                                        <span class="stat-card-value">
+                                            <span class="badge"
+                                                  th:classappend="${cliente.scoreBoaVista >= 700} ? 'score-alto' : (${cliente.scoreBoaVista >= 400} ? 'score-medio' : 'score-baixo')"
+                                                  th:text="${cliente.scoreBoaVista ?: 'N/D'}"
+                                                  style="font-size:1rem;padding:0.3rem 0.7rem;">0</span>
+                                        </span>
                                     </div>
-                                    <div class="col-md-6">
-                                        <strong>Total de Restrições:</strong>
-                                        <span class="ms-2 badge bg-danger" th:text="${#lists.size(pefins) + #lists.size(protestos) + #lists.size(acoesJudiciais) + #lists.size(cheques)}">0</span>
+                                    <div class="stat-card-icon"><i class="bi bi-graph-up"></i></div>
+                                </div>
+                                <div class="stat-card" style="flex:1">
+                                    <div class="stat-card-info">
+                                        <span class="stat-card-label">Total de Restrições</span>
+                                        <span class="stat-card-value" style="color:var(--danger);"
+                                              th:text="${#lists.size(pefins) + #lists.size(protestos) + #lists.size(acoesJudiciais) + #lists.size(cheques)}">0</span>
                                     </div>
+                                    <div class="stat-card-icon" style="background:var(--danger-bg);color:var(--danger);"><i class="bi bi-exclamation-octagon"></i></div>
                                 </div>
                             </div>
 
-                            <!-- PEFIN -->
-                            <h5 class="mb-3">PEFIN (<span th:text="${#lists.size(pefins)}">0</span>)</h5>
-                            <div th:if="${#lists.isEmpty(pefins)}" class="alert alert-success">
+                            <!-- ========== PEFIN ========== -->
+                            <h5 class="mb-3" style="font-size:0.95rem;font-weight:600;">PEFIN (<span th:text="${#lists.size(pefins)}">0</span>)</h5>
+                            <div th:if="${#lists.isEmpty(pefins)}" class="alert-theme-success" style="margin-bottom:0.75rem;">
                                 <i class="bi bi-check-circle"></i> Nenhuma ocorrência.
                             </div>
-                            <table th:unless="${#lists.isEmpty(pefins)}" class="table table-sm table-striped mb-4">
-                                <thead>
-                                    <tr>
-                                        <th>Origem</th>
-                                        <th>Valor</th>
-                                        <th>Data</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr th:each="pefin : ${pefins}">
-                                        <td th:text="${pefin.origem}">Origem</td>
-                                        <td>R$ <span th:text="${#numbers.formatDecimal(pefin.valor, 1, 'POINT', 2, 'COMMA')}">0,00</span></td>
-                                        <td th:text="${pefin.dataOcorrencia != null ? #temporals.format(pefin.dataOcorrencia, 'dd/MM/yyyy') : 'N/D'}">00/00/0000</td>
-                                    </tr>
-                                </tbody>
-                                <tfoot>
-                                    <tr class="table-warning">
-                                        <th>TOTAL</th>
-                                        <th>R$ <span th:text="${#numbers.formatDecimal(totalPefin, 1, 'POINT', 2, 'COMMA')}">0,00</span></th>
-                                        <th></th>
-                                    </tr>
-                                </tfoot>
-                            </table>
+                            <div th:unless="${#lists.isEmpty(pefins)}" style="margin-bottom:0.75rem;">
+                                <table class="table-theme" style="width:100%">
+                                    <thead>
+                                        <tr><th>Origem</th><th>Valor</th><th>Data</th><th style="width:50px;"></th></tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr th:each="pefin : ${pefins}">
+                                            <td th:text="${pefin.origem}">Origem</td>
+                                            <td>R$ <span th:text="${#numbers.formatDecimal(pefin.valor, 1, 'POINT', 2, 'COMMA')}">0,00</span></td>
+                                            <td th:text="${pefin.dataOcorrencia != null ? #temporals.format(pefin.dataOcorrencia, 'dd/MM/yyyy') : 'N/D'}">00/00/0000</td>
+                                            <td>
+                                                <form th:action="@{/analise/{aId}/pefin/{pId}/excluir(aId=${analise.id}, pId=${pefin.id})}" method="post" style="display:inline;">
+                                                    <button type="submit" class="btn-ghost" style="padding:0.15rem 0.4rem;font-size:0.75rem;color:var(--danger);" title="Excluir"
+                                                            onclick="return confirm('Excluir este PEFIN?');">
+                                                        <i class="bi bi-trash"></i>
+                                                    </button>
+                                                </form>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                    <tfoot>
+                                        <tr>
+                                            <th>TOTAL</th>
+                                            <th>R$ <span th:text="${#numbers.formatDecimal(totalPefin, 1, 'POINT', 2, 'COMMA')}">0,00</span></th>
+                                            <th colspan="2"></th>
+                                        </tr>
+                                    </tfoot>
+                                </table>
+                            </div>
+                            <form th:action="@{/analise/{id}/pefin(id=${analise.id})}" method="post" style="margin-bottom:1.5rem;">
+                                <div style="display:flex;gap:0.5rem;align-items:flex-end;flex-wrap:wrap;">
+                                    <div style="flex:2;">
+                                        <label class="form-label-theme" style="font-size:0.75rem;">Origem</label>
+                                        <input type="text" name="origem" class="form-control form-control-theme form-control-sm" placeholder="Ex: Serasa, SPC" required>
+                                    </div>
+                                    <div style="flex:1;">
+                                        <label class="form-label-theme" style="font-size:0.75rem;">Valor (R$)</label>
+                                        <input type="number" name="valor" class="form-control form-control-theme form-control-sm" step="0.01" min="0" placeholder="0,00" required>
+                                    </div>
+                                    <div style="flex:1;">
+                                        <label class="form-label-theme" style="font-size:0.75rem;">Data</label>
+                                        <input type="date" name="dataOcorrencia" class="form-control form-control-theme form-control-sm">
+                                    </div>
+                                    <div>
+                                        <button type="submit" class="btn-gold-outline" style="font-size:0.75rem;padding:0.35rem 0.7rem;">
+                                            <i class="bi bi-plus-circle"></i> Adicionar
+                                        </button>
+                                    </div>
+                                </div>
+                            </form>
 
-                            <!-- Protestos -->
-                            <h5 class="mb-3">Protestos (<span th:text="${#lists.size(protestos)}">0</span>)</h5>
-                            <div th:if="${#lists.isEmpty(protestos)}" class="alert alert-success">
+                            <!-- ========== Protestos ========== -->
+                            <h5 class="mb-3" style="font-size:0.95rem;font-weight:600;">Protestos (<span th:text="${#lists.size(protestos)}">0</span>)</h5>
+                            <div th:if="${#lists.isEmpty(protestos)}" class="alert-theme-success" style="margin-bottom:0.75rem;">
                                 <i class="bi bi-check-circle"></i> Nenhuma ocorrência.
                             </div>
-                            <table th:unless="${#lists.isEmpty(protestos)}" class="table table-sm table-striped mb-4">
-                                <thead>
-                                    <tr>
-                                        <th>Cartório</th>
-                                        <th>Valor</th>
-                                        <th>Data</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr th:each="protesto : ${protestos}">
-                                        <td th:text="${protesto.cartorio}">Cartório</td>
-                                        <td>R$ <span th:text="${#numbers.formatDecimal(protesto.valor, 1, 'POINT', 2, 'COMMA')}">0,00</span></td>
-                                        <td th:text="${protesto.dataProtesto != null ? #temporals.format(protesto.dataProtesto, 'dd/MM/yyyy') : 'N/D'}">00/00/0000</td>
-                                    </tr>
-                                </tbody>
-                                <tfoot>
-                                    <tr class="table-warning">
-                                        <th>TOTAL</th>
-                                        <th>R$ <span th:text="${#numbers.formatDecimal(totalProtesto, 1, 'POINT', 2, 'COMMA')}">0,00</span></th>
-                                        <th></th>
-                                    </tr>
-                                </tfoot>
-                            </table>
+                            <div th:unless="${#lists.isEmpty(protestos)}" style="margin-bottom:0.75rem;">
+                                <table class="table-theme" style="width:100%">
+                                    <thead>
+                                        <tr><th>Cartório</th><th>Valor</th><th>Data</th><th style="width:50px;"></th></tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr th:each="protesto : ${protestos}">
+                                            <td th:text="${protesto.cartorio}">Cartório</td>
+                                            <td>R$ <span th:text="${#numbers.formatDecimal(protesto.valor, 1, 'POINT', 2, 'COMMA')}">0,00</span></td>
+                                            <td th:text="${protesto.dataProtesto != null ? #temporals.format(protesto.dataProtesto, 'dd/MM/yyyy') : 'N/D'}">00/00/0000</td>
+                                            <td>
+                                                <form th:action="@{/analise/{aId}/protesto/{pId}/excluir(aId=${analise.id}, pId=${protesto.id})}" method="post" style="display:inline;">
+                                                    <button type="submit" class="btn-ghost" style="padding:0.15rem 0.4rem;font-size:0.75rem;color:var(--danger);" title="Excluir"
+                                                            onclick="return confirm('Excluir este protesto?');">
+                                                        <i class="bi bi-trash"></i>
+                                                    </button>
+                                                </form>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                    <tfoot>
+                                        <tr>
+                                            <th>TOTAL</th>
+                                            <th>R$ <span th:text="${#numbers.formatDecimal(totalProtesto, 1, 'POINT', 2, 'COMMA')}">0,00</span></th>
+                                            <th colspan="2"></th>
+                                        </tr>
+                                    </tfoot>
+                                </table>
+                            </div>
+                            <form th:action="@{/analise/{id}/protesto(id=${analise.id})}" method="post" style="margin-bottom:1.5rem;">
+                                <div style="display:flex;gap:0.5rem;align-items:flex-end;flex-wrap:wrap;">
+                                    <div style="flex:2;">
+                                        <label class="form-label-theme" style="font-size:0.75rem;">Cartório</label>
+                                        <input type="text" name="cartorio" class="form-control form-control-theme form-control-sm" placeholder="Nome do cartório" required>
+                                    </div>
+                                    <div style="flex:1;">
+                                        <label class="form-label-theme" style="font-size:0.75rem;">Valor (R$)</label>
+                                        <input type="number" name="valor" class="form-control form-control-theme form-control-sm" step="0.01" min="0" placeholder="0,00" required>
+                                    </div>
+                                    <div style="flex:1;">
+                                        <label class="form-label-theme" style="font-size:0.75rem;">Data</label>
+                                        <input type="date" name="dataProtesto" class="form-control form-control-theme form-control-sm">
+                                    </div>
+                                    <div>
+                                        <button type="submit" class="btn-gold-outline" style="font-size:0.75rem;padding:0.35rem 0.7rem;">
+                                            <i class="bi bi-plus-circle"></i> Adicionar
+                                        </button>
+                                    </div>
+                                </div>
+                            </form>
 
-                            <!-- Ações Judiciais -->
-                            <h5 class="mb-3">Ações Judiciais (<span th:text="${#lists.size(acoesJudiciais)}">0</span>)</h5>
-                            <div th:if="${#lists.isEmpty(acoesJudiciais)}" class="alert alert-success">
+                            <!-- ========== Ações Judiciais ========== -->
+                            <h5 class="mb-3" style="font-size:0.95rem;font-weight:600;">Ações Judiciais (<span th:text="${#lists.size(acoesJudiciais)}">0</span>)</h5>
+                            <div th:if="${#lists.isEmpty(acoesJudiciais)}" class="alert-theme-success" style="margin-bottom:0.75rem;">
                                 <i class="bi bi-check-circle"></i> Nenhuma ocorrência.
                             </div>
-                            <table th:unless="${#lists.isEmpty(acoesJudiciais)}" class="table table-sm table-striped mb-4">
-                                <thead>
-                                    <tr>
-                                        <th>Tipo</th>
-                                        <th>Vara</th>
-                                        <th>Data</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr th:each="acao : ${acoesJudiciais}">
-                                        <td th:text="${acao.tipo}">Tipo</td>
-                                        <td th:text="${acao.vara}">Vara</td>
-                                        <td th:text="${acao.dataDistribuicao != null ? #temporals.format(acao.dataDistribuicao, 'dd/MM/yyyy') : 'N/D'}">00/00/0000</td>
-                                    </tr>
-                                </tbody>
-                            </table>
+                            <div th:unless="${#lists.isEmpty(acoesJudiciais)}" style="margin-bottom:0.75rem;">
+                                <table class="table-theme" style="width:100%">
+                                    <thead>
+                                        <tr><th>Tipo</th><th>Vara</th><th>Valor</th><th>Data</th><th style="width:50px;"></th></tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr th:each="acao : ${acoesJudiciais}">
+                                            <td th:text="${acao.tipo}">Tipo</td>
+                                            <td th:text="${acao.vara}">Vara</td>
+                                            <td th:if="${acao.valor != null}">R$ <span th:text="${#numbers.formatDecimal(acao.valor, 1, 'POINT', 2, 'COMMA')}">0,00</span></td>
+                                            <td th:unless="${acao.valor != null}">N/D</td>
+                                            <td th:text="${acao.dataDistribuicao != null ? #temporals.format(acao.dataDistribuicao, 'dd/MM/yyyy') : 'N/D'}">00/00/0000</td>
+                                            <td>
+                                                <form th:action="@{/analise/{aId}/acao-judicial/{acId}/excluir(aId=${analise.id}, acId=${acao.id})}" method="post" style="display:inline;">
+                                                    <button type="submit" class="btn-ghost" style="padding:0.15rem 0.4rem;font-size:0.75rem;color:var(--danger);" title="Excluir"
+                                                            onclick="return confirm('Excluir esta ação judicial?');">
+                                                        <i class="bi bi-trash"></i>
+                                                    </button>
+                                                </form>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <form th:action="@{/analise/{id}/acao-judicial(id=${analise.id})}" method="post" style="margin-bottom:1.5rem;">
+                                <div style="display:flex;gap:0.5rem;align-items:flex-end;flex-wrap:wrap;">
+                                    <div style="flex:2;">
+                                        <label class="form-label-theme" style="font-size:0.75rem;">Tipo</label>
+                                        <input type="text" name="tipo" class="form-control form-control-theme form-control-sm" placeholder="Ex: Execução Fiscal" required>
+                                    </div>
+                                    <div style="flex:1.5;">
+                                        <label class="form-label-theme" style="font-size:0.75rem;">Vara</label>
+                                        <input type="text" name="vara" class="form-control form-control-theme form-control-sm" placeholder="Vara">
+                                    </div>
+                                    <div style="flex:1;">
+                                        <label class="form-label-theme" style="font-size:0.75rem;">Valor (R$)</label>
+                                        <input type="number" name="valor" class="form-control form-control-theme form-control-sm" step="0.01" min="0" placeholder="0,00">
+                                    </div>
+                                    <div style="flex:1;">
+                                        <label class="form-label-theme" style="font-size:0.75rem;">Data</label>
+                                        <input type="date" name="dataDistribuicao" class="form-control form-control-theme form-control-sm">
+                                    </div>
+                                    <div>
+                                        <button type="submit" class="btn-gold-outline" style="font-size:0.75rem;padding:0.35rem 0.7rem;">
+                                            <i class="bi bi-plus-circle"></i> Adicionar
+                                        </button>
+                                    </div>
+                                </div>
+                            </form>
 
-                            <!-- Cheques -->
-                            <h5 class="mb-3">Cheques Sem Fundos (<span th:text="${#lists.size(cheques)}">0</span>)</h5>
-                            <div th:if="${#lists.isEmpty(cheques)}" class="alert alert-success">
+                            <!-- ========== Cheques ========== -->
+                            <h5 class="mb-3" style="font-size:0.95rem;font-weight:600;">Cheques Sem Fundos (<span th:text="${#lists.size(cheques)}">0</span>)</h5>
+                            <div th:if="${#lists.isEmpty(cheques)}" class="alert-theme-success" style="margin-bottom:0.75rem;">
                                 <i class="bi bi-check-circle"></i> Nenhuma ocorrência.
                             </div>
-                            <table th:unless="${#lists.isEmpty(cheques)}" class="table table-sm table-striped mb-4">
-                                <thead>
-                                    <tr>
-                                        <th>Banco</th>
-                                        <th>Agência</th>
-                                        <th>Valor</th>
-                                        <th>Data</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr th:each="cheque : ${cheques}">
-                                        <td th:text="${cheque.banco}">Banco</td>
-                                        <td th:text="${cheque.agencia}">Agência</td>
-                                        <td>R$ <span th:text="${#numbers.formatDecimal(cheque.valor, 1, 'POINT', 2, 'COMMA')}">0,00</span></td>
-                                        <td th:text="${cheque.dataOcorrencia != null ? #temporals.format(cheque.dataOcorrencia, 'dd/MM/yyyy') : 'N/D'}">00/00/0000</td>
-                                    </tr>
-                                </tbody>
-                                <tfoot>
-                                    <tr class="table-warning">
-                                        <th colspan="2">TOTAL</th>
-                                        <th>R$ <span th:text="${#numbers.formatDecimal(totalCheque, 1, 'POINT', 2, 'COMMA')}">0,00</span></th>
-                                        <th></th>
-                                    </tr>
-                                </tfoot>
-                            </table>
+                            <div th:unless="${#lists.isEmpty(cheques)}" style="margin-bottom:0.75rem;">
+                                <table class="table-theme" style="width:100%">
+                                    <thead>
+                                        <tr><th>Banco</th><th>Agência</th><th>Valor</th><th>Data</th><th style="width:50px;"></th></tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr th:each="cheque : ${cheques}">
+                                            <td th:text="${cheque.banco}">Banco</td>
+                                            <td th:text="${cheque.agencia}">Agência</td>
+                                            <td>R$ <span th:text="${#numbers.formatDecimal(cheque.valor, 1, 'POINT', 2, 'COMMA')}">0,00</span></td>
+                                            <td th:text="${cheque.dataOcorrencia != null ? #temporals.format(cheque.dataOcorrencia, 'dd/MM/yyyy') : 'N/D'}">00/00/0000</td>
+                                            <td>
+                                                <form th:action="@{/analise/{aId}/cheque/{cId}/excluir(aId=${analise.id}, cId=${cheque.id})}" method="post" style="display:inline;">
+                                                    <button type="submit" class="btn-ghost" style="padding:0.15rem 0.4rem;font-size:0.75rem;color:var(--danger);" title="Excluir"
+                                                            onclick="return confirm('Excluir este cheque?');">
+                                                        <i class="bi bi-trash"></i>
+                                                    </button>
+                                                </form>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                    <tfoot>
+                                        <tr>
+                                            <th colspan="2">TOTAL</th>
+                                            <th>R$ <span th:text="${#numbers.formatDecimal(totalCheque, 1, 'POINT', 2, 'COMMA')}">0,00</span></th>
+                                            <th colspan="2"></th>
+                                        </tr>
+                                    </tfoot>
+                                </table>
+                            </div>
+                            <form th:action="@{/analise/{id}/cheque(id=${analise.id})}" method="post" style="margin-bottom:1.5rem;">
+                                <div style="display:flex;gap:0.5rem;align-items:flex-end;flex-wrap:wrap;">
+                                    <div style="flex:1.5;">
+                                        <label class="form-label-theme" style="font-size:0.75rem;">Banco</label>
+                                        <input type="text" name="banco" class="form-control form-control-theme form-control-sm" placeholder="Nome do banco" required>
+                                    </div>
+                                    <div style="flex:1;">
+                                        <label class="form-label-theme" style="font-size:0.75rem;">Agência</label>
+                                        <input type="text" name="agencia" class="form-control form-control-theme form-control-sm" placeholder="Agência">
+                                    </div>
+                                    <div style="flex:1;">
+                                        <label class="form-label-theme" style="font-size:0.75rem;">Valor (R$)</label>
+                                        <input type="number" name="valor" class="form-control form-control-theme form-control-sm" step="0.01" min="0" placeholder="0,00" required>
+                                    </div>
+                                    <div style="flex:1;">
+                                        <label class="form-label-theme" style="font-size:0.75rem;">Data</label>
+                                        <input type="date" name="dataOcorrencia" class="form-control form-control-theme form-control-sm">
+                                    </div>
+                                    <div>
+                                        <button type="submit" class="btn-gold-outline" style="font-size:0.75rem;padding:0.35rem 0.7rem;">
+                                            <i class="bi bi-plus-circle"></i> Adicionar
+                                        </button>
+                                    </div>
+                                </div>
+                            </form>
 
                             <!-- Total Geral -->
-                            <div class="alert alert-danger">
-                                <strong>TOTAL GERAL DE RESTRIÇÕES:</strong>
+                            <div class="alert-theme-danger" style="font-weight:600;">
+                                <i class="bi bi-exclamation-octagon"></i>
+                                TOTAL GERAL DE RESTRIÇÕES:
                                 R$ <span th:text="${#numbers.formatDecimal(totalRestricoes, 1, 'POINT', 2, 'COMMA')}">0,00</span>
                             </div>
                         </div>
 
                         <!-- Tab 4: Financeiro -->
                         <div class="tab-pane fade" id="financeiro" role="tabpanel">
-                            <h4 class="mb-4">Dados Financeiros</h4>
+                            <h4 class="mb-4" style="font-size:1.1rem;"><i class="bi bi-currency-dollar text-gold"></i> Dados Financeiros</h4>
 
-                            <!-- Dados BI -->
-                            <h5 class="mb-3">Dados de Business Intelligence</h5>
-                            <div th:if="${#lists.isEmpty(dadosBI)}" class="alert alert-info">
+                            <h5 class="mb-3" style="font-size:0.95rem;font-weight:600;">Dados de Business Intelligence</h5>
+                            <div th:if="${#lists.isEmpty(dadosBI)}" class="alert-theme-info" style="margin-bottom:1.25rem;">
                                 <i class="bi bi-info-circle"></i> Nenhum dado de BI disponível.
                             </div>
-                            <div th:unless="${#lists.isEmpty(dadosBI)}">
-                                <table class="table table-sm table-striped mb-4">
+                            <div th:unless="${#lists.isEmpty(dadosBI)}" style="margin-bottom:1.5rem;">
+                                <table class="table-theme" style="width:100%">
                                     <thead>
                                         <tr>
                                             <th>Coleção</th>
@@ -481,13 +825,12 @@
                                 </table>
                             </div>
 
-                            <!-- Duplicatas -->
-                            <h5 class="mb-3">Duplicatas em Aberto (<span th:text="${#lists.size(duplicatas)}">0</span>)</h5>
-                            <div th:if="${#lists.isEmpty(duplicatas)}" class="alert alert-info">
+                            <h5 class="mb-3" style="font-size:0.95rem;font-weight:600;">Duplicatas em Aberto (<span th:text="${#lists.size(duplicatas)}">0</span>)</h5>
+                            <div th:if="${#lists.isEmpty(duplicatas)}" class="alert-theme-info">
                                 <i class="bi bi-info-circle"></i> Nenhuma duplicata em aberto.
                             </div>
                             <div th:unless="${#lists.isEmpty(duplicatas)}">
-                                <table class="table table-sm table-striped">
+                                <table class="table-theme" style="width:100%">
                                     <thead>
                                         <tr>
                                             <th>Portador</th>
@@ -506,8 +849,8 @@
                                             <td>R$ <span th:text="${#numbers.formatDecimal(duplicata.saldo, 1, 'POINT', 2, 'COMMA')}">0,00</span></td>
                                             <td th:text="${duplicata.atraso ?: 0}">0</td>
                                             <td>
-                                                <span th:if="${duplicata.pago}" class="badge bg-success">Pago</span>
-                                                <span th:unless="${duplicata.pago}" class="badge bg-warning text-dark">Em Aberto</span>
+                                                <span th:if="${duplicata.pago}" class="badge score-alto" style="font-size:0.72rem;">Pago</span>
+                                                <span th:unless="${duplicata.pago}" class="badge score-medio" style="font-size:0.72rem;">Em Aberto</span>
                                             </td>
                                         </tr>
                                     </tbody>
@@ -517,12 +860,12 @@
 
                         <!-- Tab 5: Documentos -->
                         <div class="tab-pane fade" id="documentos" role="tabpanel">
-                            <h4 class="mb-4">Documentos Anexados</h4>
-                            <div th:if="${#lists.isEmpty(documentos)}" class="alert alert-info">
+                            <h4 class="mb-4" style="font-size:1.1rem;"><i class="bi bi-file-earmark-text text-gold"></i> Documentos Anexados</h4>
+                            <div th:if="${#lists.isEmpty(documentos)}" class="alert-theme-info">
                                 <i class="bi bi-info-circle"></i> Nenhum documento anexado.
                             </div>
                             <div th:unless="${#lists.isEmpty(documentos)}">
-                                <table class="table table-sm table-striped">
+                                <table class="table-theme" style="width:100%">
                                     <thead>
                                         <tr>
                                             <th>Tipo</th>
@@ -538,7 +881,7 @@
                                             <td th:text="${documento.dataUpload != null ? #temporals.format(documento.dataUpload, 'dd/MM/yyyy HH:mm') : 'N/D'}">00/00/0000 00:00</td>
                                             <td>
                                                 <a th:href="@{/documentos/download/{id}(id=${documento.id})}"
-                                                   class="btn btn-sm btn-outline-primary">
+                                                   class="btn-gold-outline" style="font-size:0.75rem;padding:0.25rem 0.6rem;">
                                                     <i class="bi bi-download"></i> Download
                                                 </a>
                                             </td>
@@ -634,34 +977,28 @@
 
                         <!-- Tab 7: Histórico -->
                         <div class="tab-pane fade" id="historico" role="tabpanel">
-                            <h4 class="mb-4">Histórico da Análise</h4>
+                            <h4 class="mb-4" style="font-size:1.1rem;"><i class="bi bi-clock-history text-gold"></i> Histórico da Análise</h4>
                             <div class="timeline">
-                                <div class="card mb-3">
-                                    <div class="card-body">
-                                        <h6 class="card-subtitle mb-2 text-muted">
-                                            <i class="bi bi-calendar"></i>
-                                            Início da Análise
-                                        </h6>
-                                        <p class="card-text">
-                                            <strong>Data:</strong> <span th:text="${analise.dataInicio != null ? #temporals.format(analise.dataInicio, 'dd/MM/yyyy HH:mm') : 'N/D'}">00/00/0000 00:00</span><br>
-                                            <strong>Status:</strong> <span th:text="${analise.statusWorkflow}">PENDENTE</span><br>
-                                            <strong>Workflow:</strong> <span th:text="${pedido.workflow}">BASE_PRAZO</span>
-                                        </p>
-                                    </div>
+                                <div class="timeline-card">
+                                    <h6>
+                                        <i class="bi bi-calendar"></i> Início da Análise
+                                    </h6>
+                                    <p>
+                                        <strong>Data:</strong> <span th:text="${analise.dataInicio != null ? #temporals.format(analise.dataInicio, 'dd/MM/yyyy HH:mm') : 'N/D'}">00/00/0000 00:00</span><br>
+                                        <strong>Status:</strong> <span th:text="${analise.statusWorkflow}">PENDENTE</span><br>
+                                        <strong>Workflow:</strong> <span th:text="${pedido.workflow}">BASE_PRAZO</span>
+                                    </p>
                                 </div>
-                                <div th:if="${analise.dataFim != null}" class="card mb-3">
-                                    <div class="card-body">
-                                        <h6 class="card-subtitle mb-2 text-muted">
-                                            <i class="bi bi-check-circle"></i>
-                                            Análise Concluída
-                                        </h6>
-                                        <p class="card-text">
-                                            <strong>Data:</strong> <span th:text="${#temporals.format(analise.dataFim, 'dd/MM/yyyy HH:mm')}">00/00/0000 00:00</span><br>
-                                            <strong>Decisão:</strong> <span th:text="${analise.decisao}">APROVADO</span><br>
-                                            <strong>Analista:</strong> <span th:text="${analise.analistaResponsavel}">SISTEMA</span><br>
-                                            <strong>Duração:</strong> <span th:text="${analise.duracaoHoras + ' horas'}">0 horas</span>
-                                        </p>
-                                    </div>
+                                <div th:if="${analise.dataFim != null}" class="timeline-card">
+                                    <h6>
+                                        <i class="bi bi-check-circle"></i> Análise Concluída
+                                    </h6>
+                                    <p>
+                                        <strong>Data:</strong> <span th:text="${#temporals.format(analise.dataFim, 'dd/MM/yyyy HH:mm')}">00/00/0000 00:00</span><br>
+                                        <strong>Decisão:</strong> <span th:text="${analise.decisao}">APROVADO</span><br>
+                                        <strong>Analista:</strong> <span th:text="${analise.analistaResponsavel}">SISTEMA</span><br>
+                                        <strong>Duração:</strong> <span th:text="${analise.duracaoHoras + ' horas'}">0 horas</span>
+                                    </p>
                                 </div>
                             </div>
                         </div>
@@ -671,15 +1008,15 @@
 
             <!-- Right Column: Decision Panel (30%) -->
             <div class="col-md-4">
-                <div class="decision-panel">
-                    <div class="card-header bg-primary text-white">
-                        <h5 class="mb-0"><i class="bi bi-clipboard-check"></i> Decisão de Crédito</h5>
+                <div class="decision-panel animate-in">
+                    <div class="panel-header">
+                        <i class="bi bi-clipboard-check"></i> Decisão de Crédito
                     </div>
-                    <div class="card-body">
+                    <div class="panel-body">
                         <!-- Score Badge -->
                         <div class="text-center mb-4">
                             <div th:if="${cliente.scoreBoaVista != null}"
-                                 class="score-badge d-inline-block"
+                                 class="score-badge-lg"
                                  th:classappend="${cliente.scoreBoaVista >= 700} ? 'score-alto' : (${cliente.scoreBoaVista >= 400} ? 'score-medio' : 'score-baixo')"
                                  th:text="${cliente.scoreBoaVista}">0</div>
                             <div th:unless="${cliente.scoreBoaVista != null}"
@@ -702,27 +1039,27 @@
 
                         <!-- Limites -->
                         <div class="mb-4">
-                            <dl class="row mb-2">
-                                <dt class="col-sm-6">Limite Atual:</dt>
-                                <dd class="col-sm-6 text-end limite-display">
+                            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.5rem;">
+                                <span style="font-size:0.8rem;font-weight:600;color:var(--text-muted);">Limite Atual:</span>
+                                <span class="limite-display">
                                     R$ <span th:text="${#numbers.formatDecimal(grupo.limiteAprovado, 1, 'POINT', 2, 'COMMA')}">0,00</span>
-                                </dd>
-                            </dl>
-                            <dl class="row mb-0">
-                                <dt class="col-sm-6">Limite Sugerido:</dt>
-                                <dd class="col-sm-6 text-end limite-display text-success">
+                                </span>
+                            </div>
+                            <div style="display:flex;justify-content:space-between;align-items:center;">
+                                <span style="font-size:0.8rem;font-weight:600;color:var(--text-muted);">Limite Sugerido:</span>
+                                <span class="limite-display" style="color:var(--success);">
                                     R$ <span th:text="${#numbers.formatDecimal(analise.limiteSugerido, 1, 'POINT', 2, 'COMMA')}">0,00</span>
-                                </dd>
-                            </dl>
+                                </span>
+                            </div>
                         </div>
 
-                        <hr>
+                        <hr style="border-color:var(--border-light);">
 
                         <!-- Decision Form -->
                         <form th:action="@{/analise/{id}/concluir(id=${analise.id})}" method="post" id="decisionForm">
                             <div class="mb-3">
-                                <label class="form-label fw-bold">Parecer:</label>
-                                <select name="decisao" id="decisaoSelect" class="form-select" required>
+                                <label class="form-label-theme">Parecer:</label>
+                                <select name="decisao" id="decisaoSelect" class="form-select form-select-theme" required>
                                     <option value="">Selecione...</option>
                                     <option value="APROVADO">Aprovado sem restrição</option>
                                     <option value="LIMITADO">Limitado a R$ X</option>
@@ -738,14 +1075,14 @@
                             </div>
 
                             <div class="mb-3">
-                                <label class="form-label fw-bold">Justificativa:</label>
-                                <textarea name="justificativa" class="form-control" rows="4"
+                                <label class="form-label-theme">Justificativa:</label>
+                                <textarea name="justificativa" class="form-control form-control-theme" rows="4"
                                           required placeholder="Descreva os motivos da sua decisão..."></textarea>
                             </div>
 
-                            <hr>
+                            <hr style="border-color:var(--border-light);">
 
-                            <!-- Parecer CRM Preview (only for CLIENTE_NOVO) -->
+                            <!-- Parecer CRM Preview -->
                             <div th:if="${parecerPreview != null}" class="mb-3">
                                 <label class="form-label fw-bold">Preview Parecer CRM:</label>
                                 <pre th:text="${parecerPreview}" class="parecer-box" style="white-space: pre-wrap; font-family: monospace; font-size: 0.75rem; line-height: 1.4; margin: 0;">Parecer...</pre>
@@ -768,7 +1105,6 @@
     <!-- Scripts -->
     <script th:src="@{/webjars/bootstrap/5.3.2/js/bootstrap.bundle.min.js}"></script>
     <script>
-        // Show/hide limite field based on decision
         document.getElementById('decisaoSelect').addEventListener('change', function() {
             const limiteField = document.getElementById('limiteField');
             if (this.value === 'LIMITADO') {
@@ -780,13 +1116,25 @@
             }
         });
 
-        // Confirm before submitting
         document.getElementById('decisionForm').addEventListener('submit', function(e) {
             const decisao = document.getElementById('decisaoSelect').value;
             if (!confirm('Tem certeza que deseja concluir a análise com a decisão: ' + decisao + '?')) {
                 e.preventDefault();
             }
         });
+
+        // Cross-tab expand/collapse
+        function toggleDetail(index) {
+            const details = document.querySelectorAll('.detail-' + index);
+            const chevron = document.getElementById('chevron-' + index);
+            const isVisible = details.length > 0 && details[0].style.display !== 'none';
+            details.forEach(function(row) {
+                row.style.display = isVisible ? 'none' : 'table-row';
+            });
+            if (chevron) {
+                chevron.style.transform = isVisible ? 'rotate(0deg)' : 'rotate(90deg)';
+            }
+        }
     </script>
 </body>
 </html>
