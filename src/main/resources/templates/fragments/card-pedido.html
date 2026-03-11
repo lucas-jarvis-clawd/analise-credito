@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
-<!-- Fragment de Card Kanban - Grupos Econômicos -->
 <th:block th:fragment="kanban-cards(analises)">
-    <div th:if="${analises == null or analises.isEmpty()}" class="espacamento-vazio">
-        <i class="bi bi-inbox"></i>
-        Nenhuma análise encontrada
+
+    <div th:if="${analises == null or analises.isEmpty()}" class="empty-state">
+        <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        Nenhuma análise
     </div>
 
     <div th:each="grupo : ${analises}"
@@ -13,77 +13,70 @@
          th:attr="data-analise-id=${grupo.analisePrincipalId}"
          th:id="'card-' + ${grupo.analisePrincipalId}">
 
-        <!-- Cabeçalho - Grupo Econômico -->
-        <div class="card-cliente">
-            <i class="bi bi-building"></i> <span th:text="${grupo.grupoNome}">Nome do Grupo</span>
+        <!-- Nome do Grupo -->
+        <div class="card-grupo-nome">
+            <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+            <span th:text="${grupo.grupoNome}">Nome do Grupo</span>
         </div>
 
-        <!-- Lista de Clientes -->
-        <div class="card-clientes-grupo mb-2">
-            <small class="text-muted">
-                <i class="bi bi-people"></i> Clientes:
-            </small>
-            <ul class="list-unstyled mb-0 mt-1" style="font-size: 0.85rem;">
-                <li th:each="razaoSocial : ${grupo.clientesRazaoSocial}">
-                    <i class="bi bi-dot"></i>
-                    <span th:text="${razaoSocial}">Razão Social</span>
-                </li>
+        <!-- Clientes do Grupo -->
+        <div class="card-clientes-list">
+            <ul>
+                <li th:each="razaoSocial : ${grupo.clientesRazaoSocial}"
+                    th:text="${razaoSocial}">Razão Social</li>
             </ul>
         </div>
 
-        <!-- Info Consolidada do Grupo -->
-        <div class="card-info">
-            <span>
-                <i class="bi bi-file-text"></i>
+        <!-- Meta: pedidos + valor -->
+        <div class="card-meta">
+            <span class="card-meta-item">
+                <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
                 <strong th:text="${grupo.quantidadePedidos}">0</strong>
                 <span th:text="${grupo.quantidadePedidos == 1} ? 'pedido' : 'pedidos'">pedidos</span>
             </span>
-            <span>
-                <i class="bi bi-currency-dollar"></i>
-                <strong th:text="${#numbers.formatDecimal(grupo.valorTotal, 1, 'POINT', 2, 'COMMA')}">0,00</strong>
+            <span class="card-meta-item">
+                <svg viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                <span th:text="${#numbers.formatDecimal(grupo.valorTotal, 1, 'POINT', 0, 'COMMA')}">0</span>
             </span>
-        </div>
-
-        <!-- SLA e UF Badges -->
-        <div class="card-badges">
-            <!-- SLA Badge -->
-            <span th:if="${grupo.diasEmAnalise != null}"
-                  class="badge-tc"
-                  th:classappend="${grupo.diasEmAnalise >= 3} ? 'bg-danger text-white' : (${grupo.diasEmAnalise >= 1} ? 'bg-warning' : 'bg-secondary text-white')"
-                  th:attr="title=${grupo.diasEmAnalise >= 3} ? 'ATRASADO - SLA excedido' : 'Dias em análise'">
-                <i class="bi bi-clock"></i>
-                <span th:text="${grupo.diasEmAnalise} + ' dia' + (${grupo.diasEmAnalise != 1} ? 's' : '')">0 dias</span>
-            </span>
-
-            <!-- UF Badge -->
-            <span th:if="${grupo.uf != null and !grupo.uf.isEmpty()}"
-                  class="badge-tc"
-                  style="background: var(--tc-primary); color: var(--tc-dark);">
-                <i class="bi bi-geo-alt"></i>
+            <!-- UF -->
+            <span th:if="${grupo.uf != null and !grupo.uf.isEmpty()}" class="card-meta-item">
+                <svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
                 <span th:text="${grupo.uf}">SP</span>
             </span>
         </div>
 
-        <!-- Pior Score do Grupo -->
-        <div class="card-badges" th:if="${grupo.piorScore != null}">
-            <span class="badge-tc badge-score"
-                  th:classappend="${grupo.piorScore >= 700} ? 'score-alto' : (${grupo.piorScore >= 400} ? 'score-medio' : 'score-baixo')"
-                  th:text="'Pior Score: ' + ${grupo.piorScore}">Pior Score: 0</span>
+        <!-- SLA -->
+        <div th:if="${grupo.diasEmAnalise != null}" style="margin-bottom:6px;">
+            <span class="badge-tc"
+                  th:class="${grupo.diasEmAnalise >= 3} ? 'badge-tc badge-danger' : (${grupo.diasEmAnalise >= 1} ? 'badge-tc badge-warning' : 'badge-tc badge-neutral')">
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                <span th:text="${grupo.diasEmAnalise} + (${grupo.diasEmAnalise != 1} ? ' dias' : ' dia')">0 dias</span>
+            </span>
         </div>
 
-        <!-- Alertas Consolidados -->
-        <div class="card-badges" th:if="${grupo.alertasConsolidados != null and !grupo.alertasConsolidados.isEmpty()}">
+        <!-- Pior Score -->
+        <div th:if="${grupo.piorScore != null}" style="margin-bottom:6px;">
+            <span class="badge-tc"
+                  th:class="${grupo.piorScore >= 700} ? 'badge-tc score-alto' : (${grupo.piorScore >= 400} ? 'badge-tc score-medio' : 'badge-tc score-baixo')"
+                  th:text="'Score Boa Vista: ' + ${grupo.piorScore}">Score Boa Vista: 0</span>
+        </div>
+
+        <!-- Alertas -->
+        <div th:if="${grupo.alertasConsolidados != null and !grupo.alertasConsolidados.isEmpty()}"
+             class="card-alerts">
             <span th:each="alert : ${grupo.alertasConsolidados}"
-                  class="badge-tc badge-perigo"
+                  class="card-alert-badge"
                   th:text="${alert}">Alerta</span>
         </div>
 
         <!-- Botão Analisar -->
         <a th:href="@{/analise/{id}(id=${grupo.analisePrincipalId})}"
-           class="btn btn-tc btn-tc-primary btn-sm mt-3"
-           style="width: 100%;">
-            <i class="bi bi-clipboard-check"></i> Analisar
+           class="btn-tc btn-tc-primary btn-tc-sm"
+           style="width:100%; justify-content:center; margin-top:10px;">
+            <svg viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+            Analisar
         </a>
     </div>
+
 </th:block>
 </html>

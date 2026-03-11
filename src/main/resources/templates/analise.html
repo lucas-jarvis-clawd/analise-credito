@@ -3,142 +3,29 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Análise de Crédito - [[${cliente.razaoSocial}]]</title>
+    <title>Análise — <th:block th:text="${cliente.razaoSocial}">Cliente</th:block> — Tex Cotton</title>
     <link rel="stylesheet" th:href="@{/webjars/bootstrap/5.3.2/css/bootstrap.min.css}">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <link rel="stylesheet" th:href="@{/css/texcotton-theme.css}">
-    <style>
-        body {
-            background: var(--tc-cinza-claro);
-        }
-
-        .wizard-container {
-            background-color: white;
-            border-radius: 8px;
-            padding: 1rem;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-
-        .decision-panel {
-            background-color: white;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            position: sticky;
-            top: 20px;
-        }
-
-        .nav-tabs .nav-link {
-            color: #495057;
-            font-weight: 500;
-            font-size: 0.8rem;
-            padding: 0.5rem 0.75rem;
-        }
-
-        .nav-tabs .nav-link.active {
-            color: #0d6efd;
-            font-weight: 600;
-        }
-
-        .tab-content {
-            padding-top: 1rem;
-        }
-
-        .info-label {
-            font-weight: 600;
-            color: #495057;
-            margin-bottom: 0.25rem;
-            font-size: 0.75rem;
-        }
-
-        .info-value {
-            color: #212529;
-            margin-bottom: 0.75rem;
-            font-size: 0.85rem;
-        }
-
-        .score-badge {
-            font-size: 1.75rem;
-            font-weight: 700;
-            padding: 0.6rem 1.2rem;
-            border-radius: 8px;
-        }
-
-        .score-alto {
-            background-color: #28a745;
-            color: white;
-        }
-
-        .score-medio {
-            background-color: #ffc107;
-            color: #212529;
-        }
-
-        .score-baixo {
-            background-color: #dc3545;
-            color: white;
-        }
-
-        .limite-display {
-            font-size: 0.95rem;
-            font-weight: 600;
-            color: #0d6efd;
-        }
-
-        .readonly-field {
-            background-color: #e9ecef;
-            cursor: not-allowed;
-        }
-
-        .table-sm td, .table-sm th {
-            font-size: 0.75rem;
-            padding: 0.4rem;
-        }
-
-        .trend-indicator {
-            margin-top: 0.5rem;
-            font-size: 0.9rem;
-        }
-
-        .trend-indicator .badge {
-            padding: 0.4rem 0.8rem;
-            font-weight: 600;
-        }
-
-        .parecer-box {
-            background-color: #f8f9fa;
-            border-left: 3px solid #0d6efd;
-            padding: 0.75rem;
-            font-family: monospace;
-            font-size: 0.7rem;
-            word-break: break-all;
-        }
-
-        .alert-dismissible {
-            margin-bottom: 1rem;
-        }
-    </style>
+    <link rel="icon" type="image/svg+xml" th:href="@{/images/logo-icon.svg}">
 </head>
 <body>
-    <!-- Navigation Bar -->
-    <nav class="navbar navbar-expand-lg navbar-texcotton">
-        <div class="container-fluid px-4">
-            <a class="navbar-brand" href="/">
-                <i class="bi bi-cash-coin"></i>
-                <span>TEX COTTON</span>
-            </a>
-            <div class="navbar-nav ms-auto d-flex align-items-center gap-3">
-                <a class="nav-link" href="/analise/kanban">
-                    <i class="bi bi-kanban"></i> Dashboard
-                </a>
-                <a href="/analise/kanban" class="btn btn-tc btn-tc-secondary btn-sm">
-                    <i class="bi bi-arrow-left"></i> Voltar
-                </a>
-            </div>
-        </div>
-    </nav>
+<div class="app-layout">
+
+    <!-- Sidebar -->
+    <aside th:replace="~{fragments/layout :: sidebar('kanban', ${perfil})}"></aside>
+
+    <!-- Main -->
+    <div class="main-wrapper">
+
+        <!-- Topbar -->
+        <header th:replace="~{fragments/layout :: topbar(|Análise — ${cliente.razaoSocial}|, ${perfil})}"></header>
+
+        <!-- Content -->
+        <main class="content-area">
 
     <!-- Main Container -->
-    <div class="container-fluid mt-4 mb-5">
+    <div class="container-fluid" style="padding:0 0 32px;">
         <!-- Flash Messages -->
         <div th:if="${mensagem}" class="alert alert-success alert-dismissible fade show" role="alert">
             <i class="bi bi-check-circle"></i> <span th:text="${mensagem}"></span>
@@ -392,7 +279,7 @@
                                         <tr th:each="socio : ${socios}">
                                             <td th:text="${socio.cpfCnpj}">000.000.000-00</td>
                                             <td th:text="${socio.nome}">Nome do Sócio</td>
-                                            <td th:text="${socio.participacao != null ? socio.participacao + '%' : 'N/D'}">0%</td>
+                                            <td th:text="${socio.participacao != null ? #numbers.formatDecimal(socio.participacao, 1, 'POINT', 2, 'COMMA') + '%' : 'N/D'}">0%</td>
                                             <td th:text="${socio.dataEntrada != null ? #temporals.format(socio.dataEntrada, 'dd/MM/yyyy') : 'N/D'}">00/00/0000</td>
                                         </tr>
                                     </tbody>
@@ -417,7 +304,7 @@
                                         <tr th:each="participacao : ${participacoes}">
                                             <td th:text="${participacao.cnpjParticipada}">00.000.000/0000-00</td>
                                             <td th:text="${participacao.razaoSocialParticipada}">Razão Social</td>
-                                            <td th:text="${participacao.percentual != null ? participacao.percentual + '%' : 'N/D'}">0%</td>
+                                            <td th:text="${participacao.percentual != null ? #numbers.formatDecimal(participacao.percentual, 1, 'POINT', 2, 'COMMA') + '%' : 'N/D'}">0%</td>
                                         </tr>
                                     </tbody>
                                 </table>
@@ -578,7 +465,7 @@
                                             <th>Coleção</th>
                                             <th>Valor Vencido</th>
                                             <th>Crédito</th>
-                                            <th>Score Interno</th>
+                                            <th>Score Tex</th>
                                             <th>Atraso Médio</th>
                                         </tr>
                                     </thead>
@@ -588,7 +475,7 @@
                                             <td>R$ <span th:text="${#numbers.formatDecimal(dado.valorVencido, 1, 'POINT', 2, 'COMMA')}">0,00</span></td>
                                             <td>R$ <span th:text="${#numbers.formatDecimal(dado.credito, 1, 'POINT', 2, 'COMMA')}">0,00</span></td>
                                             <td th:text="${dado.score ?: 'N/D'}">0</td>
-                                            <td th:text="${dado.atrasoMedio != null ? dado.atrasoMedio + ' dias' : 'N/D'}">0 dias</td>
+                                            <td th:text="${dado.atrasoMedio != null ? #numbers.formatDecimal(dado.atrasoMedio, 1, 'POINT', 1, 'COMMA') + ' dias' : 'N/D'}">0 dias</td>
                                         </tr>
                                     </tbody>
                                 </table>
@@ -845,8 +732,8 @@
 
                             <div class="mb-3" id="limiteField" style="display:none;">
                                 <label class="form-label fw-bold">Limite Aprovado (R$):</label>
-                                <input type="number" name="limiteAprovado" class="form-control"
-                                       step="0.01" min="0" placeholder="0,00">
+                                <input type="text" name="limiteAprovado" class="form-control"
+                                       placeholder="0,00">
                                 <div class="form-text">Digite o valor do limite aprovado</div>
                             </div>
 
@@ -873,6 +760,10 @@
             </div>
         </div>
     </div>
+
+        </main><!-- /content-area -->
+    </div><!-- /main-wrapper -->
+</div><!-- /app-layout -->
 
     <!-- Scripts -->
     <script th:src="@{/webjars/bootstrap/5.3.2/js/bootstrap.bundle.min.js}"></script>

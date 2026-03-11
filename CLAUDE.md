@@ -15,6 +15,13 @@ Webapp para digitalizar análise de crédito de lojistas, substituindo planilhas
 ./mvnw test
 ```
 
+## Design System
+
+**Skill:** `.claude/tex-cotton-design/SKILL.md` — invocar SEMPRE antes de criar ou editar qualquer template/UI
+**CSS:** `texcotton-theme.css` v3.0 — DM Sans font, `--accent: #d4a843`, `--bg-main: #f5f5f0`
+**Logo:** `.claude/tex-cotton-design/assets/LogoTex.png`
+**Design specs:** `docs/superpowers/specs/` (arquivos markdown de especificação de telas)
+
 ## Architecture
 
 **Stack:** Spring Boot 4.0.2 + Java 25 + Thymeleaf + HTMX + Bootstrap 5 + H2 (→ Oracle produção)
@@ -50,6 +57,7 @@ AnaliseCredito.Analise_de_Credito/
 **Pedido**
 - `bloqueio` determina workflow: 80/36 = CLIENTE_NOVO, outros = BASE_PRAZO
 - `alerts` (List<String>) - calculados dinamicamente por AlertaService
+- `colecao` (Integer), `nomeColecao` (String), `tipoOperacao` (TipoOperacao), `pedidoSazonal` (boolean)
 - N:1 → Cliente, 1:1 → Analise
 
 **Analise**
@@ -57,9 +65,12 @@ AnaliseCredito.Analise_de_Credito/
 - `statusWorkflow` (enum), `tipoAnalista` (FINANCEIRO/COMERCIAL)
 - `parecerCRM` gerado APENAS para workflow CLIENTE_NOVO
 - `requerAprovacaoGestor` (boolean) - baseado em regras de alçada
+- `valorAprovado`, `prazoAprovado`, `condicoesEspeciais` - aprovação condicional
+- `exigeGarantia` (boolean), `garantiaExigida` (TipoGarantia), `observacoesCondicoes`
 
 **DadosBI** (por coleção, vinculado ao GrupoEconomico)
-- `colecao` (Integer, ex: 202601), `credito`, `score` (interno), `valorVencido`, `atrasoMedio`
+- `colecao` (Integer, ex: 202601), `credito`, `score` (**Score Tex** — interno Tex Cotton), `valorVencido`, `atrasoMedio`
+- `getVariacaoScore()`, `getVariacaoAtraso()`, `getTendencia()` — @Transient, calculados comparando coleções consecutivas
 
 **Duplicata**
 - `getAtraso()` (método calculado, NÃO coluna fixa):
@@ -74,16 +85,19 @@ AnaliseCredito.Analise_de_Credito/
 
 **Configuracao** (tabela única, 1 registro, editável por admin)
 - Limites SIMEI, thresholds score, multiplicadores, critérios alçada
+- 5 campos sazonalidade: multiplicadores e meses de alta temporada
+
+**Enums adicionais:** `TipoOperacao` (REPOSICAO/LANCAMENTO/OPORTUNIDADE), `TipoGarantia` (6 tipos), `TendenciaRisco` (MELHORANDO/ESTAVEL/DETERIORANDO)
 
 ## Workflows (Dois Distintos)
 
 ### BASE_PRAZO (bloqueio != 80 e != 36)
-PENDENTE → EM_ANALISE_FINANCEIRO → PARECER_APROVADO/REPROVADO → [AGUARDANDO_APROVACAO_GESTOR] → [REANALISE_COMERCIAL] → FINALIZADO
+PENDENTE → EM_ANALISE_FINANCEIRO → PARECER_APROVADO/REPROVADO/APROVADO_CONDICIONAL → [AGUARDANDO_APROVACAO_GESTOR] → [AGUARDANDO_ACEITE_CLIENTE] → [REANALISE_COMERCIAL] → FINALIZADO
 
 ### CLIENTE_NOVO (bloqueio == 80 ou == 36)
-PENDENTE → DOCUMENTACAO_SOLICITADA → DOCUMENTACAO_ENVIADA → PARECER_APROVADO/REPROVADO → [AGUARDANDO_APROVACAO_GESTOR] → [REANALISE_COMERCIAL] → FINALIZADO
+PENDENTE → DOCUMENTACAO_SOLICITADA → DOCUMENTACAO_ENVIADA → PARECER_APROVADO/REPROVADO/APROVADO_CONDICIONAL → [AGUARDANDO_APROVACAO_GESTOR] → [AGUARDANDO_ACEITE_CLIENTE] → [REANALISE_COMERCIAL] → FINALIZADO
 
-**Diferença crítica:** CLIENTE_NOVO gera `parecerCRM` automaticamente (formato: "[DECISÃO] DATA - TIPO - FUNDAÇÃO - SIMEI - RESTRIÇÕES - CRED - SCORE - SÓCIOS - PARTS")
+**Diferença crítica:** CLIENTE_NOVO gera `parecerCRM` automaticamente (formato 8 linhas: DECISÃO | CADASTRO+SCORE | HISTÓRICO | EXPOSIÇÃO | ALERTAS | APROVAÇÃO | FUNDAMENTAÇÃO | RESPONSÁVEL)
 
 ## Kanban Grouping Pattern
 
@@ -132,7 +146,9 @@ if (grupoEconomicoId == null) {
 - ⚠️ **PEDIDO > LIMITE**: pedido.valor > grupo.limiteAprovado
 - ⚠️ **TOTAL > LIMITE**: soma pedidos abertos > limite
 - 🟡 **RESTRIÇÕES (X)**: count(protestos + pefin + ações + cheques) > 0
-- 🟡 **SCORE BAIXO**: scoreBoaVista < scoreBaixoThreshold
+- 🟡 **SCORE BAIXO**: scoreBoaVista (Score Boa Vista) < scoreBaixoThreshold
+- 🟡 **PEDIDO ACIMA SAZONALIDADE**: valor > 1.5x média histórica da coleção
+- 🟡 **DETERIORAÇÃO SCORE / ATRASO CRESCENTE**: baseados em getTendencia() do DadosBI
 
 ### 4. Regras de Alçada
 ```java
@@ -145,32 +161,25 @@ analise.requerAprovacaoGestor = (
 
 ## Implementation Plan
 
-**Status:** ✅ **90% COMPLETE - MVP FUNCIONAL COM MELHORIAS!**
+**Status:** ✅ **95% COMPLETE - MVP FUNCIONAL COM 5 MELHORIAS CRÍTICAS!**
 
 **Phases:**
-1. ✅ Fundação: Pacotes, enums (6), entities (14), repos (14), config
+1. ✅ Fundação: Pacotes, enums (6→9), entities (14), repos (14), config
 2. ✅ Importação: ImportacaoService (Apache POI), XLSX parsing - 684 linhas, 14 testes
 3. ✅ Services Core: Scoring (9 tests), Alertas (13 tests), Workflow (20 tests), Parecer (20 tests)
-4. ✅ UI Kanban: Dashboard com drag-and-drop JavaScript, filtros, badges dinâmicos
-5. ✅ Wizard Análise: 7 tabs (Cadastrais, Vínculos, Restrições, Financeiro, Docs, Pedidos Grupo, Histórico) + painel decisão
+4. ✅ UI Kanban: Dashboard com drag-and-drop, filtros UF/valor/SLA/busca, badges SLA dinâmicos
+5. ✅ Wizard Análise: 7 tabs + painel decisão + tendência BI + sazonalidade
 6. ✅ CRUD/Admin: Home, Importação, Configuração, FileStorage, Documentos
 7. ✅ Edição Manual: Financeiro pode editar score e adicionar/remover restrições
 8. ✅ Kanban Agrupado: Cards agrupados por GrupoEconomico com informações consolidadas
-9. ⏳ Testes: 77 testes unitários passando, E2E pendente
-10. ⏳ Deploy: Docs, build scripts, perfil produção
-
-**Execution Strategy:**
-- ✅ Executado com subagent-driven-development
-- ✅ Agentes especializados para cada tarefa
-- ✅ Review em dois estágios (spec compliance + code quality)
-- ✅ 16/20 tarefas completas
+9. ✅ 5 Melhorias: Filtros Kanban, Parecer 8-linhas, Sazonalidade, Aprovação Condicional, Tendência
+10. ⏳ Testes: 119 testes unitários passando, E2E pendente
+11. ⏳ Deploy: Build scripts, perfil produção Oracle
 
 **Task List:**
-- ✅ Tasks #1-7: Backend completo (entities, repos, services, import)
-- ✅ Tasks #8-11: Business services (scoring, alertas, workflow, parecer)
-- ✅ Tasks #12-17: Controllers e UI (home, kanban, analise, import, config, file upload)
-- ⏳ Task #18: Templates adicionais (maioria já feita)
-- ⏳ Tasks #19-20: Testes adicionais e E2E
+- ✅ Tasks #1-17: Backend completo + Controllers + UI
+- ✅ Tasks #18+: 5 melhorias críticas implementadas (filtros, parecer, sazonalidade, condicional, tendência)
+- ⏳ E2E e deploy Oracle
 
 ## Development Workflow
 
@@ -228,6 +237,9 @@ Financeiro pode editar manualmente dados do cliente na tela de análise:
 9. **Kanban agrupado por grupo** - 1 card = 1 GrupoEconomico (não 1 pedido). Drag-and-drop usa analisePrincipalId
 10. **GrupoKanbanDTO no Kanban** - Template recebe List<GrupoKanbanDTO>, não List<Analise>
 11. **Edição manual sempre disponível** - Score e restrições editáveis em qualquer status do workflow
+12. **Filtros Kanban por URL params** - UF, faixa de valor, SLA, busca; estado preservado em query string
+13. **Tendência DadosBI é @Transient** - getTendencia() compara última vs penúltima coleção, NÃO persiste
+14. **Design system via skill** - Usar `.claude/tex-cotton-design` ANTES de criar/editar qualquer template HTML
 
 ## Configuration
 
@@ -258,12 +270,11 @@ upload.path=/static/uploads/
 - h2
 - spring-boot-devtools
 
-**To Add (Task #5):**
+**Já adicionados:**
 - Apache POI (XLSX parsing)
 - HTMX webjar
 - Bootstrap 5 webjar
 - spring-boot-starter-validation
-- lombok (optional)
 
 ## MVP Scope (What's NOT Included)
 
